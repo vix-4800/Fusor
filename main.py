@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
     QTabWidget,
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
     QPushButton,
     QComboBox,
     QTextEdit,
@@ -13,6 +14,23 @@ from PyQt6.QtWidgets import (
     QFormLayout,
 )
 
+
+class QTextEditLogger:
+    """Redirects writes to both stdout and a QTextEdit widget."""
+
+    def __init__(self, text_edit, original_stdout):
+        self.text_edit = text_edit
+        self.original_stdout = original_stdout
+
+    def write(self, msg):
+        if msg.rstrip():
+            # Append text to the widget without extra newlines
+            self.text_edit.append(msg.rstrip())
+        self.original_stdout.write(msg)
+
+    def flush(self):
+        self.original_stdout.flush()
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -20,7 +38,18 @@ class MainWindow(QMainWindow):
         self.resize(1024, 768)
 
         self.tabs = QTabWidget()
-        self.setCentralWidget(self.tabs)
+        self.output_view = QTextEdit()
+        self.output_view.setReadOnly(True)
+
+        central_widget = QWidget()
+        main_layout = QHBoxLayout(central_widget)
+        main_layout.addWidget(self.tabs)
+        main_layout.addWidget(self.output_view)
+        self.setCentralWidget(central_widget)
+
+        # Redirect stdout to the output view
+        self._stdout_logger = QTextEditLogger(self.output_view, sys.stdout)
+        sys.stdout = self._stdout_logger
 
         self.init_project_tab()
         self.init_git_tab()
