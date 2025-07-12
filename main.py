@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
     QLineEdit,
     QFormLayout,
+    QMessageBox,
 )
 
 
@@ -201,6 +202,12 @@ class MainWindow(QMainWindow):
         var1 = self.var1_edit.text()
         var2 = self.var2_edit.text()
         framework = self.framework_combo.currentText()
+        
+        if not git_url or not var1 or not var2:
+            QMessageBox.warning(self, "Invalid settings", "All settings fields must be filled out.")
+            print("Failed to save settings: one or more fields were empty")
+            return
+
         print(
             f"Settings saved: Git URL={git_url}, Variable 1={var1}, Variable 2={var2}, Framework={framework}"
         )
