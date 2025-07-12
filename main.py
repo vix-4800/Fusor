@@ -11,12 +11,10 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
 )
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Fusor – Laravel/PHP QA Toolbox")
-        # open the window at a convenient default size
         self.resize(1024, 768)
 
         self.tabs = QTabWidget()
@@ -131,7 +129,6 @@ def main():
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()
