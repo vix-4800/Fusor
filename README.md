@@ -8,6 +8,7 @@ interface with the following tabs:
 - **Git** – simple controls for common Git actions.
 - **Database** – quick actions for opening and dumping a database.
 - **Logs** – displays example log text with a refresh option.
+- **Settings** – form fields for configuring the Git URL and other variables.
 
 The widgets resize along with the main window so the interface stays usable at
 any size.
