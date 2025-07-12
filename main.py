@@ -9,6 +9,8 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QTextEdit,
     QSizePolicy,
+    QLineEdit,
+    QFormLayout,
 )
 
 class MainWindow(QMainWindow):
@@ -24,6 +26,7 @@ class MainWindow(QMainWindow):
         self.init_git_tab()
         self.init_database_tab()
         self.init_logs_tab()
+        self.init_settings_tab()
 
     def init_project_tab(self):
         project_tab = QWidget()
@@ -120,9 +123,35 @@ class MainWindow(QMainWindow):
 
         self.tabs.addTab(logs_tab, "Logs")
 
+    def init_settings_tab(self):
+        settings_tab = QWidget()
+        layout = QFormLayout(settings_tab)
+
+        self.git_url_edit = QLineEdit()
+        layout.addRow("Git URL:", self.git_url_edit)
+
+        self.var1_edit = QLineEdit()
+        layout.addRow("Variable 1:", self.var1_edit)
+
+        self.var2_edit = QLineEdit()
+        layout.addRow("Variable 2:", self.var2_edit)
+
+        save_btn = QPushButton("Save")
+        save_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        save_btn.clicked.connect(self.save_settings)
+        layout.addRow(save_btn)
+
+        self.tabs.addTab(settings_tab, "Settings")
+
     def refresh_logs(self):
         print("Refresh logs clicked")
         self.log_view.setPlainText("Example log line 1\nExample log line 2\nExample log line 3")
+
+    def save_settings(self):
+        git_url = self.git_url_edit.text()
+        var1 = self.var1_edit.text()
+        var2 = self.var2_edit.text()
+        print(f"Settings saved: Git URL={git_url}, Variable 1={var1}, Variable 2={var2}")
 
 def main():
     app = QApplication(sys.argv)
