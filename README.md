@@ -9,6 +9,9 @@ interface with the following tabs:
 - **Database** – quick actions for opening and dumping a database.
 - **Logs** – displays example log text with a refresh option.
 
+The widgets resize along with the main window so the interface stays usable at
+any size.
+
 ## Running
 
 Install the dependencies and execute `main.py`:
