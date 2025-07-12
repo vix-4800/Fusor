@@ -1,4 +1,5 @@
 import sys
+import subprocess
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -58,28 +59,43 @@ class MainWindow(QMainWindow):
         self.init_logs_tab()
         self.init_settings_tab()
 
+    def run_command(self, command):
+        """Run a shell command and print its output."""
+        print(f"$ {' '.join(command)}")
+        try:
+            result = subprocess.run(command, capture_output=True, text=True)
+            if result.stdout:
+                print(result.stdout.strip())
+            if result.stderr:
+                print(result.stderr.strip())
+        except FileNotFoundError:
+            print(f"Command not found: {command[0]}")
+
+    def current_framework(self):
+        return self.framework_combo.currentText() if hasattr(self, 'framework_combo') else "None"
+
     def init_project_tab(self):
         project_tab = QWidget()
         layout = QVBoxLayout(project_tab)
 
         migrate_btn = QPushButton("Migrate")
         migrate_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        migrate_btn.clicked.connect(lambda: print("Migrate clicked"))
+        migrate_btn.clicked.connect(self.migrate)
         layout.addWidget(migrate_btn)
 
         rollback_btn = QPushButton("Rollback")
         rollback_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        rollback_btn.clicked.connect(lambda: print("Rollback clicked"))
+        rollback_btn.clicked.connect(self.rollback)
         layout.addWidget(rollback_btn)
 
         fresh_btn = QPushButton("Fresh")
         fresh_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        fresh_btn.clicked.connect(lambda: print("Fresh clicked"))
+        fresh_btn.clicked.connect(self.fresh)
         layout.addWidget(fresh_btn)
 
         seed_btn = QPushButton("Seed")
         seed_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        seed_btn.clicked.connect(lambda: print("Seed clicked"))
+        seed_btn.clicked.connect(self.seed)
         layout.addWidget(seed_btn)
 
         self.tabs.addTab(project_tab, "Project")
@@ -166,6 +182,10 @@ class MainWindow(QMainWindow):
         self.var2_edit = QLineEdit()
         layout.addRow("Variable 2:", self.var2_edit)
 
+        self.framework_combo = QComboBox()
+        self.framework_combo.addItems(["Laravel", "Yii", "None"])
+        layout.addRow("Framework:", self.framework_combo)
+
         save_btn = QPushButton("Save")
         save_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         save_btn.clicked.connect(self.save_settings)
@@ -178,18 +198,43 @@ class MainWindow(QMainWindow):
         self.log_view.setPlainText("Example log line 1\nExample log line 2\nExample log line 3")
 
     def save_settings(self):
-        git_url = self.git_url_edit.text().strip()
-        var1 = self.var1_edit.text().strip()
-        var2 = self.var2_edit.text().strip()
-
+        git_url = self.git_url_edit.text()
+        var1 = self.var1_edit.text()
+        var2 = self.var2_edit.text()
+        framework = self.framework_combo.currentText()
+        
         if not git_url or not var1 or not var2:
             QMessageBox.warning(self, "Invalid settings", "All settings fields must be filled out.")
             print("Failed to save settings: one or more fields were empty")
             return
 
         print(
-            f"Settings saved: Git URL={git_url}, Variable 1={var1}, Variable 2={var2}"
+            f"Settings saved: Git URL={git_url}, Variable 1={var1}, Variable 2={var2}, Framework={framework}"
         )
+
+    def migrate(self):
+        if self.current_framework() == "Laravel":
+            self.run_command(["php", "artisan", "migrate"])
+        else:
+            print(f"Migrate not implemented for {self.current_framework()}")
+
+    def rollback(self):
+        if self.current_framework() == "Laravel":
+            self.run_command(["php", "artisan", "migrate:rollback"])
+        else:
+            print(f"Rollback not implemented for {self.current_framework()}")
+
+    def fresh(self):
+        if self.current_framework() == "Laravel":
+            self.run_command(["php", "artisan", "migrate:fresh"])
+        else:
+            print(f"Fresh not implemented for {self.current_framework()}")
+
+    def seed(self):
+        if self.current_framework() == "Laravel":
+            self.run_command(["php", "artisan", "db:seed"])
+        else:
+            print(f"Seed not implemented for {self.current_framework()}")
 
 def main():
     app = QApplication(sys.argv)
