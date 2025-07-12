@@ -116,9 +116,8 @@ class MainWindow(QMainWindow):
         )
 
     def artisan(self, *args):
-        php_exe = os.path.join(self.project_path, "php") if self.project_path else "php"
         artisan_file = os.path.join(self.project_path, "artisan") if self.project_path else "artisan"
-        self.run_command([php_exe, artisan_file, *args])
+        self.run_command(["php", artisan_file, *args])
 
     def migrate(self):
         if self.current_framework() == "Laravel":
