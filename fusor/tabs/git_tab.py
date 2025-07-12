@@ -1,4 +1,12 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QSizePolicy
+from PyQt6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QPushButton,
+    QComboBox,
+    QSizePolicy,
+    QMessageBox,
+)
+import subprocess
 
 
 class GitTab(QWidget):
@@ -11,14 +19,13 @@ class GitTab(QWidget):
         layout = QVBoxLayout(self)
 
         self.branch_combo = QComboBox()
-        self.branch_combo.addItems(["main", "dev", "feature/example"])
-        self.branch_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.branch_combo.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
         layout.addWidget(self.branch_combo)
+        self.branch_combo.currentTextChanged.connect(self.on_branch_changed)
 
-        checkout_btn = QPushButton("Checkout")
-        checkout_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        checkout_btn.clicked.connect(self.checkout)
-        layout.addWidget(checkout_btn)
+        self.load_branches()
 
         pull_btn = QPushButton("Pull")
         pull_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -35,5 +42,57 @@ class GitTab(QWidget):
         stash_btn.clicked.connect(lambda: print("Stash clicked"))
         layout.addWidget(stash_btn)
 
-    def checkout(self):
-        print(f"Checkout {self.branch_combo.currentText()}")
+    def run_git_command(self, *args):
+        command = ["git", *args]
+        print(f"$ {' '.join(command)}")
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                cwd=self.main_window.project_path or None,
+            )
+            if result.stdout:
+                print(result.stdout.strip())
+            if result.stderr:
+                print(result.stderr.strip())
+        except FileNotFoundError:
+            print("Command not found: git")
+
+    def load_branches(self):
+        try:
+            result = subprocess.run(
+                ["git", "branch", "--format=%(refname:short)"],
+                capture_output=True,
+                text=True,
+                cwd=self.main_window.project_path or None,
+            )
+            branches = [b.strip() for b in result.stdout.splitlines() if b.strip()]
+            self.branch_combo.clear()
+            self.branch_combo.addItems(branches)
+
+            head = subprocess.run(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                capture_output=True,
+                text=True,
+                cwd=self.main_window.project_path or None,
+            )
+            current = head.stdout.strip()
+            if current in branches:
+                self.branch_combo.setCurrentText(current)
+        except FileNotFoundError:
+            print("Command not found: git")
+
+    def checkout(self, branch):
+        self.run_git_command("checkout", branch)
+
+    def on_branch_changed(self, branch):
+        if not branch:
+            return
+        reply = QMessageBox.question(
+            self,
+            "Checkout Branch",
+            f"Switch to branch '{branch}'?",
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            self.checkout(branch)
