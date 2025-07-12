@@ -1,4 +1,5 @@
 import sys
+import os
 import subprocess
 from PyQt6.QtWidgets import (
     QMainWindow,
@@ -52,6 +53,9 @@ class MainWindow(QMainWindow):
         self._stdout_logger = QTextEditLogger(self.output_view, sys.stdout)
         sys.stdout = self._stdout_logger
 
+        # Directory containing php and artisan executables
+        self.project_path = ""
+
         # initialize tabs
         self.project_tab = ProjectTab(self)
         self.tabs.addTab(self.project_tab, "Project")
@@ -92,40 +96,51 @@ class MainWindow(QMainWindow):
 
     def save_settings(self):
         git_url = self.git_url_edit.text()
-        var1 = self.var1_edit.text()
-        var2 = self.var2_edit.text()
+        project_path = self.project_path_edit.text()
         framework = self.framework_combo.currentText()
 
-        if not git_url or not var1 or not var2:
+        if not git_url or not project_path:
             QMessageBox.warning(self, "Invalid settings", "All settings fields must be filled out.")
             print("Failed to save settings: one or more fields were empty")
             return
 
+        if not os.path.isdir(project_path):
+            QMessageBox.warning(self, "Invalid PHP path", "The specified PHP path does not exist.")
+            print(f"Failed to save settings: directory does not exist - {project_path}")
+            return
+
+        self.project_path = project_path
+
         print(
-            f"Settings saved: Git URL={git_url}, Variable 1={var1}, Variable 2={var2}, Framework={framework}"
+            f"Settings saved: Git URL={git_url}, PHP Path={project_path}, Framework={framework}"
         )
+
+    def artisan(self, *args):
+        php_exe = os.path.join(self.project_path, "php") if self.project_path else "php"
+        artisan_file = os.path.join(self.project_path, "artisan") if self.project_path else "artisan"
+        self.run_command([php_exe, artisan_file, *args])
 
     def migrate(self):
         if self.current_framework() == "Laravel":
-            self.run_command(["php", "artisan", "migrate"])
+            self.artisan("migrate")
         else:
             print(f"Migrate not implemented for {self.current_framework()}")
 
     def rollback(self):
         if self.current_framework() == "Laravel":
-            self.run_command(["php", "artisan", "migrate:rollback"])
+            self.artisan("migrate:rollback")
         else:
             print(f"Rollback not implemented for {self.current_framework()}")
 
     def fresh(self):
         if self.current_framework() == "Laravel":
-            self.run_command(["php", "artisan", "migrate:fresh"])
+            self.artisan("migrate:fresh")
         else:
             print(f"Fresh not implemented for {self.current_framework()}")
 
     def seed(self):
         if self.current_framework() == "Laravel":
-            self.run_command(["php", "artisan", "db:seed"])
+            self.artisan("db:seed")
         else:
             print(f"Seed not implemented for {self.current_framework()}")
 

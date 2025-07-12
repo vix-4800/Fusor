@@ -13,11 +13,8 @@ class SettingsTab(QWidget):
         self.git_url_edit = QLineEdit()
         layout.addRow("Git URL:", self.git_url_edit)
 
-        self.var1_edit = QLineEdit()
-        layout.addRow("Variable 1:", self.var1_edit)
-
-        self.var2_edit = QLineEdit()
-        layout.addRow("Variable 2:", self.var2_edit)
+        self.project_path_edit = QLineEdit()
+        layout.addRow("Project Path:", self.project_path_edit)
 
         self.framework_combo = QComboBox()
         self.framework_combo.addItems(["Laravel", "Yii", "None"])
@@ -30,6 +27,5 @@ class SettingsTab(QWidget):
 
         # expose widgets for use in MainWindow
         self.main_window.git_url_edit = self.git_url_edit
-        self.main_window.var1_edit = self.var1_edit
-        self.main_window.var2_edit = self.var2_edit
+        self.main_window.project_path_edit = self.project_path_edit
         self.main_window.framework_combo = self.framework_combo
