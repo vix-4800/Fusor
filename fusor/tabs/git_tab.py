@@ -23,9 +23,10 @@ class GitTab(QWidget):
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
         layout.addWidget(self.branch_combo)
-        self.branch_combo.currentTextChanged.connect(self.on_branch_changed)
 
+        self.current_branch = ""
         self.load_branches()
+        self.branch_combo.currentTextChanged.connect(self.on_branch_changed)
 
         pull_btn = QPushButton("Pull")
         pull_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -68,6 +69,7 @@ class GitTab(QWidget):
                 cwd=self.main_window.project_path or None,
             )
             branches = [b.strip() for b in result.stdout.splitlines() if b.strip()]
+            self.branch_combo.blockSignals(True)
             self.branch_combo.clear()
             self.branch_combo.addItems(branches)
 
@@ -80,14 +82,17 @@ class GitTab(QWidget):
             current = head.stdout.strip()
             if current in branches:
                 self.branch_combo.setCurrentText(current)
+            self.current_branch = current
+            self.branch_combo.blockSignals(False)
         except FileNotFoundError:
             print("Command not found: git")
 
     def checkout(self, branch):
         self.run_git_command("checkout", branch)
+        self.current_branch = branch
 
     def on_branch_changed(self, branch):
-        if not branch:
+        if not branch or branch == self.current_branch:
             return
         reply = QMessageBox.question(
             self,
@@ -96,3 +101,8 @@ class GitTab(QWidget):
         )
         if reply == QMessageBox.StandardButton.Yes:
             self.checkout(branch)
+        else:
+            # revert selection to previous branch
+            self.branch_combo.blockSignals(True)
+            self.branch_combo.setCurrentText(self.current_branch)
+            self.branch_combo.blockSignals(False)
