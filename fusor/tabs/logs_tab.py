@@ -12,8 +12,9 @@ class LogsTab(QWidget):
 
         self.log_view = QTextEdit()
         self.log_view.setReadOnly(True)
-        self.log_view.setPlainText("Example log line 1\nExample log line 2")
-        self.log_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.log_view.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         layout.addWidget(self.log_view)
 
         refresh_btn = QPushButton("Refresh")
@@ -23,3 +24,6 @@ class LogsTab(QWidget):
 
         # expose log view so main window can update it
         self.main_window.log_view = self.log_view
+
+        # load logs initially
+        self.main_window.refresh_logs()
