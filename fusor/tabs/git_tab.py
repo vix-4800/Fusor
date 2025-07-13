@@ -33,13 +33,17 @@ class GitTab(QWidget):
         layout.addWidget(pull_btn)
 
         hard_reset_btn = QPushButton("Hard reset")
-        hard_reset_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        hard_reset_btn.clicked.connect(lambda: print("Hard reset clicked"))
+        hard_reset_btn.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        hard_reset_btn.clicked.connect(self.hard_reset)
         layout.addWidget(hard_reset_btn)
 
         stash_btn = QPushButton("Stash")
-        stash_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        stash_btn.clicked.connect(lambda: print("Stash clicked"))
+        stash_btn.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        stash_btn.clicked.connect(self.stash)
         layout.addWidget(stash_btn)
 
     def run_git_command(self, *args):
@@ -57,8 +61,10 @@ class GitTab(QWidget):
                 print(result.stdout.strip())
             if result.stderr:
                 print(result.stderr.strip())
+            return result
         except FileNotFoundError:
             print("Command not found: git")
+            return None
 
     def load_branches(self):
         """Populate the branch combo if a project path is available."""
@@ -111,3 +117,30 @@ class GitTab(QWidget):
             self.branch_combo.blockSignals(True)
             self.branch_combo.setCurrentText(self.current_branch)
             self.branch_combo.blockSignals(False)
+
+    def hard_reset(self):
+        """Perform a hard reset with confirmation."""
+        if not self.main_window.ensure_project_path():
+            return
+
+        reply = QMessageBox.question(
+            self,
+            "Hard Reset",
+            "Discard all local changes and reset to HEAD?",
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            result = self.run_git_command("reset", "--hard")
+            if result and result.returncode == 0:
+                print("Hard reset successful")
+            else:
+                print("Hard reset failed")
+
+    def stash(self):
+        """Stash current changes."""
+        if not self.main_window.ensure_project_path():
+            return
+        result = self.run_git_command("stash")
+        if result and result.returncode == 0:
+            print("Changes stashed successfully")
+        else:
+            print("Stash failed")
