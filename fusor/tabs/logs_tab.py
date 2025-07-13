@@ -25,11 +25,13 @@ class LogsTab(QWidget):
         layout.addWidget(self.log_view)
 
         refresh_btn = QPushButton("Refresh")
+        refresh_btn.setMinimumHeight(30)
         refresh_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         refresh_btn.clicked.connect(self.main_window.refresh_logs)
         layout.addWidget(refresh_btn)
 
         self.auto_checkbox = QCheckBox("Auto refresh")
+        self.auto_checkbox.setMinimumHeight(30)
         self.auto_checkbox.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )

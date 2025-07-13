@@ -28,11 +28,13 @@ class GitTab(QWidget):
         self.branch_combo.currentTextChanged.connect(self.on_branch_changed)
 
         pull_btn = QPushButton("Pull")
+        pull_btn.setMinimumHeight(30)
         pull_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         pull_btn.clicked.connect(lambda: self.run_git_command("pull"))
         layout.addWidget(pull_btn)
 
         hard_reset_btn = QPushButton("Hard reset")
+        hard_reset_btn.setMinimumHeight(30)
         hard_reset_btn.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
@@ -40,6 +42,7 @@ class GitTab(QWidget):
         layout.addWidget(hard_reset_btn)
 
         stash_btn = QPushButton("Stash")
+        stash_btn.setMinimumHeight(30)
         stash_btn.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )

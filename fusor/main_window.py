@@ -33,6 +33,21 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Fusor – Laravel/PHP QA Toolbox")
         self.resize(1024, 768)
 
+        # bright, minimal stylesheet
+        self.setStyleSheet(
+            """
+            QWidget { background-color: #f0f0f0; color: #202020; }
+            QPushButton {
+                background-color: #e0e0e0;
+                color: #202020;
+                padding: 6px 12px;
+                border-radius: 4px;
+            }
+            QPushButton:hover { background-color: #d6d6d6; }
+            QTextEdit { background-color: #ffffff; }
+            """
+        )
+
         self.tabs = QTabWidget()
         self.output_view = QTextEdit()
         self.output_view.setReadOnly(True)
@@ -209,7 +224,7 @@ class MainWindow(QMainWindow):
         except OSError as e:
             print(f"Failed to write config: {e}")
 
-        print(f"Settings saved!")
+        print("Settings saved!")
 
         if hasattr(self, "git_tab"):
             self.git_tab.load_branches()
