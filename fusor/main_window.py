@@ -47,7 +47,6 @@ class MainWindow(QMainWindow):
 
         # Directory containing php and artisan executables
         self.project_path = ""
-        self.git_url = ""
         self.framework_choice = "Laravel"
         self.load_config()
 
@@ -68,7 +67,6 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.settings_tab, "Settings")
 
         # populate settings widgets with loaded values
-        self.git_url_edit.setText(self.git_url)
         self.project_path_edit.setText(self.project_path)
         if self.framework_choice in [self.framework_combo.itemText(i) for i in range(self.framework_combo.count())]:
             self.framework_combo.setCurrentText(self.framework_choice)
@@ -82,7 +80,6 @@ class MainWindow(QMainWindow):
         """Load saved configuration values into the instance."""
         data = load_config()
         self.project_path = data.get("project_path", self.project_path)
-        self.git_url = data.get("git_url", "")
         self.framework_choice = data.get("framework", self.framework_choice)
 
     def run_command(self, command):
@@ -149,11 +146,10 @@ class MainWindow(QMainWindow):
         self.log_view.setPlainText(log_contents.strip())
 
     def save_settings(self):
-        git_url = self.git_url_edit.text()
         project_path = self.project_path_edit.text()
         framework = self.framework_combo.currentText()
 
-        if not git_url or not project_path:
+        if not project_path:
             QMessageBox.warning(self, "Invalid settings", "All settings fields must be filled out.")
             print("Failed to save settings: one or more fields were empty")
             return
@@ -164,11 +160,9 @@ class MainWindow(QMainWindow):
             return
 
         self.project_path = project_path
-        self.git_url = git_url
         self.framework_choice = framework
 
         data = {
-            "git_url": git_url,
             "project_path": project_path,
             "framework": framework,
         }
