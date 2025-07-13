@@ -1,52 +1,49 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QPushButton, QSizePolicy, QGroupBox
+)
 
 class DatabaseTab(QWidget):
-    """Tab with quick database helpers."""
-
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
+        outer_layout = QVBoxLayout(self)
+        outer_layout.setContentsMargins(20, 20, 20, 20)
+        outer_layout.setSpacing(20)
 
-        layout = QVBoxLayout(self)
+        # --- SQL Tools Group ---
+        tools_group = QGroupBox("SQL Tools")
+        tools_layout = QVBoxLayout()
+        tools_layout.setSpacing(10)
 
-        dbeaver_btn = QPushButton("Open in DBeaver")
-        dbeaver_btn.setMinimumHeight(30)
-        dbeaver_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        dbeaver_btn.clicked.connect(lambda: print("Open in DBeaver clicked"))
-        layout.addWidget(dbeaver_btn)
+        dbeaver_btn = self._btn("🧩 Open in DBeaver", lambda: print("Open in DBeaver clicked"))
+        dump_btn = self._btn("💾 Dump to SQL", lambda: print("Dump to SQL clicked"))
+        restore_btn = self._btn("📂 Restore dump", lambda: print("Restore dump clicked"))
 
-        dump_btn = QPushButton("Dump to SQL")
-        dump_btn.setMinimumHeight(30)
-        dump_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        dump_btn.clicked.connect(lambda: print("Dump to SQL clicked"))
-        layout.addWidget(dump_btn)
+        tools_layout.addWidget(dbeaver_btn)
+        tools_layout.addWidget(dump_btn)
+        tools_layout.addWidget(restore_btn)
 
-        restore_btn = QPushButton("Restore dump")
-        restore_btn.setMinimumHeight(30)
-        restore_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        restore_btn.clicked.connect(lambda: print("Restore dump clicked"))
-        layout.addWidget(restore_btn)
+        tools_group.setLayout(tools_layout)
+        outer_layout.addWidget(tools_group)
 
-        migrate_btn = QPushButton("Migrate")
-        migrate_btn.setMinimumHeight(30)
-        migrate_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        migrate_btn.clicked.connect(self.main_window.migrate)
-        layout.addWidget(migrate_btn)
+        # --- Migrations Group ---
+        migrate_group = QGroupBox("Laravel Migrations")
+        migrate_layout = QVBoxLayout()
+        migrate_layout.setSpacing(10)
 
-        rollback_btn = QPushButton("Rollback")
-        rollback_btn.setMinimumHeight(30)
-        rollback_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        rollback_btn.clicked.connect(self.main_window.rollback)
-        layout.addWidget(rollback_btn)
+        migrate_layout.addWidget(self._btn("Migrate", self.main_window.migrate))
+        migrate_layout.addWidget(self._btn("↩ Rollback", self.main_window.rollback))
+        migrate_layout.addWidget(self._btn("Fresh", self.main_window.fresh))
+        migrate_layout.addWidget(self._btn("Seed", self.main_window.seed))
 
-        fresh_btn = QPushButton("Fresh")
-        fresh_btn.setMinimumHeight(30)
-        fresh_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        fresh_btn.clicked.connect(self.main_window.fresh)
-        layout.addWidget(fresh_btn)
+        migrate_group.setLayout(migrate_layout)
+        outer_layout.addWidget(migrate_group)
 
-        seed_btn = QPushButton("Seed")
-        seed_btn.setMinimumHeight(30)
-        seed_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        seed_btn.clicked.connect(self.main_window.seed)
-        layout.addWidget(seed_btn)
+        outer_layout.addStretch(1)
+
+    def _btn(self, text, slot):
+        btn = QPushButton(text)
+        btn.setMinimumHeight(36)
+        btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        btn.clicked.connect(slot)
+        return btn

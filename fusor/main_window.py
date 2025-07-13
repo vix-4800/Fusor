@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QTabWidget,
     QWidget,
-    QHBoxLayout,
+    QVBoxLayout,
     QTextEdit,
     QMessageBox,
     QFileDialog,
@@ -27,35 +27,114 @@ from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
 
 class MainWindow(QMainWindow):
-    """Main application window hosting all feature tabs."""
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Fusor – Laravel/PHP QA Toolbox")
         self.resize(1024, 768)
 
-        # bright, minimal stylesheet
-        self.setStyleSheet(
-            """
-            QWidget { background-color: #f0f0f0; color: #202020; }
-            QPushButton {
-                background-color: #e0e0e0;
-                color: #202020;
-                padding: 6px 12px;
-                border-radius: 4px;
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #1e1e1e;
             }
-            QPushButton:hover { background-color: #d6d6d6; }
-            QTextEdit { background-color: #ffffff; }
-            """
-        )
+
+            QTabWidget::pane {
+                border: none;
+            }
+
+            QWidget {
+                background-color: #1e1e1e;
+                color: #dddddd;
+                font-family: "Segoe UI", "Arial", sans-serif;
+                font-size: 14px;
+            }
+
+            QPushButton {
+                background-color: #2e7d32;
+                color: #ffffff;
+                padding: 8px 16px;
+                border: none;
+                border-radius: 6px;
+                font-weight: 500;
+            }
+
+            QPushButton:hover {
+                background-color: #388e3c;
+            }
+
+            QPushButton:pressed {
+                background-color: #1b5e20;
+            }
+
+            QTextEdit, QLineEdit {
+                background-color: #2c2c2c;
+                color: #eeeeee;
+                padding: 8px;
+                border: 1px solid #444444;
+                border-radius: 6px;
+                font-family: monospace;
+            }
+
+            QComboBox {
+                background-color: #2c2c2c;
+                color: #eeeeee;
+                padding: 6px;
+                border: 1px solid #444444;
+                border-radius: 6px;
+            }
+
+            QComboBox QAbstractItemView {
+                background-color: #2c2c2c;
+                selection-background-color: #388e3c;
+                selection-color: white;
+            }
+
+            QTabBar::tab {
+                background: transparent;
+                color: #888888;
+                padding: 12px;
+                border: none;
+            }
+
+            QTabBar::tab:selected {
+                color: #4caf50;
+                font-weight: bold;
+            }
+
+            QScrollBar:vertical {
+                background: #2c2c2c;
+                width: 10px;
+                margin: 0px 0px 0px 0px;
+            }
+
+            QScrollBar::handle:vertical {
+                background: #555;
+                min-height: 20px;
+                border-radius: 5px;
+            }
+
+            QScrollBar::handle:vertical:hover {
+                background: #666;
+            }
+
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0;
+            }
+        """)
 
         self.tabs = QTabWidget()
         self.output_view = QTextEdit()
         self.output_view.setReadOnly(True)
 
         central_widget = QWidget()
-        main_layout = QHBoxLayout(central_widget)
+        main_layout = QVBoxLayout(central_widget)
+
         main_layout.addWidget(self.tabs)
+
+        self.output_view = QTextEdit()
+        self.output_view.setReadOnly(True)
+        self.output_view.setMaximumHeight(180)
         main_layout.addWidget(self.output_view)
+
         self.setCentralWidget(central_widget)
 
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
@@ -101,7 +180,6 @@ class MainWindow(QMainWindow):
             QTimer.singleShot(0, self.ask_project_path)
 
     def load_config(self):
-        """Load saved configuration values into the instance."""
         data = load_config()
         self.project_path = data.get("project_path", self.project_path)
         self.framework_choice = data.get("framework", self.framework_choice)
@@ -110,8 +188,6 @@ class MainWindow(QMainWindow):
         self.use_docker = data.get("use_docker", self.use_docker)
 
     def run_command(self, command):
-        """Execute *command* asynchronously and stream output to the log view."""
-
         if self.use_docker and not (
             len(command) >= 2 and command[0] == "docker" and command[1] == "compose"
         ):
@@ -139,7 +215,6 @@ class MainWindow(QMainWindow):
         self.executor.submit(task)
 
     def ensure_project_path(self):
-        """Warn and close the app if the project path is not set."""
         if not self.project_path:
             print("Project path not set")
             self.close()
@@ -147,7 +222,6 @@ class MainWindow(QMainWindow):
         return True
 
     def ask_project_path(self):
-        """Prompt the user for a project path on startup."""
         path = QFileDialog.getExistingDirectory(self, "Select Project Path")
         if path:
             self.project_path = path
@@ -259,13 +333,11 @@ class MainWindow(QMainWindow):
             print(f"Seed not implemented for {self.current_framework()}")
 
     def phpunit(self):
-        """Run the project's PHPUnit tests using the configured PHP binary."""
         self.ensure_project_path()
         phpunit_file = os.path.join(self.project_path, "vendor", "bin", "phpunit")
         self.run_command([self.php_path, phpunit_file])
 
     def start_project(self):
-        """Launch the project's development server."""
         if self.use_docker:
             self.run_command(["docker", "compose", "up", "-d"])
             return
@@ -304,7 +376,6 @@ class MainWindow(QMainWindow):
             print(f"Command not found: {command[0]}")
 
     def stop_project(self):
-        """Terminate the running development server."""
         if self.use_docker:
             self.run_command(["docker", "compose", "down"])
             return
@@ -321,7 +392,6 @@ class MainWindow(QMainWindow):
             print("Project is not running")
 
     def closeEvent(self, event):
-        """Shutdown background executor before closing."""
         if self.server_process and self.server_process.poll() is None:
             if hasattr(self.server_process, "terminate"):
                 self.server_process.terminate()

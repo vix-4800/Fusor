@@ -1,56 +1,60 @@
 from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QPushButton,
-    QComboBox,
-    QSizePolicy,
-    QMessageBox,
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
+    QComboBox, QSizePolicy, QMessageBox, QGroupBox, QLabel
 )
+
 import subprocess
 
 class GitTab(QWidget):
-    """Tab providing basic Git actions."""
-
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
-
-        layout = QVBoxLayout(self)
-
-        self.branch_combo = QComboBox()
-        self.branch_combo.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
-        layout.addWidget(self.branch_combo)
-
         self.current_branch = ""
-        # branches are loaded once the project path is available
+
+        outer_layout = QVBoxLayout(self)
+        outer_layout.setContentsMargins(20, 20, 20, 20)
+        outer_layout.setSpacing(16)
+
+        # --- Branch section ---
+        branch_group = QGroupBox("Active Branch")
+        branch_layout = QHBoxLayout()
+        self.branch_combo = QComboBox()
+        self.branch_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.branch_combo.currentTextChanged.connect(self.on_branch_changed)
 
-        pull_btn = QPushButton("Pull")
-        pull_btn.setMinimumHeight(30)
-        pull_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        pull_btn.clicked.connect(lambda: self.run_git_command("pull"))
-        layout.addWidget(pull_btn)
+        branch_layout.addWidget(QLabel("Branch:"))
+        branch_layout.addWidget(self.branch_combo)
+        branch_group.setLayout(branch_layout)
+        outer_layout.addWidget(branch_group)
 
-        hard_reset_btn = QPushButton("Hard reset")
-        hard_reset_btn.setMinimumHeight(30)
-        hard_reset_btn.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
-        hard_reset_btn.clicked.connect(self.hard_reset)
-        layout.addWidget(hard_reset_btn)
+        # --- Git actions ---
+        actions_group = QGroupBox("Git Commands")
+        actions_layout = QVBoxLayout()
+        actions_layout.setSpacing(10)
 
-        stash_btn = QPushButton("Stash")
-        stash_btn.setMinimumHeight(30)
-        stash_btn.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
-        stash_btn.clicked.connect(self.stash)
-        layout.addWidget(stash_btn)
+        pull_btn = self._btn("⬇ Pull", lambda: self.run_git_command("pull"))
+        reset_btn = self._btn("↩ Hard Reset", self.hard_reset)
+        stash_btn = self._btn("💾 Stash", self.stash)
+
+        actions_layout.addWidget(pull_btn)
+        actions_layout.addWidget(reset_btn)
+        actions_layout.addWidget(stash_btn)
+
+        actions_group.setLayout(actions_layout)
+        outer_layout.addWidget(actions_group)
+
+        outer_layout.addStretch(1)
+
+    def _btn(self, label, slot):
+        btn = QPushButton(label)
+        btn.setMinimumHeight(36)
+        btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        btn.clicked.connect(slot)
+        return btn
 
     def run_git_command(self, *args):
-        self.main_window.ensure_project_path()
+        if not self.main_window.ensure_project_path():
+            return
         command = ["git", *args]
         print(f"$ {' '.join(command)}")
         try:
@@ -70,7 +74,6 @@ class GitTab(QWidget):
             return None
 
     def load_branches(self):
-        """Populate the branch combo if a project path is available."""
         if not self.main_window.project_path:
             return
         try:
@@ -122,10 +125,8 @@ class GitTab(QWidget):
             self.branch_combo.blockSignals(False)
 
     def hard_reset(self):
-        """Perform a hard reset with confirmation."""
         if not self.main_window.ensure_project_path():
             return
-
         reply = QMessageBox.question(
             self,
             "Hard Reset",
@@ -139,7 +140,6 @@ class GitTab(QWidget):
                 print("Hard reset failed")
 
     def stash(self):
-        """Stash current changes."""
         if not self.main_window.ensure_project_path():
             return
         result = self.run_git_command("stash")

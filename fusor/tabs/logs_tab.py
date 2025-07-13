@@ -1,49 +1,56 @@
 from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QTextEdit,
-    QPushButton,
-    QCheckBox,
-    QSizePolicy,
+    QWidget, QVBoxLayout, QTextEdit, QPushButton,
+    QCheckBox, QSizePolicy, QHBoxLayout, QGroupBox
 )
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, Qt
 
 class LogsTab(QWidget):
-    """Tab that displays log text and allows refreshing."""
-
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
 
-        layout = QVBoxLayout(self)
+        outer_layout = QVBoxLayout(self)
+        outer_layout.setContentsMargins(20, 20, 20, 20)
+        outer_layout.setSpacing(16)
 
+        # --- Log Output ---
         self.log_view = QTextEdit()
         self.log_view.setReadOnly(True)
+        self.log_view.setPlaceholderText("No logs loaded yet...")
         self.log_view.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
-        layout.addWidget(self.log_view)
+        outer_layout.addWidget(self.log_view)
 
-        refresh_btn = QPushButton("Refresh")
-        refresh_btn.setMinimumHeight(30)
-        refresh_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        # --- Controls Group ---
+        control_box = QGroupBox("Controls")
+        control_layout = QHBoxLayout()
+        control_layout.setSpacing(12)
+
+        refresh_btn = QPushButton("🔄 Refresh")
+        refresh_btn.setMinimumHeight(36)
         refresh_btn.clicked.connect(self.main_window.refresh_logs)
-        layout.addWidget(refresh_btn)
+        refresh_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        control_layout.addWidget(refresh_btn)
 
-        self.auto_checkbox = QCheckBox("Auto refresh")
-        self.auto_checkbox.setMinimumHeight(30)
-        self.auto_checkbox.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
-        layout.addWidget(self.auto_checkbox)
+        self.auto_checkbox = QCheckBox("Auto refresh (5s)")
+        self.auto_checkbox.setMinimumHeight(36)
+        self.auto_checkbox.setChecked(False)
+        control_layout.addWidget(self.auto_checkbox, alignment=Qt.AlignmentFlag.AlignVCenter)
 
+        control_box.setLayout(control_layout)
+        outer_layout.addWidget(control_box)
+
+        outer_layout.addStretch(1)
+
+        # Expose log view to main_window
+        self.main_window.log_view = self.log_view
+
+        # Timer for auto-refresh
         self._timer = QTimer(self)
         self._timer.setInterval(5000)
         self._timer.timeout.connect(self.main_window.refresh_logs)
         self.auto_checkbox.toggled.connect(self.on_auto_refresh_toggled)
-
-        # expose log view so main window can update it
-        self.main_window.log_view = self.log_view
 
     def on_auto_refresh_toggled(self, checked: bool):
         if checked:
