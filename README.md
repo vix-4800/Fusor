@@ -14,10 +14,10 @@ The available tabs are:
 -   **Git** – simple controls for common Git actions.
 -   **Database** – quick actions for opening and dumping a database.
 -   **Logs** – shows your project's log file (Laravel only) with a refresh option.
--   **Settings** – form fields for configuring the Git URL and other variables. A
-    _Browse_ button lets you pick the project directory.
+-   **Settings** – fields for selecting the project directory and framework.
+    A _Browse_ button lets you pick the project directory.
 
-The application stores your selected project path, Git URL and framework in
+The application stores your selected project path and framework in
 `~/.fusor_config.json`. These values are restored automatically when the
 application starts.
 
