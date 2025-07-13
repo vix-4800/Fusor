@@ -147,8 +147,6 @@ class MainWindow(QMainWindow):
         return self.framework_combo.currentText() if hasattr(self, "framework_combo") else "None"
 
     def refresh_logs(self):
-        print("Refresh logs clicked")
-
         if not self.ensure_project_path():
             return
 
@@ -212,7 +210,7 @@ class MainWindow(QMainWindow):
             print(f"Failed to write config: {e}")
 
         print(f"Settings saved!")
-  
+
         if hasattr(self, "git_tab"):
             self.git_tab.load_branches()
 
@@ -244,7 +242,7 @@ class MainWindow(QMainWindow):
             self.artisan("db:seed")
         else:
             print(f"Seed not implemented for {self.current_framework()}")
-            
+
     def phpunit(self):
         """Run the project's PHPUnit tests using the configured PHP binary."""
         self.ensure_project_path()
