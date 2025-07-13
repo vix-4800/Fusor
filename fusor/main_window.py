@@ -128,7 +128,8 @@ class MainWindow(QMainWindow):
     def refresh_logs(self):
         print("Refresh logs clicked")
 
-        self.ensure_project_path()
+        if not self.ensure_project_path():
+            return
 
         framework = self.current_framework()
         log_contents = ""
