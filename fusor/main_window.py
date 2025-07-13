@@ -1,6 +1,7 @@
 import sys
 import os
 import subprocess
+import concurrent.futures
 from PyQt6.QtWidgets import (
     QMainWindow,
     QTabWidget,
@@ -9,6 +10,7 @@ from PyQt6.QtWidgets import (
     QTextEdit,
     QMessageBox,
 )
+from PyQt6.QtCore import QMetaObject, Qt, Q_ARG
 
 from .tabs.project_tab import ProjectTab
 from .tabs.git_tab import GitTab
@@ -26,7 +28,12 @@ class QTextEditLogger:
 
     def write(self, msg):
         if msg.rstrip():
-            self.text_edit.append(msg.rstrip())
+            QMetaObject.invokeMethod(
+                self.text_edit,
+                "append",
+                Qt.ConnectionType.QueuedConnection,
+                Q_ARG(str, msg.rstrip()),
+            )
         self.original_stdout.write(msg)
 
     def flush(self):
@@ -48,6 +55,8 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.tabs)
         main_layout.addWidget(self.output_view)
         self.setCentralWidget(central_widget)
+
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
         # Redirect stdout to the output view
         self._stdout_logger = QTextEditLogger(self.output_view, sys.stdout)
@@ -74,16 +83,20 @@ class MainWindow(QMainWindow):
 
     # logic helpers
     def run_command(self, command):
-        """Run a shell command and print its output."""
+        """Run a shell command on a background thread and print its output."""
+
+        def task():
+            try:
+                result = subprocess.run(command, capture_output=True, text=True)
+                if result.stdout:
+                    print(result.stdout.strip())
+                if result.stderr:
+                    print(result.stderr.strip())
+            except FileNotFoundError:
+                print(f"Command not found: {command[0]}")
+
         print(f"$ {' '.join(command)}")
-        try:
-            result = subprocess.run(command, capture_output=True, text=True)
-            if result.stdout:
-                print(result.stdout.strip())
-            if result.stderr:
-                print(result.stderr.strip())
-        except FileNotFoundError:
-            print(f"Command not found: {command[0]}")
+        self.executor.submit(task)
 
     def current_framework(self):
         return self.framework_combo.currentText() if hasattr(self, "framework_combo") else "None"
@@ -142,4 +155,9 @@ class MainWindow(QMainWindow):
             self.artisan("db:seed")
         else:
             print(f"Seed not implemented for {self.current_framework()}")
+
+    def closeEvent(self, event):
+        """Shutdown background executor before closing."""
+        self.executor.shutdown(wait=False)
+        super().closeEvent(event)
 
