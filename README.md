@@ -17,6 +17,10 @@ The available tabs are:
 - **Settings** – form fields for configuring the Git URL and other variables. A
   *Browse* button lets you pick the project directory.
 
+The application stores your selected project path, Git URL and framework in
+`~/.fusor_config.json`. These values are restored automatically when the
+application starts.
+
 ## Running
 
 Install the dependencies and execute `main.py`:
