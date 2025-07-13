@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
     QHBoxLayout,
     QFileDialog,
+    QCheckBox,
 )
 
 class SettingsTab(QWidget):
@@ -46,6 +47,10 @@ class SettingsTab(QWidget):
             self.framework_combo.setCurrentText(self.main_window.framework_choice)
         layout.addRow("Framework:", self.framework_combo)
 
+        self.docker_checkbox = QCheckBox("Use Docker")
+        self.docker_checkbox.setChecked(self.main_window.use_docker)
+        layout.addRow(self.docker_checkbox)
+
         save_btn = QPushButton("Save")
         save_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         save_btn.clicked.connect(self.main_window.save_settings)
@@ -55,6 +60,7 @@ class SettingsTab(QWidget):
         self.main_window.project_path_edit = self.project_path_edit
         self.main_window.framework_combo = self.framework_combo
         self.main_window.php_path_edit = self.php_path_edit
+        self.main_window.docker_checkbox = self.docker_checkbox
 
     def browse_project_path(self):
         """Open a folder selection dialog and update the path field."""

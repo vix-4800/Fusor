@@ -8,12 +8,16 @@ def load_config():
     """Return configuration values from disk if available."""
     try:
         with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+        if not isinstance(data, dict):
+            return {"use_docker": False}
+        data.setdefault("use_docker", False)
+        return data
     except FileNotFoundError:
-        return {}
+        return {"use_docker": False}
     except json.JSONDecodeError:
         print("Failed to load config: invalid JSON")
-        return {}
+        return {"use_docker": False}
 
 def save_config(data):
     """Persist configuration dictionary to disk."""
