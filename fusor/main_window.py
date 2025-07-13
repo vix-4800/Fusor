@@ -82,6 +82,7 @@ class MainWindow(QMainWindow):
         self.project_path = data.get("project_path", self.project_path)
         self.git_url = data.get("git_url", "")
         self.framework_choice = data.get("framework", self.framework_choice)
+
     def run_command(self, command):
         """Execute *command* asynchronously and stream output to the log view."""
 
@@ -101,11 +102,6 @@ class MainWindow(QMainWindow):
     def ensure_project_path(self):
         """Warn and close the app if the project path is not set."""
         if not self.project_path:
-            QMessageBox.warning(
-                self,
-                "Project Path Missing",
-                "Please set the project path in Settings.",
-            )
             print("Project path not set")
             self.close()
             return False

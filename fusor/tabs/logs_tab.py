@@ -23,6 +23,3 @@ class LogsTab(QWidget):
 
         # expose log view so main window can update it
         self.main_window.log_view = self.log_view
-
-        # load logs initially
-        self.main_window.refresh_logs()
