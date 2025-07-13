@@ -30,7 +30,7 @@ class GitTab(QWidget):
 
         pull_btn = QPushButton("Pull")
         pull_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        pull_btn.clicked.connect(lambda: print("Pull clicked"))
+        pull_btn.clicked.connect(lambda: self.run_git_command("pull"))
         layout.addWidget(pull_btn)
 
         hard_reset_btn = QPushButton("Hard reset")
