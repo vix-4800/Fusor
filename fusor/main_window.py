@@ -23,8 +23,10 @@ from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
 
 class MainWindow(QMainWindow):
-    """Main application window hosting all feature tabs."""
+    """Main application window hosting all feature tabs and controls."""
+
     def __init__(self):
+        """Create the UI and load persisted configuration."""
         super().__init__()
         self.setWindowTitle("Fusor – Laravel/PHP QA Toolbox")
         self.resize(1024, 768)
@@ -80,14 +82,20 @@ class MainWindow(QMainWindow):
             QTimer.singleShot(0, self.ask_project_path)
 
     def load_config(self):
-        """Load saved configuration values into the instance."""
+        """Load persisted settings into this window instance."""
         data = load_config()
         self.project_path = data.get("project_path", self.project_path)
         self.framework_choice = data.get("framework", self.framework_choice)
         self.php_path = data.get("php_path", self.php_path)
 
     def run_command(self, command):
-        """Execute *command* asynchronously and stream output to the log view."""
+        """Execute ``command`` asynchronously and log output.
+
+        Parameters
+        ----------
+        command : list[str]
+            Command and arguments to execute.
+        """
 
         def task():
             try:
@@ -103,7 +111,13 @@ class MainWindow(QMainWindow):
         self.executor.submit(task)
 
     def ensure_project_path(self):
-        """Warn and close the app if the project path is not set."""
+        """Ensure a project path is configured.
+
+        Returns
+        -------
+        bool
+            ``True`` if a path is set, otherwise ``False``.
+        """
         if not self.project_path:
             print("Project path not set")
             self.close()
@@ -111,7 +125,7 @@ class MainWindow(QMainWindow):
         return True
 
     def ask_project_path(self):
-        """Prompt the user for a project path on startup."""
+        """Prompt the user for a project directory."""
         path = QFileDialog.getExistingDirectory(self, "Select Project Path")
         if path:
             self.project_path = path
@@ -123,9 +137,11 @@ class MainWindow(QMainWindow):
                 self.git_tab.load_branches()
 
     def current_framework(self):
+        """Return the selected framework name."""
         return self.framework_combo.currentText() if hasattr(self, "framework_combo") else "None"
 
     def refresh_logs(self):
+        """Reload the log view from the project's log file."""
         print("Refresh logs clicked")
 
         self.ensure_project_path()
@@ -150,6 +166,8 @@ class MainWindow(QMainWindow):
         self.log_view.setPlainText(log_contents.strip())
 
     def save_settings(self):
+        """Validate and persist settings from the settings tab."""
+
         project_path = self.project_path_edit.text()
         framework = self.framework_combo.currentText()
         php_path = self.php_path_edit.text()
@@ -189,29 +207,35 @@ class MainWindow(QMainWindow):
             self.git_tab.load_branches()
 
     def artisan(self, *args):
+        """Run an artisan command for the Laravel project."""
+
         self.ensure_project_path()
         artisan_file = os.path.join(self.project_path, "artisan")
         self.run_command([self.php_path, artisan_file, *args])
 
     def migrate(self):
+        """Run database migrations using the current framework."""
         if self.current_framework() == "Laravel":
             self.artisan("migrate")
         else:
             print(f"Migrate not implemented for {self.current_framework()}")
 
     def rollback(self):
+        """Rollback the last database migration batch."""
         if self.current_framework() == "Laravel":
             self.artisan("migrate:rollback")
         else:
             print(f"Rollback not implemented for {self.current_framework()}")
 
     def fresh(self):
+        """Recreate the database schema from scratch."""
         if self.current_framework() == "Laravel":
             self.artisan("migrate:fresh")
         else:
             print(f"Fresh not implemented for {self.current_framework()}")
 
     def seed(self):
+        """Seed the database with test data."""
         if self.current_framework() == "Laravel":
             self.artisan("db:seed")
         else:

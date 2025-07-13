@@ -12,6 +12,13 @@ class GitTab(QWidget):
     """Tab providing basic Git actions."""
 
     def __init__(self, main_window):
+        """Initialize the Git tab UI.
+
+        Parameters
+        ----------
+        main_window : MainWindow
+            Parent window used to run commands.
+        """
         super().__init__()
         self.main_window = main_window
 
@@ -47,6 +54,8 @@ class GitTab(QWidget):
         layout.addWidget(stash_btn)
 
     def run_git_command(self, *args):
+        """Run a Git command inside the project directory."""
+
         self.main_window.ensure_project_path()
         command = ["git", *args]
         print(f"$ {' '.join(command)}")
@@ -97,11 +106,15 @@ class GitTab(QWidget):
             print("Command not found: git")
 
     def checkout(self, branch):
+        """Switch to ``branch`` if possible."""
+
         self.main_window.ensure_project_path()
         self.run_git_command("checkout", branch)
         self.current_branch = branch
 
     def on_branch_changed(self, branch):
+        """Handle branch selection changes."""
+
         if not branch or branch == self.current_branch:
             return
         self.main_window.ensure_project_path()

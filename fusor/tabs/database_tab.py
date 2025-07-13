@@ -4,6 +4,13 @@ class DatabaseTab(QWidget):
     """Tab with quick database helpers."""
 
     def __init__(self, main_window):
+        """Create the database tools tab.
+
+        Parameters
+        ----------
+        main_window : MainWindow
+            Parent window exposing migration helpers.
+        """
         super().__init__()
         self.main_window = main_window
 

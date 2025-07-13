@@ -4,6 +4,13 @@ class ProjectTab(QWidget):
     """Tab with common project actions."""
 
     def __init__(self, main_window):
+        """Create the project actions tab.
+
+        Parameters
+        ----------
+        main_window : MainWindow
+            Parent window providing action callbacks.
+        """
         super().__init__()
         self.main_window = main_window
 

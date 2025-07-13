@@ -4,6 +4,8 @@ from PyQt6.QtWidgets import QApplication
 from fusor.main_window import MainWindow
 
 def main():
+    """Entry point for launching the GUI application."""
+
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()

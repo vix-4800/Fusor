@@ -4,6 +4,13 @@ class LogsTab(QWidget):
     """Tab that displays log text and allows refreshing."""
 
     def __init__(self, main_window):
+        """Create the logs viewer tab.
+
+        Parameters
+        ----------
+        main_window : MainWindow
+            Window that will update the log text.
+        """
         super().__init__()
         self.main_window = main_window
 

@@ -13,6 +13,13 @@ class SettingsTab(QWidget):
     """Tab with simple settings form."""
 
     def __init__(self, main_window):
+        """Create the settings tab widgets.
+
+        Parameters
+        ----------
+        main_window : MainWindow
+            Window whose attributes are updated with these settings fields.
+        """
         super().__init__()
         self.main_window = main_window
 
