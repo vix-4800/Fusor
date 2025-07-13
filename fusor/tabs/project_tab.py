@@ -22,7 +22,6 @@ class ProjectTab(QWidget):
         layout.addLayout(row1)
 
         layout.addWidget(self._btn("Run PHPUnit", main_window.phpunit))
-        
         self.composer_install_btn = self._btn(
             "Composer install",
             lambda: main_window.run_command(["composer", "install"]),
