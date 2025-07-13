@@ -22,8 +22,18 @@ class ProjectTab(QWidget):
         layout.addLayout(row1)
 
         layout.addWidget(self._btn("Run PHPUnit", main_window.phpunit))
-        layout.addWidget(self._btn("Composer install", lambda: main_window.run_command(["composer", "install"])))
-        layout.addWidget(self._btn("Composer update", lambda: main_window.run_command(["composer", "update"])))
+
+        self.composer_install_btn = self._btn(
+            "Composer install",
+            lambda: main_window.run_command(["composer", "install"]),
+        )
+        layout.addWidget(self.composer_install_btn)
+
+        self.composer_update_btn = self._btn(
+            "Composer update",
+            lambda: main_window.run_command(["composer", "update"]),
+        )
+        layout.addWidget(self.composer_update_btn)
 
         layout.addStretch(1)
 
