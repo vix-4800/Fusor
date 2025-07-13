@@ -57,3 +57,7 @@ Install pytest and run the test suite from the repository root:
 pip install pytest
 pytest
 ```
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
