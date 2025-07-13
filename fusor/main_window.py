@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 import subprocess
 import concurrent.futures
 from PyQt6.QtWidgets import (
@@ -9,14 +10,18 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QTextEdit,
     QMessageBox,
+    QFileDialog,
 )
-from PyQt6.QtCore import QMetaObject, Qt, Q_ARG
+from PyQt6.QtCore import QTimer, QMetaObject, Qt, Q_ARG
 
 from .tabs.project_tab import ProjectTab
 from .tabs.git_tab import GitTab
 from .tabs.database_tab import DatabaseTab
 from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
+
+
+CONFIG_FILE = os.path.expanduser("./fusor_config.json")
 
 
 class QTextEditLogger:
@@ -63,7 +68,10 @@ class MainWindow(QMainWindow):
         sys.stdout = self._stdout_logger
 
         # Directory containing php and artisan executables
-        self.project_path = os.getcwd()
+        self.project_path = ""
+        self.git_url = ""
+        self.framework_choice = "Laravel"
+        self.load_config()
 
         # initialize tabs
         self.project_tab = ProjectTab(self)
@@ -81,6 +89,29 @@ class MainWindow(QMainWindow):
         self.settings_tab = SettingsTab(self)
         self.tabs.addTab(self.settings_tab, "Settings")
 
+        # populate settings widgets with loaded values
+        self.git_url_edit.setText(self.git_url)
+        self.project_path_edit.setText(self.project_path)
+        if self.framework_choice in [self.framework_combo.itemText(i) for i in range(self.framework_combo.count())]:
+            self.framework_combo.setCurrentText(self.framework_choice)
+
+        if not self.project_path:
+            QTimer.singleShot(0, self.ask_project_path)
+
+    def load_config(self):
+        """Load saved configuration if available."""
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            self.project_path = data.get("project_path", self.project_path)
+            self.git_url = data.get("git_url", "")
+            self.framework_choice = data.get("framework", self.framework_choice)
+        except FileNotFoundError:
+            # no saved settings yet
+            pass
+        except json.JSONDecodeError:
+            print("Failed to load config: invalid JSON")
+
     # logic helpers
     def run_command(self, command):
         """Run a shell command on a background thread and print its output."""
@@ -97,6 +128,26 @@ class MainWindow(QMainWindow):
 
         print(f"$ {' '.join(command)}")
         self.executor.submit(task)
+
+    def ensure_project_path(self):
+        """Return True if project path is set else warn the user."""
+        if not self.project_path:
+            QMessageBox.warning(
+                self,
+                "Project Path Missing",
+                "Please set the project path in Settings.",
+            )
+            print("Project path not set")
+            return False
+        return True
+
+    def ask_project_path(self):
+        """Prompt the user for a project path on startup."""
+        path = QFileDialog.getExistingDirectory(self, "Select Project Path")
+        if path:
+            self.project_path = path
+            if hasattr(self, "project_path_edit"):
+                self.project_path_edit.setText(path)
 
     def current_framework(self):
         return self.framework_combo.currentText() if hasattr(self, "framework_combo") else "None"
@@ -123,13 +174,28 @@ class MainWindow(QMainWindow):
             return
 
         self.project_path = project_path
+        self.git_url = git_url
+        self.framework_choice = framework
+
+        data = {
+            "git_url": git_url,
+            "project_path": project_path,
+            "framework": framework,
+        }
+        try:
+            with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+        except OSError as e:
+            print(f"Failed to write config: {e}")
 
         print(
             f"Settings saved: Git URL={git_url}, PHP Path={project_path}, Framework={framework}"
         )
 
     def artisan(self, *args):
-        artisan_file = os.path.join(self.project_path, "artisan") if self.project_path else "artisan"
+        if not self.ensure_project_path():
+            return
+        artisan_file = os.path.join(self.project_path, "artisan")
         self.run_command(["php", artisan_file, *args])
 
     def migrate(self):
