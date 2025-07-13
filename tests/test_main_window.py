@@ -1,5 +1,8 @@
 import builtins
 import os
+# Force Qt to use the offscreen platform before importing QApplication to avoid
+# errors on systems without a display server or OpenGL libraries.
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PyQt6.QtWidgets import QApplication
 import fusor.main_window as mw_module
 from fusor.main_window import MainWindow
@@ -11,7 +14,6 @@ class DummyLogView:
         self.text = text
 
 def test_refresh_logs_no_project_path(monkeypatch):
-    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     app = QApplication.instance()
     if app is None:
         app = QApplication([])
