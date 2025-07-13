@@ -172,9 +172,7 @@ class MainWindow(QMainWindow):
         except OSError as e:
             print(f"Failed to write config: {e}")
 
-        print(
-            f"Settings saved: Git URL={git_url}, PHP Path={project_path}, Framework={framework}"
-        )
+        print(f"Settings saved!")
 
     def artisan(self, *args):
         self.ensure_project_path()
