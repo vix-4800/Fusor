@@ -1,7 +1,7 @@
 # Fusor
 
 Fusor is a minimal PyQt6 application with a main window titled
-**"Fusor – Laravel/PHP QA Toolbox"**. The UI is organised into several tabs
+**"Fusor – Laravel/PHP QA Toolbox"**. The UI is organized into several tabs
 that provide helper actions for typical PHP development tasks.
 
 The application is split into small modules under the `fusor` package to make

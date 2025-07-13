@@ -18,7 +18,6 @@ class SettingsTab(QWidget):
 
         layout = QFormLayout(self)
 
-
         self.project_path_edit = QLineEdit()
         self.project_path_edit.setText(self.main_window.project_path)
         path_container = QWidget()

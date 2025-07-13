@@ -1,6 +1,5 @@
 from fusor import config
 
-
 def test_save_then_load(tmp_path, monkeypatch):
     cfg_file = tmp_path / "config.json"
     monkeypatch.setattr(config, "CONFIG_FILE", str(cfg_file))
@@ -9,12 +8,10 @@ def test_save_then_load(tmp_path, monkeypatch):
     loaded = config.load_config()
     assert loaded == data
 
-
 def test_load_missing_file(tmp_path, monkeypatch):
     cfg_file = tmp_path / "missing.json"
     monkeypatch.setattr(config, "CONFIG_FILE", str(cfg_file))
     assert config.load_config() == {}
-
 
 def test_load_invalid_json(tmp_path, monkeypatch):
     cfg_file = tmp_path / "broken.json"
