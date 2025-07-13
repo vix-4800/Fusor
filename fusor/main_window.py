@@ -8,7 +8,9 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QTextEdit,
     QMessageBox,
+    QFileDialog,
 )
+from PyQt6.QtCore import QTimer
 
 from .tabs.project_tab import ProjectTab
 from .tabs.git_tab import GitTab
@@ -54,7 +56,7 @@ class MainWindow(QMainWindow):
         sys.stdout = self._stdout_logger
 
         # Directory containing php and artisan executables
-        self.project_path = os.getcwd()
+        self.project_path = ""
 
         # initialize tabs
         self.project_tab = ProjectTab(self)
@@ -72,6 +74,8 @@ class MainWindow(QMainWindow):
         self.settings_tab = SettingsTab(self)
         self.tabs.addTab(self.settings_tab, "Settings")
 
+        QTimer.singleShot(0, self.ask_project_path)
+
     # logic helpers
     def run_command(self, command):
         """Run a shell command and print its output."""
@@ -84,6 +88,26 @@ class MainWindow(QMainWindow):
                 print(result.stderr.strip())
         except FileNotFoundError:
             print(f"Command not found: {command[0]}")
+
+    def ensure_project_path(self):
+        """Return True if project path is set else warn the user."""
+        if not self.project_path:
+            QMessageBox.warning(
+                self,
+                "Project Path Missing",
+                "Please set the project path in Settings.",
+            )
+            print("Project path not set")
+            return False
+        return True
+
+    def ask_project_path(self):
+        """Prompt the user for a project path on startup."""
+        path = QFileDialog.getExistingDirectory(self, "Select Project Path")
+        if path:
+            self.project_path = path
+            if hasattr(self, "project_path_edit"):
+                self.project_path_edit.setText(path)
 
     def current_framework(self):
         return self.framework_combo.currentText() if hasattr(self, "framework_combo") else "None"
@@ -116,7 +140,9 @@ class MainWindow(QMainWindow):
         )
 
     def artisan(self, *args):
-        artisan_file = os.path.join(self.project_path, "artisan") if self.project_path else "artisan"
+        if not self.ensure_project_path():
+            return
+        artisan_file = os.path.join(self.project_path, "artisan")
         self.run_command(["php", artisan_file, *args])
 
     def migrate(self):
