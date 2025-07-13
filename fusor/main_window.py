@@ -2,6 +2,10 @@ import sys
 import os
 import subprocess
 import concurrent.futures
+import builtins
+
+# allow tests to monkeypatch file operations easily
+open = builtins.open
 from PyQt6.QtWidgets import (
     QMainWindow,
     QTabWidget,
@@ -301,10 +305,13 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         """Shutdown background executor before closing."""
         if self.server_process and self.server_process.poll() is None:
-            self.server_process.terminate()
-            try:
-                self.server_process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                self.server_process.kill()
+            if hasattr(self.server_process, "terminate"):
+                self.server_process.terminate()
+                try:
+                    self.server_process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    if hasattr(self.server_process, "kill"):
+                        self.server_process.kill()
+            self.server_process = None
         self.executor.shutdown(wait=False)
         super().closeEvent(event)
