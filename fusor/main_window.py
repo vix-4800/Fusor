@@ -130,7 +130,7 @@ class MainWindow(QMainWindow):
         self.executor.submit(task)
 
     def ensure_project_path(self):
-        """Return True if project path is set else warn the user."""
+        """Warn and close the app if the project path is not set."""
         if not self.project_path:
             QMessageBox.warning(
                 self,
@@ -138,6 +138,7 @@ class MainWindow(QMainWindow):
                 "Please set the project path in Settings.",
             )
             print("Project path not set")
+            self.close()
             return False
         return True
 
@@ -148,6 +149,7 @@ class MainWindow(QMainWindow):
             self.project_path = path
             if hasattr(self, "project_path_edit"):
                 self.project_path_edit.setText(path)
+        self.ensure_project_path()
 
     def current_framework(self):
         return self.framework_combo.currentText() if hasattr(self, "framework_combo") else "None"
@@ -155,8 +157,7 @@ class MainWindow(QMainWindow):
     def refresh_logs(self):
         print("Refresh logs clicked")
 
-        if not self.ensure_project_path():
-            return
+        self.ensure_project_path()
 
         framework = self.current_framework()
         log_contents = ""
@@ -212,8 +213,7 @@ class MainWindow(QMainWindow):
         )
 
     def artisan(self, *args):
-        if not self.ensure_project_path():
-            return
+        self.ensure_project_path()
         artisan_file = os.path.join(self.project_path, "artisan")
         self.run_command(["php", artisan_file, *args])
 
