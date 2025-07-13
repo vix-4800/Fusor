@@ -154,9 +154,28 @@ class MainWindow(QMainWindow):
 
     def refresh_logs(self):
         print("Refresh logs clicked")
-        self.log_view.setPlainText(
-            "Example log line 1\nExample log line 2\nExample log line 3"
-        )
+
+        if not self.ensure_project_path():
+            return
+
+        framework = self.current_framework()
+        log_contents = ""
+        if framework == "Laravel":
+            log_file = os.path.join(
+                self.project_path, "storage", "logs", "laravel.log"
+            )
+            if os.path.exists(log_file):
+                try:
+                    with open(log_file, "r", encoding="utf-8") as f:
+                        log_contents = f.read()
+                except OSError as e:
+                    log_contents = f"Failed to read log file: {e}"
+            else:
+                log_contents = f"Log file not found: {log_file}"
+        else:
+            log_contents = f"Logs not implemented for {framework}"
+
+        self.log_view.setPlainText(log_contents.strip())
 
     def save_settings(self):
         git_url = self.git_url_edit.text()

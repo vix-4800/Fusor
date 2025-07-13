@@ -13,7 +13,7 @@ The available tabs are:
 - **Project** – buttons to manage migrations.
 - **Git** – simple controls for common Git actions.
 - **Database** – quick actions for opening and dumping a database.
-- **Logs** – displays example log text with a refresh option.
+- **Logs** – shows your project's log file (Laravel only) with a refresh option.
 - **Settings** – form fields for configuring the Git URL and other variables. A
   *Browse* button lets you pick the project directory.
 
