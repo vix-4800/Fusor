@@ -51,7 +51,9 @@ down` respectively.
 
 ## Testing
 
-Install pytest and run the test suite from the repository root:
+Install pytest and run the test suite from the repository root. Tests run
+headless automatically thanks to the `QT_QPA_PLATFORM=offscreen` setting in
+`pytest.ini`:
 
 ```bash
 pip install pytest
