@@ -1,1 +1,2 @@
-PyQt6
+PyQt6~=6.9
+python-dotenv>=1.0
