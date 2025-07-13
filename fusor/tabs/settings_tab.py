@@ -9,7 +9,6 @@ from PyQt6.QtWidgets import (
     QFileDialog,
 )
 
-
 class SettingsTab(QWidget):
     """Tab with simple settings form."""
 

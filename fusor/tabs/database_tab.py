@@ -1,6 +1,5 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy
 
-
 class DatabaseTab(QWidget):
     """Tab with quick database helpers."""
 

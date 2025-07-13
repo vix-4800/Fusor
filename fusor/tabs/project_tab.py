@@ -1,6 +1,5 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy
 
-
 class ProjectTab(QWidget):
     """Tab with common project migration actions."""
 

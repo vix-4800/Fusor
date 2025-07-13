@@ -1,6 +1,5 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QPushButton, QSizePolicy
 
-
 class LogsTab(QWidget):
     """Tab that displays log text and allows refreshing."""
 

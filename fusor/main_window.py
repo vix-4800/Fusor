@@ -1,5 +1,3 @@
-"""Main window containing the application tabs."""
-
 import sys
 import os
 import subprocess
@@ -23,10 +21,6 @@ from .tabs.git_tab import GitTab
 from .tabs.database_tab import DatabaseTab
 from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
-
-
-
-
 
 class MainWindow(QMainWindow):
     """Main application window hosting all feature tabs."""
@@ -219,4 +213,3 @@ class MainWindow(QMainWindow):
         """Shutdown background executor before closing."""
         self.executor.shutdown(wait=False)
         super().closeEvent(event)
-

@@ -8,7 +8,6 @@ from PyQt6.QtWidgets import (
 )
 import subprocess
 
-
 class GitTab(QWidget):
     """Tab providing basic Git actions."""
 

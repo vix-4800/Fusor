@@ -1,6 +1,5 @@
 from PyQt6.QtCore import QMetaObject, Qt, Q_ARG
 
-
 class QTextEditLogger:
     """Write stdout text to both the console and a QTextEdit widget."""
 
