@@ -55,6 +55,7 @@ class MainWindow(QMainWindow):
         self.project_path = ""
         self.framework_choice = "Laravel"
         self.php_path = "php"
+        self.php_service = "php"
         self.use_docker = False
         self.load_config()
 
@@ -90,6 +91,7 @@ class MainWindow(QMainWindow):
         self.project_path = data.get("project_path", self.project_path)
         self.framework_choice = data.get("framework", self.framework_choice)
         self.php_path = data.get("php_path", self.php_path)
+        self.php_service = data.get("php_service", self.php_service)
         self.use_docker = data.get("use_docker", self.use_docker)
 
     def run_command(self, command):
@@ -103,7 +105,7 @@ class MainWindow(QMainWindow):
                 "compose",
                 "exec",
                 "-T",
-                "php",
+                self.php_service,
                 *command,
             ]
         cwd = self.project_path if self.use_docker else None
@@ -173,9 +175,10 @@ class MainWindow(QMainWindow):
         project_path = self.project_path_edit.text()
         framework = self.framework_combo.currentText()
         php_path = self.php_path_edit.text()
+        php_service = self.php_service_edit.text() if hasattr(self, "php_service_edit") else self.php_service
         use_docker = self.docker_checkbox.isChecked()
 
-        if not project_path or (not php_path and not use_docker):
+        if not project_path or (not php_path and not use_docker) or (use_docker and not php_service):
             QMessageBox.warning(self, "Invalid settings", "All settings fields must be filled out.")
             print("Failed to save settings: one or more fields were empty")
             return
@@ -193,12 +196,14 @@ class MainWindow(QMainWindow):
         self.project_path = project_path
         self.framework_choice = framework
         self.php_path = php_path
+        self.php_service = php_service or self.php_service
         self.use_docker = use_docker
 
         data = {
             "project_path": project_path,
             "framework": framework,
             "php_path": php_path,
+            "php_service": php_service,
             "use_docker": use_docker,
         }
         try:
