@@ -20,7 +20,7 @@ from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
 
 
-CONFIG_FILE = os.path.expanduser("~/.fusor_config.json")
+CONFIG_FILE = os.path.expanduser("./fusor_config.json")
 
 
 class QTextEditLogger:
@@ -80,7 +80,7 @@ class MainWindow(QMainWindow):
 
         self.settings_tab = SettingsTab(self)
         self.tabs.addTab(self.settings_tab, "Settings")
-        
+
         QTimer.singleShot(0, self.ask_project_path)
 
         # populate settings widgets with loaded values
