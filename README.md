@@ -32,10 +32,10 @@ application starts.
 
 ## Running
 
-Install the dependencies and execute `main.py`:
+Install the dependencies from `requirements.txt` and execute `main.py`:
 
 ```bash
-pip install PyQt6
+pip install -r requirements.txt
 python3 main.py
 ```
 
