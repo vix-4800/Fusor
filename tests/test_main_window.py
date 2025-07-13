@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, Qt
 
 import fusor.main_window as mw_module
 from fusor.main_window import MainWindow
@@ -135,3 +135,15 @@ class TestMainWindow:
         main_window.docker_checkbox.setChecked(False)
         qtbot.wait(10)
         assert main_window.php_path_edit.isEnabled()
+
+    def test_composer_install_button_runs_command(self, main_window, qtbot, monkeypatch):
+        captured = []
+        monkeypatch.setattr(main_window, "run_command", lambda cmd: captured.append(cmd), raising=True)
+        qtbot.mouseClick(main_window.project_tab.composer_install_btn, Qt.MouseButton.LeftButton)
+        assert captured == [["composer", "install"]]
+
+    def test_composer_update_button_runs_command(self, main_window, qtbot, monkeypatch):
+        captured = []
+        monkeypatch.setattr(main_window, "run_command", lambda cmd: captured.append(cmd), raising=True)
+        qtbot.mouseClick(main_window.project_tab.composer_update_btn, Qt.MouseButton.LeftButton)
+        assert captured == [["composer", "update"]]

@@ -23,3 +23,21 @@ class ProjectTab(QWidget):
         phpunit_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         phpunit_btn.clicked.connect(self.main_window.phpunit)
         layout.addWidget(phpunit_btn)
+
+        self.composer_install_btn = QPushButton("Composer install")
+        self.composer_install_btn.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        self.composer_install_btn.clicked.connect(
+            lambda: self.main_window.run_command(["composer", "install"])
+        )
+        layout.addWidget(self.composer_install_btn)
+
+        self.composer_update_btn = QPushButton("Composer update")
+        self.composer_update_btn.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        self.composer_update_btn.clicked.connect(
+            lambda: self.main_window.run_command(["composer", "update"])
+        )
+        layout.addWidget(self.composer_update_btn)
