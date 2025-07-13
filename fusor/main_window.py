@@ -1,6 +1,7 @@
+"""Main window containing the application tabs."""
+
 import sys
 import os
-import json
 import subprocess
 import concurrent.futures
 from PyQt6.QtWidgets import (
@@ -12,7 +13,10 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QFileDialog,
 )
-from PyQt6.QtCore import QTimer, QMetaObject, Qt, Q_ARG
+from PyQt6.QtCore import QTimer
+
+from .config import load_config, save_config
+from .qtextedit_logger import QTextEditLogger
 
 from .tabs.project_tab import ProjectTab
 from .tabs.git_tab import GitTab
@@ -21,31 +25,11 @@ from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
 
 
-CONFIG_FILE = os.path.expanduser("./fusor_config.json")
 
-
-class QTextEditLogger:
-    """Redirect writes to both stdout and a QTextEdit widget."""
-
-    def __init__(self, text_edit, original_stdout):
-        self.text_edit = text_edit
-        self.original_stdout = original_stdout
-
-    def write(self, msg):
-        if msg.rstrip():
-            QMetaObject.invokeMethod(
-                self.text_edit,
-                "append",
-                Qt.ConnectionType.QueuedConnection,
-                Q_ARG(str, msg.rstrip()),
-            )
-        self.original_stdout.write(msg)
-
-    def flush(self):
-        self.original_stdout.flush()
 
 
 class MainWindow(QMainWindow):
+    """Main application window hosting all feature tabs."""
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Fusor – Laravel/PHP QA Toolbox")
@@ -99,22 +83,13 @@ class MainWindow(QMainWindow):
             QTimer.singleShot(0, self.ask_project_path)
 
     def load_config(self):
-        """Load saved configuration if available."""
-        try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            self.project_path = data.get("project_path", self.project_path)
-            self.git_url = data.get("git_url", "")
-            self.framework_choice = data.get("framework", self.framework_choice)
-        except FileNotFoundError:
-            # no saved settings yet
-            pass
-        except json.JSONDecodeError:
-            print("Failed to load config: invalid JSON")
-
-    # logic helpers
+        """Load saved configuration values into the instance."""
+        data = load_config()
+        self.project_path = data.get("project_path", self.project_path)
+        self.git_url = data.get("git_url", "")
+        self.framework_choice = data.get("framework", self.framework_choice)
     def run_command(self, command):
-        """Run a shell command on a background thread and print its output."""
+        """Execute *command* asynchronously and stream output to the log view."""
 
         def task():
             try:
@@ -183,8 +158,7 @@ class MainWindow(QMainWindow):
             "framework": framework,
         }
         try:
-            with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
+            save_config(data)
         except OSError as e:
             print(f"Failed to write config: {e}")
 
