@@ -73,7 +73,9 @@ class MainWindow(QMainWindow):
         if self.framework_choice in [self.framework_combo.itemText(i) for i in range(self.framework_combo.count())]:
             self.framework_combo.setCurrentText(self.framework_choice)
 
-        if not self.project_path:
+        if self.project_path:
+            self.git_tab.load_branches()
+        else:
             QTimer.singleShot(0, self.ask_project_path)
 
     def load_config(self):
@@ -114,7 +116,10 @@ class MainWindow(QMainWindow):
             self.project_path = path
             if hasattr(self, "project_path_edit"):
                 self.project_path_edit.setText(path)
-        self.ensure_project_path()
+        if self.ensure_project_path():
+            # update git branch list now that the project path is set
+            if hasattr(self, "git_tab"):
+                self.git_tab.load_branches()
 
     def current_framework(self):
         return self.framework_combo.currentText() if hasattr(self, "framework_combo") else "None"
@@ -173,6 +178,9 @@ class MainWindow(QMainWindow):
             print(f"Failed to write config: {e}")
 
         print(f"Settings saved!")
+  
+        if hasattr(self, "git_tab"):
+            self.git_tab.load_branches()
 
     def artisan(self, *args):
         self.ensure_project_path()

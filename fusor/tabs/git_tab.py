@@ -24,7 +24,7 @@ class GitTab(QWidget):
         layout.addWidget(self.branch_combo)
 
         self.current_branch = ""
-        self.load_branches()
+        # branches are loaded once the project path is available
         self.branch_combo.currentTextChanged.connect(self.on_branch_changed)
 
         pull_btn = QPushButton("Pull")
@@ -61,7 +61,9 @@ class GitTab(QWidget):
             print("Command not found: git")
 
     def load_branches(self):
-        self.main_window.ensure_project_path()
+        """Populate the branch combo if a project path is available."""
+        if not self.main_window.project_path:
+            return
         try:
             result = subprocess.run(
                 ["git", "branch", "--format=%(refname:short)"],
