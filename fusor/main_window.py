@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 import subprocess
 from PyQt6.QtWidgets import (
     QMainWindow,
@@ -15,6 +16,9 @@ from .tabs.git_tab import GitTab
 from .tabs.database_tab import DatabaseTab
 from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
+
+
+CONFIG_FILE = os.path.expanduser("~/.fusor_config.json")
 
 
 class QTextEditLogger:
@@ -55,6 +59,9 @@ class MainWindow(QMainWindow):
 
         # Directory containing php and artisan executables
         self.project_path = os.getcwd()
+        self.git_url = ""
+        self.framework_choice = "Laravel"
+        self.load_config()
 
         # initialize tabs
         self.project_tab = ProjectTab(self)
@@ -71,6 +78,26 @@ class MainWindow(QMainWindow):
 
         self.settings_tab = SettingsTab(self)
         self.tabs.addTab(self.settings_tab, "Settings")
+
+        # populate settings widgets with loaded values
+        self.git_url_edit.setText(self.git_url)
+        self.project_path_edit.setText(self.project_path)
+        if self.framework_choice in [self.framework_combo.itemText(i) for i in range(self.framework_combo.count())]:
+            self.framework_combo.setCurrentText(self.framework_choice)
+
+    def load_config(self):
+        """Load saved configuration if available."""
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            self.project_path = data.get("project_path", self.project_path)
+            self.git_url = data.get("git_url", "")
+            self.framework_choice = data.get("framework", self.framework_choice)
+        except FileNotFoundError:
+            # no saved settings yet
+            pass
+        except json.JSONDecodeError:
+            print("Failed to load config: invalid JSON")
 
     # logic helpers
     def run_command(self, command):
@@ -110,6 +137,19 @@ class MainWindow(QMainWindow):
             return
 
         self.project_path = project_path
+        self.git_url = git_url
+        self.framework_choice = framework
+
+        data = {
+            "git_url": git_url,
+            "project_path": project_path,
+            "framework": framework,
+        }
+        try:
+            with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+        except OSError as e:
+            print(f"Failed to write config: {e}")
 
         print(
             f"Settings saved: Git URL={git_url}, PHP Path={project_path}, Framework={framework}"

@@ -16,6 +16,10 @@ The available tabs are:
 - **Logs** – displays example log text with a refresh option.
 - **Settings** – form fields for configuring the Git URL and other variables.
 
+The application stores your selected project path, Git URL and framework in
+`~/.fusor_config.json`. These values are restored automatically when the
+application starts.
+
 ## Running
 
 Install the dependencies and execute `main.py`:

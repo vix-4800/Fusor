@@ -11,6 +11,7 @@ class SettingsTab(QWidget):
         layout = QFormLayout(self)
 
         self.git_url_edit = QLineEdit()
+        self.git_url_edit.setText(self.main_window.git_url)
         layout.addRow("Git URL:", self.git_url_edit)
 
         self.project_path_edit = QLineEdit()
@@ -19,6 +20,8 @@ class SettingsTab(QWidget):
 
         self.framework_combo = QComboBox()
         self.framework_combo.addItems(["Laravel", "Yii", "None"])
+        if self.main_window.framework_choice in ["Laravel", "Yii", "None"]:
+            self.framework_combo.setCurrentText(self.main_window.framework_choice)
         layout.addRow("Framework:", self.framework_combo)
 
         save_btn = QPushButton("Save")
