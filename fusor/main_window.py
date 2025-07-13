@@ -81,13 +81,14 @@ class MainWindow(QMainWindow):
         self.settings_tab = SettingsTab(self)
         self.tabs.addTab(self.settings_tab, "Settings")
 
-        QTimer.singleShot(0, self.ask_project_path)
-
         # populate settings widgets with loaded values
         self.git_url_edit.setText(self.git_url)
         self.project_path_edit.setText(self.project_path)
         if self.framework_choice in [self.framework_combo.itemText(i) for i in range(self.framework_combo.count())]:
             self.framework_combo.setCurrentText(self.framework_choice)
+
+        if not self.project_path:
+            QTimer.singleShot(0, self.ask_project_path)
 
     def load_config(self):
         """Load saved configuration if available."""
