@@ -29,3 +29,12 @@ Install the dependencies and execute `main.py`:
 pip install PyQt6
 python3 main.py
 ```
+
+## Testing
+
+Install pytest and run the test suite from the repository root:
+
+```bash
+pip install pytest
+pytest
+```

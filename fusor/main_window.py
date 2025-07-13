@@ -41,6 +41,8 @@ class MainWindow(QMainWindow):
 
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
+        self.server_process = None
+
         # Redirect stdout to the output view
         self._stdout_logger = QTextEditLogger(self.output_view, sys.stdout)
         sys.stdout = self._stdout_logger
@@ -214,14 +216,68 @@ class MainWindow(QMainWindow):
             self.artisan("db:seed")
         else:
             print(f"Seed not implemented for {self.current_framework()}")
-
+            
     def phpunit(self):
         """Run the project's PHPUnit tests using the configured PHP binary."""
         self.ensure_project_path()
         phpunit_file = os.path.join(self.project_path, "vendor", "bin", "phpunit")
         self.run_command([self.php_path, phpunit_file])
 
+    def start_project(self):
+        """Launch the project's development server."""
+        if self.server_process and self.server_process.poll() is None:
+            print("Project already running")
+            return
+
+        if not self.ensure_project_path():
+            return
+
+        if self.current_framework() == "Laravel":
+            artisan_file = os.path.join(self.project_path, "artisan")
+            command = ["php", artisan_file, "serve"]
+        else:
+            # fallback generic PHP server
+            command = ["php", "-S", "localhost:8000", "-t", os.path.join(self.project_path, "public")]
+
+        print(f"$ {' '.join(command)}")
+        try:
+            self.server_process = subprocess.Popen(
+                command,
+                cwd=self.project_path,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+
+            def stream():
+                assert self.server_process is not None
+                for line in self.server_process.stdout:
+                    print(line.rstrip())
+
+            self.executor.submit(stream)
+        except FileNotFoundError:
+            print(f"Command not found: {command[0]}")
+
+    def stop_project(self):
+        """Terminate the running development server."""
+        if self.server_process and self.server_process.poll() is None:
+            print("Stopping project...")
+            self.server_process.terminate()
+            try:
+                self.server_process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.server_process.kill()
+            self.server_process = None
+        else:
+            print("Project is not running")
+
     def closeEvent(self, event):
         """Shutdown background executor before closing."""
+        if self.server_process and self.server_process.poll() is None:
+            self.server_process.terminate()
+            try:
+                self.server_process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.server_process.kill()
         self.executor.shutdown(wait=False)
         super().closeEvent(event)
