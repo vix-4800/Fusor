@@ -44,8 +44,7 @@ class GitTab(QWidget):
         layout.addWidget(stash_btn)
 
     def run_git_command(self, *args):
-        if not self.main_window.ensure_project_path():
-            return
+        self.main_window.ensure_project_path()
         command = ["git", *args]
         print(f"$ {' '.join(command)}")
         try:
@@ -63,8 +62,7 @@ class GitTab(QWidget):
             print("Command not found: git")
 
     def load_branches(self):
-        if not self.main_window.ensure_project_path():
-            return
+        self.main_window.ensure_project_path()
         try:
             result = subprocess.run(
                 ["git", "branch", "--format=%(refname:short)"],
@@ -92,19 +90,14 @@ class GitTab(QWidget):
             print("Command not found: git")
 
     def checkout(self, branch):
-        if not self.main_window.ensure_project_path():
-            return
+        self.main_window.ensure_project_path()
         self.run_git_command("checkout", branch)
         self.current_branch = branch
 
     def on_branch_changed(self, branch):
         if not branch or branch == self.current_branch:
             return
-        if not self.main_window.ensure_project_path():
-            self.branch_combo.blockSignals(True)
-            self.branch_combo.setCurrentText(self.current_branch)
-            self.branch_combo.blockSignals(False)
-            return
+        self.main_window.ensure_project_path()
         reply = QMessageBox.question(
             self,
             "Checkout Branch",
