@@ -45,9 +45,10 @@ class MainWindow(QMainWindow):
         self._stdout_logger = QTextEditLogger(self.output_view, sys.stdout)
         sys.stdout = self._stdout_logger
 
-        # Directory containing php and artisan executables
+        # Directory containing project files and PHP executable path
         self.project_path = ""
         self.framework_choice = "Laravel"
+        self.php_path = "php"
         self.load_config()
 
         # initialize tabs
@@ -81,6 +82,7 @@ class MainWindow(QMainWindow):
         data = load_config()
         self.project_path = data.get("project_path", self.project_path)
         self.framework_choice = data.get("framework", self.framework_choice)
+        self.php_path = data.get("php_path", self.php_path)
 
     def run_command(self, command):
         """Execute *command* asynchronously and stream output to the log view."""
@@ -148,23 +150,31 @@ class MainWindow(QMainWindow):
     def save_settings(self):
         project_path = self.project_path_edit.text()
         framework = self.framework_combo.currentText()
+        php_path = self.php_path_edit.text()
 
-        if not project_path:
+        if not project_path or not php_path:
             QMessageBox.warning(self, "Invalid settings", "All settings fields must be filled out.")
             print("Failed to save settings: one or more fields were empty")
             return
 
         if not os.path.isdir(project_path):
-            QMessageBox.warning(self, "Invalid PHP path", "The specified PHP path does not exist.")
+            QMessageBox.warning(self, "Invalid project path", "The specified project path does not exist.")
             print(f"Failed to save settings: directory does not exist - {project_path}")
+            return
+
+        if not os.path.isfile(php_path):
+            QMessageBox.warning(self, "Invalid PHP path", "The specified PHP executable was not found.")
+            print(f"Failed to save settings: php not found - {php_path}")
             return
 
         self.project_path = project_path
         self.framework_choice = framework
+        self.php_path = php_path
 
         data = {
             "project_path": project_path,
             "framework": framework,
+            "php_path": php_path,
         }
         try:
             save_config(data)
@@ -179,7 +189,7 @@ class MainWindow(QMainWindow):
     def artisan(self, *args):
         self.ensure_project_path()
         artisan_file = os.path.join(self.project_path, "artisan")
-        self.run_command(["php", artisan_file, *args])
+        self.run_command([self.php_path, artisan_file, *args])
 
     def migrate(self):
         if self.current_framework() == "Laravel":
@@ -204,6 +214,12 @@ class MainWindow(QMainWindow):
             self.artisan("db:seed")
         else:
             print(f"Seed not implemented for {self.current_framework()}")
+
+    def phpunit(self):
+        """Run the project's PHPUnit tests using the configured PHP binary."""
+        self.ensure_project_path()
+        phpunit_file = os.path.join(self.project_path, "vendor", "bin", "phpunit")
+        self.run_command([self.php_path, phpunit_file])
 
     def closeEvent(self, event):
         """Shutdown background executor before closing."""
