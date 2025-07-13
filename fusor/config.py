@@ -10,14 +10,15 @@ def load_config():
         with open(CONFIG_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
         if not isinstance(data, dict):
-            return {"use_docker": False}
+            return {"use_docker": False, "php_service": "php"}
         data.setdefault("use_docker", False)
+        data.setdefault("php_service", "php")
         return data
     except FileNotFoundError:
-        return {"use_docker": False}
+        return {"use_docker": False, "php_service": "php"}
     except json.JSONDecodeError:
         print("Failed to load config: invalid JSON")
-        return {"use_docker": False}
+        return {"use_docker": False, "php_service": "php"}
 
 def save_config(data):
     """Persist configuration dictionary to disk."""

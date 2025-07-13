@@ -130,11 +130,13 @@ class TestMainWindow:
         main_window.docker_checkbox.setChecked(True)
         qtbot.wait(10)
         assert not main_window.php_path_edit.isEnabled()
+        assert main_window.php_service_edit.isEnabled()
 
         # disable docker again and widgets should be enabled
         main_window.docker_checkbox.setChecked(False)
         qtbot.wait(10)
         assert main_window.php_path_edit.isEnabled()
+        assert not main_window.php_service_edit.isEnabled()
 
     def test_composer_install_button_runs_command(self, main_window, qtbot, monkeypatch):
         captured = []
@@ -147,3 +149,22 @@ class TestMainWindow:
         monkeypatch.setattr(main_window, "run_command", lambda cmd: captured.append(cmd), raising=True)
         qtbot.mouseClick(main_window.project_tab.composer_update_btn, Qt.MouseButton.LeftButton)
         assert captured == [["composer", "update"]]
+
+    def test_run_command_uses_php_service_with_docker(self, main_window, monkeypatch):
+        main_window.use_docker = True
+        main_window.php_service = "myphp"
+        captured = {}
+
+        def fake_run(cmd, capture_output=True, text=True, cwd=None):
+            captured["cmd"] = cmd
+            class Result:
+                stdout = ""
+                stderr = ""
+            return Result()
+
+        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+
+        main_window.run_command(["php", "-v"])
+
+        assert captured["cmd"][:5] == ["docker", "compose", "exec", "-T", "myphp"]

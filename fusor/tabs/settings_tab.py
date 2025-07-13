@@ -41,6 +41,10 @@ class SettingsTab(QWidget):
         php_layout.addWidget(self.php_browse_btn)
         layout.addRow("PHP Executable:", php_container)
 
+        self.php_service_edit = QLineEdit()
+        self.php_service_edit.setText(self.main_window.php_service)
+        layout.addRow("PHP Service:", self.php_service_edit)
+
         self.framework_combo = QComboBox()
         self.framework_combo.addItems(["Laravel", "Yii", "None"])
         if self.main_window.framework_choice in ["Laravel", "Yii", "None"]:
@@ -61,6 +65,7 @@ class SettingsTab(QWidget):
         self.main_window.project_path_edit = self.project_path_edit
         self.main_window.framework_combo = self.framework_combo
         self.main_window.php_path_edit = self.php_path_edit
+        self.main_window.php_service_edit = self.php_service_edit
         self.main_window.docker_checkbox = self.docker_checkbox
 
         # apply initial enabled state
@@ -70,6 +75,7 @@ class SettingsTab(QWidget):
         """Enable or disable PHP path widgets when Docker mode changes."""
         self.php_path_edit.setEnabled(not checked)
         self.php_browse_btn.setEnabled(not checked)
+        self.php_service_edit.setEnabled(checked)
 
     def browse_project_path(self):
         """Open a folder selection dialog and update the path field."""
