@@ -84,6 +84,47 @@ class TestMainWindow:
 
         assert captured["cmd"][0] == "/custom/php"
 
+    def test_start_project_uses_docker_compose_up(self, tmp_path: Path, main_window, monkeypatch):
+        main_window.project_path = str(tmp_path)
+        (tmp_path / "public").mkdir()
+
+        main_window.use_docker = True
+
+        captured = {}
+
+        def fake_run(cmd, capture_output=True, text=True, cwd=None):
+            captured["cmd"] = cmd
+            class Result:
+                stdout = ""
+                stderr = ""
+            return Result()
+
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
+
+        main_window.start_project()
+
+        assert captured["cmd"] == ["docker", "compose", "up", "-d"]
+
+    def test_stop_project_uses_docker_compose_down(self, main_window, monkeypatch):
+        main_window.use_docker = True
+
+        captured = {}
+
+        def fake_run(cmd, capture_output=True, text=True, cwd=None):
+            captured["cmd"] = cmd
+            class Result:
+                stdout = ""
+                stderr = ""
+            return Result()
+
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
+
+        main_window.stop_project()
+
+        assert captured["cmd"] == ["docker", "compose", "down"]
+
     def test_php_field_disabled_when_docker_enabled(self, main_window, qtbot):
         # enable docker and ensure php path widgets become disabled
         main_window.docker_checkbox.setChecked(True)

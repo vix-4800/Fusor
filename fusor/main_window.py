@@ -95,7 +95,9 @@ class MainWindow(QMainWindow):
     def run_command(self, command):
         """Execute *command* asynchronously and stream output to the log view."""
 
-        if self.use_docker:
+        if self.use_docker and not (
+            len(command) >= 2 and command[0] == "docker" and command[1] == "compose"
+        ):
             command = [
                 "docker",
                 "compose",
@@ -104,9 +106,7 @@ class MainWindow(QMainWindow):
                 "php",
                 *command,
             ]
-            cwd = self.project_path
-        else:
-            cwd = None
+        cwd = self.project_path if self.use_docker else None
 
         def task():
             try:
