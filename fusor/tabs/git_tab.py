@@ -44,6 +44,9 @@ class GitTab(QWidget):
         layout.addWidget(stash_btn)
 
     def run_git_command(self, *args):
+        if not self.main_window.project_path:
+            print("Project path not set")
+            return
         command = ["git", *args]
         print(f"$ {' '.join(command)}")
         try:
@@ -51,7 +54,7 @@ class GitTab(QWidget):
                 command,
                 capture_output=True,
                 text=True,
-                cwd=self.main_window.project_path or None,
+                cwd=self.main_window.project_path,
             )
             if result.stdout:
                 print(result.stdout.strip())
@@ -61,12 +64,14 @@ class GitTab(QWidget):
             print("Command not found: git")
 
     def load_branches(self):
+        if not self.main_window.project_path:
+            return
         try:
             result = subprocess.run(
                 ["git", "branch", "--format=%(refname:short)"],
                 capture_output=True,
                 text=True,
-                cwd=self.main_window.project_path or None,
+                cwd=self.main_window.project_path,
             )
             branches = [b.strip() for b in result.stdout.splitlines() if b.strip()]
             self.branch_combo.blockSignals(True)
@@ -77,7 +82,7 @@ class GitTab(QWidget):
                 ["git", "rev-parse", "--abbrev-ref", "HEAD"],
                 capture_output=True,
                 text=True,
-                cwd=self.main_window.project_path or None,
+                cwd=self.main_window.project_path,
             )
             current = head.stdout.strip()
             if current in branches:
@@ -88,11 +93,20 @@ class GitTab(QWidget):
             print("Command not found: git")
 
     def checkout(self, branch):
+        if not self.main_window.project_path:
+            print("Project path not set")
+            return
         self.run_git_command("checkout", branch)
         self.current_branch = branch
 
     def on_branch_changed(self, branch):
         if not branch or branch == self.current_branch:
+            return
+        if not self.main_window.project_path:
+            print("Project path not set")
+            self.branch_combo.blockSignals(True)
+            self.branch_combo.setCurrentText(self.current_branch)
+            self.branch_combo.blockSignals(False)
             return
         reply = QMessageBox.question(
             self,
