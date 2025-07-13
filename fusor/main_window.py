@@ -177,9 +177,8 @@ class MainWindow(QMainWindow):
         except OSError as e:
             print(f"Failed to write config: {e}")
 
-        print(
-            f"Settings saved: Git URL={git_url}, PHP Path={project_path}, Framework={framework}"
-        )
+        print(f"Settings saved!")
+  
         if hasattr(self, "git_tab"):
             self.git_tab.load_branches()
 
