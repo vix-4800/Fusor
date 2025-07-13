@@ -51,6 +51,7 @@ class MainWindow(QMainWindow):
         self.project_path = ""
         self.framework_choice = "Laravel"
         self.php_path = "php"
+        self.use_docker = False
         self.load_config()
 
         # initialize tabs
@@ -85,13 +86,27 @@ class MainWindow(QMainWindow):
         self.project_path = data.get("project_path", self.project_path)
         self.framework_choice = data.get("framework", self.framework_choice)
         self.php_path = data.get("php_path", self.php_path)
+        self.use_docker = data.get("use_docker", self.use_docker)
 
     def run_command(self, command):
         """Execute *command* asynchronously and stream output to the log view."""
 
+        if self.use_docker:
+            command = [
+                "docker",
+                "compose",
+                "exec",
+                "-T",
+                "php",
+                *command,
+            ]
+            cwd = self.project_path
+        else:
+            cwd = None
+
         def task():
             try:
-                result = subprocess.run(command, capture_output=True, text=True)
+                result = subprocess.run(command, capture_output=True, text=True, cwd=cwd)
                 if result.stdout:
                     print(result.stdout.strip())
                 if result.stderr:
@@ -154,8 +169,9 @@ class MainWindow(QMainWindow):
         project_path = self.project_path_edit.text()
         framework = self.framework_combo.currentText()
         php_path = self.php_path_edit.text()
+        use_docker = self.docker_checkbox.isChecked()
 
-        if not project_path or not php_path:
+        if not project_path or (not php_path and not use_docker):
             QMessageBox.warning(self, "Invalid settings", "All settings fields must be filled out.")
             print("Failed to save settings: one or more fields were empty")
             return
@@ -165,7 +181,7 @@ class MainWindow(QMainWindow):
             print(f"Failed to save settings: directory does not exist - {project_path}")
             return
 
-        if not os.path.isfile(php_path):
+        if not use_docker and not os.path.isfile(php_path):
             QMessageBox.warning(self, "Invalid PHP path", "The specified PHP executable was not found.")
             print(f"Failed to save settings: php not found - {php_path}")
             return
@@ -173,11 +189,13 @@ class MainWindow(QMainWindow):
         self.project_path = project_path
         self.framework_choice = framework
         self.php_path = php_path
+        self.use_docker = use_docker
 
         data = {
             "project_path": project_path,
             "framework": framework,
             "php_path": php_path,
+            "use_docker": use_docker,
         }
         try:
             save_config(data)
@@ -226,6 +244,10 @@ class MainWindow(QMainWindow):
 
     def start_project(self):
         """Launch the project's development server."""
+        if self.use_docker:
+            self.run_command(["docker", "compose", "up", "-d"])
+            return
+
         if self.server_process and self.server_process.poll() is None:
             print("Project already running")
             return
@@ -235,10 +257,10 @@ class MainWindow(QMainWindow):
 
         if self.current_framework() == "Laravel":
             artisan_file = os.path.join(self.project_path, "artisan")
-            command = ["php", artisan_file, "serve"]
+            command = [self.php_path, artisan_file, "serve"]
         else:
             # fallback generic PHP server
-            command = ["php", "-S", "localhost:8000", "-t", os.path.join(self.project_path, "public")]
+            command = [self.php_path, "-S", "localhost:8000", "-t", os.path.join(self.project_path, "public")]
 
         print(f"$ {' '.join(command)}")
         try:
@@ -261,6 +283,10 @@ class MainWindow(QMainWindow):
 
     def stop_project(self):
         """Terminate the running development server."""
+        if self.use_docker:
+            self.run_command(["docker", "compose", "down"])
+            return
+
         if self.server_process and self.server_process.poll() is None:
             print("Stopping project...")
             self.server_process.terminate()

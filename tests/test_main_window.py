@@ -1,7 +1,6 @@
 import builtins
 import os
-# Force Qt to use the offscreen platform before importing QApplication to avoid
-# errors on systems without a display server or OpenGL libraries.
+import subprocess
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PyQt6.QtWidgets import QApplication
 import fusor.main_window as mw_module
@@ -41,3 +40,38 @@ def test_refresh_logs_no_project_path(monkeypatch):
 
     assert close_called == [True]
     assert dummy.text is None
+
+def test_start_project_uses_configured_php(tmp_path, monkeypatch):
+    # ensure QApplication exists for MainWindow
+    app = QApplication.instance() or QApplication([])
+
+    window = MainWindow()
+    window.project_path = str(tmp_path)
+    window.framework_choice = "None"
+    if hasattr(window, "framework_combo"):
+        window.framework_combo.setCurrentText("None")
+    window.php_path = "/custom/php"
+
+    (tmp_path / "public").mkdir()
+
+    called = {}
+
+    class DummyProcess:
+        def __init__(self):
+            self.stdout = []
+
+        def poll(self):
+            return None
+
+    def fake_popen(cmd, **kwargs):
+        called["cmd"] = cmd
+        return DummyProcess()
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+    monkeypatch.setattr(window.executor, "submit", lambda fn: None)
+
+    window.start_project()
+
+    assert called["cmd"][0] == "/custom/php"
+
+    app.quit()

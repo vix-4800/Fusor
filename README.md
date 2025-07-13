@@ -17,7 +17,8 @@ The available tabs are:
 -   **Settings** – fields for selecting the project directory, framework and PHP executable.
     Browse buttons let you choose each path.
 
-The application stores your selected project path, PHP binary and framework in
+The application stores your selected project path, PHP binary, framework and the
+"use docker" setting in
 `~/.fusor_config.json`. These values are restored automatically when the
 application starts.
 
@@ -29,6 +30,14 @@ Install the dependencies and execute `main.py`:
 pip install PyQt6
 python3 main.py
 ```
+
+### Docker mode
+
+Enable the **Use Docker** option in the Settings tab to run all PHP commands
+inside your project's Docker containers. When enabled, actions such as running
+PHPUnit or starting the development server are executed via `docker compose`.
+The Start and Stop buttons will run `docker compose up -d` and `docker compose
+down` respectively.
 
 ## Testing
 
