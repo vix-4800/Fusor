@@ -18,3 +18,8 @@ class ProjectTab(QWidget):
         stop_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         stop_btn.clicked.connect(self.main_window.stop_project)
         layout.addWidget(stop_btn)
+
+        phpunit_btn = QPushButton("PHPUnit")
+        phpunit_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        phpunit_btn.clicked.connect(self.main_window.phpunit)
+        layout.addWidget(phpunit_btn)

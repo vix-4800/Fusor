@@ -10,14 +10,14 @@ the codebase easier to maintain. Each tab lives in its own file inside
 
 The available tabs are:
 
--   **Project** – buttons to manage migrations.
+-   **Project** – buttons to manage migrations and run PHPUnit tests.
 -   **Git** – simple controls for common Git actions.
 -   **Database** – quick actions for opening and dumping a database.
 -   **Logs** – shows your project's log file (Laravel only) with a refresh option.
--   **Settings** – fields for selecting the project directory and framework.
-    A _Browse_ button lets you pick the project directory.
+-   **Settings** – fields for selecting the project directory, framework and PHP executable.
+    Browse buttons let you choose each path.
 
-The application stores your selected project path and framework in
+The application stores your selected project path, PHP binary and framework in
 `~/.fusor_config.json`. These values are restored automatically when the
 application starts.
 
