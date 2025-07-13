@@ -36,9 +36,9 @@ class SettingsTab(QWidget):
         php_layout = QHBoxLayout(php_container)
         php_layout.setContentsMargins(0, 0, 0, 0)
         php_layout.addWidget(self.php_path_edit)
-        php_browse_btn = QPushButton("Browse")
-        php_browse_btn.clicked.connect(self.browse_php_path)
-        php_layout.addWidget(php_browse_btn)
+        self.php_browse_btn = QPushButton("Browse")
+        self.php_browse_btn.clicked.connect(self.browse_php_path)
+        php_layout.addWidget(self.php_browse_btn)
         layout.addRow("PHP Executable:", php_container)
 
         self.framework_combo = QComboBox()
@@ -49,6 +49,7 @@ class SettingsTab(QWidget):
 
         self.docker_checkbox = QCheckBox("Use Docker")
         self.docker_checkbox.setChecked(self.main_window.use_docker)
+        self.docker_checkbox.toggled.connect(self.on_docker_toggled)
         layout.addRow(self.docker_checkbox)
 
         save_btn = QPushButton("Save")
@@ -61,6 +62,14 @@ class SettingsTab(QWidget):
         self.main_window.framework_combo = self.framework_combo
         self.main_window.php_path_edit = self.php_path_edit
         self.main_window.docker_checkbox = self.docker_checkbox
+
+        # apply initial enabled state
+        self.on_docker_toggled(self.docker_checkbox.isChecked())
+
+    def on_docker_toggled(self, checked: bool):
+        """Enable or disable PHP path widgets when Docker mode changes."""
+        self.php_path_edit.setEnabled(not checked)
+        self.php_browse_btn.setEnabled(not checked)
 
     def browse_project_path(self):
         """Open a folder selection dialog and update the path field."""

@@ -83,3 +83,14 @@ class TestMainWindow:
         main_window.start_project()
 
         assert captured["cmd"][0] == "/custom/php"
+
+    def test_php_field_disabled_when_docker_enabled(self, main_window, qtbot):
+        # enable docker and ensure php path widgets become disabled
+        main_window.docker_checkbox.setChecked(True)
+        qtbot.wait(10)
+        assert not main_window.php_path_edit.isEnabled()
+
+        # disable docker again and widgets should be enabled
+        main_window.docker_checkbox.setChecked(False)
+        qtbot.wait(10)
+        assert main_window.php_path_edit.isEnabled()
