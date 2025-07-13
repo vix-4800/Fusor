@@ -33,6 +33,21 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Fusor – Laravel/PHP QA Toolbox")
         self.resize(1024, 768)
 
+        # simple dark theme
+        self.setStyleSheet(
+            """
+            QWidget { background-color: #1e1e1e; color: #dddddd; }
+            QPushButton {
+                background-color: #444444;
+                color: #f0f0f0;
+                padding: 6px 12px;
+                border-radius: 4px;
+            }
+            QPushButton:hover { background-color: #555555; }
+            QTextEdit { background-color: #2b2b2b; }
+            """
+        )
+
         self.tabs = QTabWidget()
         self.output_view = QTextEdit()
         self.output_view.setReadOnly(True)
