@@ -14,6 +14,7 @@ class SettingsTab(QWidget):
         layout.addRow("Git URL:", self.git_url_edit)
 
         self.project_path_edit = QLineEdit()
+        self.project_path_edit.setText(self.main_window.project_path)
         layout.addRow("Project Path:", self.project_path_edit)
 
         self.framework_combo = QComboBox()

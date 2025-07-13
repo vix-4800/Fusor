@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
         sys.stdout = self._stdout_logger
 
         # Directory containing php and artisan executables
-        self.project_path = ""
+        self.project_path = os.getcwd()
 
         # initialize tabs
         self.project_tab = ProjectTab(self)
