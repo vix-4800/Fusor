@@ -1,77 +1,85 @@
 import builtins
 import os
 import subprocess
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-from PyQt6.QtWidgets import QApplication
+from pathlib import Path
+
+import pytest
+from PyQt6.QtCore import QTimer
+
 import fusor.main_window as mw_module
 from fusor.main_window import MainWindow
 
-class DummyLogView:
+# ---------------------------------------------------------------------------
+# Helpers & fixtures
+# ---------------------------------------------------------------------------
+
+class FakeLogView:
     def __init__(self):
         self.text = None
-    def setPlainText(self, text):
+
+    def setPlainText(self, text: str):
         self.text = text
 
-def test_refresh_logs_no_project_path(monkeypatch):
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication([])
+@pytest.fixture
+def main_window(monkeypatch, qtbot):
+    monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+    monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
 
-    # prevent dialog on construction
-    monkeypatch.setattr(mw_module.QTimer, "singleShot", lambda *a, **k: None)
-    monkeypatch.setattr(MainWindow, "ask_project_path", lambda self: None)
-    # avoid reading real config
-    monkeypatch.setattr(mw_module, "load_config", lambda: {})
+    win = MainWindow()
+    qtbot.addWidget(win)
+    win.show()
 
-    window = MainWindow()
-    window.project_path = ""
-    dummy = DummyLogView()
-    window.log_view = dummy
-    close_called = []
-    monkeypatch.setattr(window, "close", lambda: close_called.append(True))
+    yield win
 
-    def fail(*args, **kwargs):
-        raise AssertionError("log access attempted")
+    win.close()
 
-    monkeypatch.setattr(os.path, "exists", fail)
-    monkeypatch.setattr(builtins, "open", fail)
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
 
-    window.refresh_logs()
+class TestMainWindow:
+    def test_refresh_logs_no_project_path(self, main_window, monkeypatch):
+        main_window.project_path = ""
+        main_window.log_view = FakeLogView()
 
-    assert close_called == [True]
-    assert dummy.text is None
+        closed = []
+        monkeypatch.setattr(main_window, "close", lambda: closed.append(True), raising=True)
 
-def test_start_project_uses_configured_php(tmp_path, monkeypatch):
-    # ensure QApplication exists for MainWindow
-    app = QApplication.instance() or QApplication([])
+        def forbid(*_a, **_kw):
+            raise AssertionError("unexpected FS access")
 
-    window = MainWindow()
-    window.project_path = str(tmp_path)
-    window.framework_choice = "None"
-    if hasattr(window, "framework_combo"):
-        window.framework_combo.setCurrentText("None")
-    window.php_path = "/custom/php"
+        monkeypatch.setattr(os.path, "exists", forbid, raising=True)
+        monkeypatch.setattr(mw_module, "open", forbid, raising=True)
 
-    (tmp_path / "public").mkdir()
+        main_window.refresh_logs()
 
-    called = {}
+        assert closed == [True]
+        assert main_window.log_view.text is None
 
-    class DummyProcess:
-        def __init__(self):
-            self.stdout = []
+    def test_start_project_uses_configured_php(self, tmp_path: Path, main_window, monkeypatch):
+        main_window.project_path = str(tmp_path)
+        (tmp_path / "public").mkdir()
 
-        def poll(self):
-            return None
+        main_window.framework_choice = "None"
+        if hasattr(main_window, "framework_combo"):
+            main_window.framework_combo.setCurrentText("None")
 
-    def fake_popen(cmd, **kwargs):
-        called["cmd"] = cmd
-        return DummyProcess()
+        main_window.php_path = "/custom/php"
 
-    monkeypatch.setattr(subprocess, "Popen", fake_popen)
-    monkeypatch.setattr(window.executor, "submit", lambda fn: None)
+        captured = {}
 
-    window.start_project()
+        class DummyProcess:
+            def poll(self):
+                return None
+            stdout: list[str] = []
 
-    assert called["cmd"][0] == "/custom/php"
+        def fake_popen(cmd, **_kw):
+            captured["cmd"] = cmd
+            return DummyProcess()
 
-    app.quit()
+        monkeypatch.setattr(subprocess, "Popen", fake_popen, raising=True)
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+
+        main_window.start_project()
+
+        assert captured["cmd"][0] == "/custom/php"
