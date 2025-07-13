@@ -1,5 +1,10 @@
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QPushButton, QSizePolicy, QGroupBox
+    QWidget,
+    QVBoxLayout,
+    QPushButton,
+    QSizePolicy,
+    QGroupBox,
+    QFileDialog,
 )
 
 class DatabaseTab(QWidget):
@@ -15,13 +20,13 @@ class DatabaseTab(QWidget):
         tools_layout = QVBoxLayout()
         tools_layout.setSpacing(10)
 
-        dbeaver_btn = self._btn("🧩 Open in DBeaver", lambda: print("Open in DBeaver clicked"))
-        dump_btn = self._btn("💾 Dump to SQL", lambda: print("Dump to SQL clicked"))
-        restore_btn = self._btn("📂 Restore dump", lambda: print("Restore dump clicked"))
+        self.dbeaver_btn = self._btn("🧩 Open in DBeaver", self.open_dbeaver)
+        self.dump_btn = self._btn("💾 Dump to SQL", self.dump_sql)
+        self.restore_btn = self._btn("📂 Restore dump", self.restore_dump)
 
-        tools_layout.addWidget(dbeaver_btn)
-        tools_layout.addWidget(dump_btn)
-        tools_layout.addWidget(restore_btn)
+        tools_layout.addWidget(self.dbeaver_btn)
+        tools_layout.addWidget(self.dump_btn)
+        tools_layout.addWidget(self.restore_btn)
 
         tools_group.setLayout(tools_layout)
         outer_layout.addWidget(tools_group)
@@ -47,3 +52,16 @@ class DatabaseTab(QWidget):
         btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         btn.clicked.connect(slot)
         return btn
+
+    def open_dbeaver(self):
+        self.main_window.run_command(["dbeaver"])
+
+    def dump_sql(self):
+        path, _ = QFileDialog.getSaveFileName(self, "Save SQL Dump", filter="SQL Files (*.sql)")
+        if path:
+            self.main_window.run_command(["mysqldump", "--result-file", path])
+
+    def restore_dump(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Select SQL Dump", filter="SQL Files (*.sql)")
+        if path:
+            self.main_window.run_command(["mysql", path])
