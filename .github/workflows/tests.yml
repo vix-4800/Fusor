@@ -12,6 +12,15 @@ jobs:
       QT_QPA_PLATFORM: offscreen
     steps:
       - uses: actions/checkout@v3
+
+      - name: Install Qt runtime libs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libegl1 \
+            libgl1-mesa-glx \
+            libxkbcommon-x11-0
+
       - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
@@ -21,5 +30,4 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
       - name: Run tests
-        run: |
-          pytest -q
+        run: pytest -q
