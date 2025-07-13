@@ -13,9 +13,13 @@ The available tabs are:
 -   **Project** – buttons to manage migrations and run PHPUnit tests.
 -   **Git** – simple controls for common Git actions.
 -   **Database** – quick actions for opening and dumping a database.
--   **Logs** – shows your project's log file (Laravel only) with a refresh option.
+-   **Logs** – shows your project's log file (Laravel only) with a refresh
+    button and optional auto refresh.
 -   **Settings** – fields for selecting the project directory, framework and PHP executable.
     Browse buttons let you choose each path.
+
+The Logs tab also provides an **Auto refresh** checkbox to reload logs
+automatically every few seconds.
 
 The application stores your selected project path, PHP binary, framework and the
 "use docker" setting in
