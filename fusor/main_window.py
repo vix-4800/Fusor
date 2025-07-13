@@ -234,10 +234,10 @@ class MainWindow(QMainWindow):
 
         if self.current_framework() == "Laravel":
             artisan_file = os.path.join(self.project_path, "artisan")
-            command = ["php", artisan_file, "serve"]
+            command = [self.php_path, artisan_file, "serve"]
         else:
             # fallback generic PHP server
-            command = ["php", "-S", "localhost:8000", "-t", os.path.join(self.project_path, "public")]
+            command = [self.php_path, "-S", "localhost:8000", "-t", os.path.join(self.project_path, "public")]
 
         print(f"$ {' '.join(command)}")
         try:
