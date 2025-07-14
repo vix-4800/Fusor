@@ -118,6 +118,8 @@ class SettingsTab(QWidget):
         self.php_path_edit.setEnabled(not checked)
         self.php_browse_btn.setEnabled(not checked)
         self.php_service_edit.setEnabled(checked)
+        if hasattr(self.main_window, "docker_tab"):
+            self.main_window.docker_tab.setEnabled(checked)
 
     def browse_project_path(self):
         directory = QFileDialog.getExistingDirectory(

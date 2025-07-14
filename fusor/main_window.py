@@ -20,6 +20,7 @@ from .qtextedit_logger import QTextEditLogger
 from .tabs.project_tab import ProjectTab
 from .tabs.git_tab import GitTab
 from .tabs.database_tab import DatabaseTab
+from .tabs.docker_tab import DockerTab
 from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
 
@@ -166,11 +167,17 @@ class MainWindow(QMainWindow):
         self.database_tab = DatabaseTab(self)
         self.tabs.addTab(self.database_tab, "Database")
 
+        self.docker_tab = DockerTab(self)
+        self.tabs.addTab(self.docker_tab, "Docker")
+
         self.logs_tab = LogsTab(self)
         self.tabs.addTab(self.logs_tab, "Logs")
 
         self.settings_tab = SettingsTab(self)
         self.tabs.addTab(self.settings_tab, "Settings")
+
+        # docker tab availability
+        self.docker_tab.setEnabled(self.use_docker)
 
         # populate settings widgets with loaded values
         self.project_path_edit.setText(self.project_path)
