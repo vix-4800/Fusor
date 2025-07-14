@@ -52,6 +52,16 @@ class SettingsTab(QWidget):
         self.server_port_edit = QLineEdit(str(self.main_window.server_port))
         form.addRow("Server Port:", self.server_port_edit)
 
+        self.log_path_edit = QLineEdit(self.main_window.log_path)
+        log_browse_btn = QPushButton("Browse")
+        log_browse_btn.setFixedHeight(30)
+        log_browse_btn.clicked.connect(self.browse_log_path)
+        log_path_row = QHBoxLayout()
+        log_path_row.addWidget(self.log_path_edit)
+        log_path_row.addWidget(log_browse_btn)
+        self.log_path_row = self._wrap(log_path_row)
+        form.addRow("Log Path:", self.log_path_row)
+
         self.framework_combo = QComboBox()
         self.framework_combo.addItems(["Laravel", "Yii", "None"])
         if self.main_window.framework_choice in ["Laravel", "Yii", "None"]:
@@ -88,6 +98,7 @@ class SettingsTab(QWidget):
         self.main_window.server_port_edit = self.server_port_edit
         self.main_window.docker_checkbox = self.docker_checkbox
         self.main_window.yii_template_combo = self.yii_template_combo
+        self.main_window.log_path_edit = self.log_path_edit
 
         self.on_docker_toggled(self.docker_checkbox.isChecked())
         self.on_framework_changed(self.framework_combo.currentText())
@@ -126,6 +137,16 @@ class SettingsTab(QWidget):
         if file:
             self.php_path_edit.setText(file)
 
+    def browse_log_path(self):
+        file, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Log File",
+            self.log_path_edit.text() or self.main_window.log_path,
+        )
+        if file:
+            self.log_path_edit.setText(file)
+
     def on_framework_changed(self, text: str):
         self.yii_template_row.setVisible(text == "Yii")
+        self.log_path_row.setVisible(text == "Laravel")
 

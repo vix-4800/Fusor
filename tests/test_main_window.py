@@ -196,3 +196,24 @@ class TestMainWindow:
         main_window.run_command(["php", "-v"])
 
         assert captured["cmd"][:5] == ["docker", "compose", "exec", "-T", "myphp"]
+
+    def test_refresh_logs_reads_custom_path(self, tmp_path: Path, main_window, monkeypatch):
+        log_file = tmp_path / "custom.log"
+        log_file.write_text("log text")
+        main_window.project_path = str(tmp_path)
+        main_window.log_view = FakeLogView()
+        main_window.log_path = "custom.log"
+
+        opened = []
+        real_open = mw_module.open
+
+        def fake_open(path, *args, **kwargs):
+            opened.append(path)
+            return real_open(path, *args, **kwargs)
+
+        monkeypatch.setattr(mw_module, "open", fake_open, raising=True)
+
+        main_window.refresh_logs()
+
+        assert opened == [str(log_file)]
+        assert main_window.log_view.text == "log text"
