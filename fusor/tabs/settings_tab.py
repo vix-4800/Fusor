@@ -72,7 +72,7 @@ class SettingsTab(QWidget):
         self.compose_row = self._wrap(compose_row)
         self.compose_label = QLabel("Compose Files:")
         form.addRow(self.compose_label, self.compose_row)
-        
+
         self.remote_combo = QComboBox()
         remotes = self.main_window.git_tab.get_remotes()
         if remotes:
@@ -172,10 +172,11 @@ class SettingsTab(QWidget):
         self.php_path_edit.setEnabled(not checked)
         self.php_browse_btn.setEnabled(not checked)
         self.php_service_edit.setEnabled(checked)
+        self.server_port_edit.setEnabled(not checked)
         self.compose_files_edit.setEnabled(checked)
         self.compose_browse_btn.setEnabled(checked)
-        self.compose_row.setVisible(checked)
-        self.compose_label.setVisible(checked)
+        self.compose_row.setEnabled(checked)
+        self.compose_label.setEnabled(checked)
         if hasattr(self.main_window, "docker_index"):
             self.main_window.tabs.setTabVisible(self.main_window.docker_index, checked)
             self.main_window.tabs.setTabEnabled(self.main_window.docker_index, checked)
