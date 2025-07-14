@@ -19,18 +19,18 @@ The available tabs are:
 -   **Database** – quick actions for opening and dumping a database.
 -   **Logs** – shows your project's log file (Laravel only) with a refresh
     button and optional auto refresh.
--   **Settings** – fields for selecting the project directory, framework, PHP
-    executable, Docker service name and the server port. When **Yii** is selected, a drop-down
-    lets you choose between the **basic** or **advanced** application template.
-    Browse buttons let you choose each path.
+-   **Settings** – manage multiple projects using an **Add** button and project
+   selector. The tab also lets you choose the framework, PHP executable, Docker
+   service name and the server port. When **Yii** is selected, a drop-down
+   lets you choose between the **basic** or **advanced** application template.
 
 The Logs tab also provides an **Auto refresh** checkbox to reload logs
 automatically every few seconds.
 
-The application stores your selected project path, PHP binary, framework,
-Yii template, Docker service name, server port and the "use docker" setting in
-`~/.fusor_config.json`. These values are restored automatically when the
-application starts.
+The application stores your list of projects, the currently selected project,
+PHP binary, framework, Yii template, Docker service name, server port and the
+"use docker" setting in `~/.fusor_config.json`. These values are restored
+automatically when the application starts.
 
 ## Running
 

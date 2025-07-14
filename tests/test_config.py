@@ -11,6 +11,8 @@ def test_save_then_load(tmp_path, monkeypatch):
         "server_port": 9000,
         "yii_template": "advanced",
         "log_path": "/tmp/app.log",
+        "projects": ["/one", "/two"],
+        "current_project": "/two",
     }
     config.save_config(data)
     loaded = config.load_config()
@@ -25,6 +27,8 @@ def test_load_missing_file(tmp_path, monkeypatch):
         "server_port": 8000,
         "yii_template": "basic",
         "log_path": "storage/logs/laravel.log",
+        "projects": [],
+        "current_project": "",
     }
 
 def test_load_invalid_json(tmp_path, monkeypatch):
@@ -37,4 +41,6 @@ def test_load_invalid_json(tmp_path, monkeypatch):
         "server_port": 8000,
         "yii_template": "basic",
         "log_path": "storage/logs/laravel.log",
+        "projects": [],
+        "current_project": "",
     }

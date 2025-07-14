@@ -16,12 +16,21 @@ def load_config():
                 "server_port": 8000,
                 "yii_template": "basic",
                 "log_path": os.path.join("storage", "logs", "laravel.log"),
+                "projects": [],
+                "current_project": "",
             }
         data.setdefault("use_docker", False)
         data.setdefault("php_service", "php")
         data.setdefault("server_port", 8000)
         data.setdefault("yii_template", "basic")
         data.setdefault("log_path", os.path.join("storage", "logs", "laravel.log"))
+        data.setdefault("projects", [])
+        data.setdefault("current_project", "")
+        if "project_path" in data and data["project_path"]:
+            if data["project_path"] not in data["projects"]:
+                data["projects"].append(data["project_path"])
+            if not data["current_project"]:
+                data["current_project"] = data["project_path"]
         return data
     except FileNotFoundError:
         return {
@@ -30,6 +39,8 @@ def load_config():
             "server_port": 8000,
             "yii_template": "basic",
             "log_path": os.path.join("storage", "logs", "laravel.log"),
+            "projects": [],
+            "current_project": "",
         }
     except json.JSONDecodeError:
         print("Failed to load config: invalid JSON")
@@ -39,6 +50,8 @@ def load_config():
             "server_port": 8000,
             "yii_template": "basic",
             "log_path": os.path.join("storage", "logs", "laravel.log"),
+            "projects": [],
+            "current_project": "",
         }
 
 def save_config(data):

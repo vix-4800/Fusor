@@ -28,14 +28,18 @@ class SettingsTab(QWidget):
         form = QFormLayout()
         form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
 
-        self.project_path_edit = QLineEdit(self.main_window.project_path)
-        browse_btn = QPushButton("Browse")
-        browse_btn.setFixedHeight(30)
-        browse_btn.clicked.connect(self.browse_project_path)
-        project_path_row = QHBoxLayout()
-        project_path_row.addWidget(self.project_path_edit)
-        project_path_row.addWidget(browse_btn)
-        form.addRow("Project Path:", self._wrap(project_path_row))
+        self.project_combo = QComboBox()
+        self.project_combo.addItems(self.main_window.projects)
+        self.project_combo.setCurrentText(self.main_window.project_path)
+        self.project_combo.currentTextChanged.connect(self.main_window.set_current_project)
+
+        add_btn = QPushButton("Add")
+        add_btn.setFixedHeight(30)
+        add_btn.clicked.connect(self.add_project)
+        project_row = QHBoxLayout()
+        project_row.addWidget(self.project_combo)
+        project_row.addWidget(add_btn)
+        form.addRow("Project:", self._wrap(project_row))
 
         self.php_path_edit = QLineEdit(self.main_window.php_path)
         self.php_browse_btn = QPushButton("Browse")
@@ -91,7 +95,7 @@ class SettingsTab(QWidget):
         save_btn.clicked.connect(self.main_window.save_settings)
         outer_layout.addWidget(save_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self.main_window.project_path_edit = self.project_path_edit
+        self.main_window.project_combo = self.project_combo
         self.main_window.framework_combo = self.framework_combo
         self.main_window.php_path_edit = self.php_path_edit
         self.main_window.php_service_edit = self.php_service_edit
@@ -119,14 +123,19 @@ class SettingsTab(QWidget):
         self.php_browse_btn.setEnabled(not checked)
         self.php_service_edit.setEnabled(checked)
 
-    def browse_project_path(self):
+    def add_project(self):
         directory = QFileDialog.getExistingDirectory(
             self,
             "Select Project Directory",
-            self.project_path_edit.text() or self.main_window.project_path,
+            self.main_window.project_path,
         )
         if directory:
-            self.project_path_edit.setText(directory)
+            if directory not in self.main_window.projects:
+                self.main_window.projects.append(directory)
+                self.project_combo.addItem(directory)
+            self.project_combo.setCurrentText(directory)
+            self.main_window.set_current_project(directory)
+            self.main_window.save_settings()
 
     def browse_php_path(self):
         file, _ = QFileDialog.getOpenFileName(

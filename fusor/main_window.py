@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QTextEdit,
     QMessageBox,
     QFileDialog,
+    QInputDialog,
 )
 from PyQt6.QtCore import QTimer
 
@@ -147,6 +148,7 @@ class MainWindow(QMainWindow):
 
         # Directory containing project files and PHP executable path
         self.project_path = ""
+        self.projects: list[str] = []
         self.framework_choice = "Laravel"
         self.php_path = "php"
         self.php_service = "php"
@@ -173,18 +175,24 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.settings_tab, "Settings")
 
         # populate settings widgets with loaded values
-        self.project_path_edit.setText(self.project_path)
+        if hasattr(self, "project_combo"):
+            self.project_combo.setCurrentText(self.project_path)
         if self.framework_choice in [self.framework_combo.itemText(i) for i in range(self.framework_combo.count())]:
             self.framework_combo.setCurrentText(self.framework_choice)
 
         if self.project_path:
             self.git_tab.load_branches()
         else:
-            QTimer.singleShot(0, self.ask_project_path)
+            QTimer.singleShot(0, self.choose_project)
 
     def load_config(self):
         data = load_config()
-        self.project_path = data.get("project_path", self.project_path)
+        self.projects = data.get("projects", [])
+        self.project_path = data.get("current_project", self.project_path)
+        if not self.projects and data.get("project_path"):
+            self.projects = [data["project_path"]]
+        if not self.project_path and self.projects:
+            self.project_path = self.projects[0]
         self.framework_choice = data.get("framework", self.framework_choice)
         self.php_path = data.get("php_path", self.php_path)
         self.php_service = data.get("php_service", self.php_service)
@@ -227,16 +235,40 @@ class MainWindow(QMainWindow):
             return False
         return True
 
-    def ask_project_path(self):
+    def set_current_project(self, path: str):
+        if not path:
+            return
+        self.project_path = path
+        if path not in self.projects:
+            self.projects.append(path)
+        if hasattr(self, "project_combo"):
+            self.project_combo.blockSignals(True)
+            if path not in [self.project_combo.itemText(i) for i in range(self.project_combo.count())]:
+                self.project_combo.addItem(path)
+            self.project_combo.setCurrentText(path)
+            self.project_combo.blockSignals(False)
+        if hasattr(self, "git_tab"):
+            self.git_tab.load_branches()
+
+    def add_project(self):
         path = QFileDialog.getExistingDirectory(self, "Select Project Path")
         if path:
-            self.project_path = path
-            if hasattr(self, "project_path_edit"):
-                self.project_path_edit.setText(path)
-        if self.ensure_project_path():
-            # update git branch list now that the project path is set
-            if hasattr(self, "git_tab"):
-                self.git_tab.load_branches()
+            self.set_current_project(path)
+            self.save_settings()
+
+    def choose_project(self):
+        if not self.projects:
+            self.add_project()
+            return
+        project, ok = QInputDialog.getItem(
+            self,
+            "Choose Project",
+            "Select project:",
+            self.projects,
+            editable=False,
+        )
+        if ok and project:
+            self.set_current_project(project)
 
     def current_framework(self):
         return self.framework_combo.currentText() if hasattr(self, "framework_combo") else "None"
@@ -265,7 +297,7 @@ class MainWindow(QMainWindow):
         self.log_view.setPlainText(log_contents.strip())
 
     def save_settings(self):
-        project_path = self.project_path_edit.text()
+        project_path = self.project_combo.currentText() if hasattr(self, "project_combo") else self.project_path
         framework = self.framework_combo.currentText()
         php_path = self.php_path_edit.text()
         php_service = self.php_service_edit.text() if hasattr(self, "php_service_edit") else self.php_service
@@ -297,6 +329,8 @@ class MainWindow(QMainWindow):
         server_port = int(port_text)
 
         self.project_path = project_path
+        if project_path not in self.projects:
+            self.projects.append(project_path)
         self.framework_choice = framework
         self.php_path = php_path
         self.php_service = php_service or self.php_service
@@ -306,6 +340,8 @@ class MainWindow(QMainWindow):
         self.log_path = log_path
 
         data = {
+            "projects": self.projects,
+            "current_project": project_path,
             "project_path": project_path,
             "framework": framework,
             "php_path": php_path,
