@@ -446,4 +446,4 @@ class TestMainWindow:
         main_window.save_settings()
 
         assert not warnings
-        assert saved["php_path"] == "php"
+        assert saved["project_settings"]["/tmp"]["php_path"] == "php"

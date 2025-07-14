@@ -7,15 +7,19 @@ def test_save_then_load(tmp_path, monkeypatch):
     data = {
         "foo": 123,
         "bar": [1, 2, 3],
-        "use_docker": True,
-        "php_service": "php",
-        "server_port": 9000,
-        "yii_template": "advanced",
-        "log_path": "/tmp/app.log",
         "projects": ["/one", "/two"],
         "current_project": "/two",
-        "git_remote": "origin",
-        "compose_files": ["dc.yml"],
+        "project_settings": {
+            "/two": {
+                "use_docker": True,
+                "php_service": "php",
+                "server_port": 9000,
+                "yii_template": "advanced",
+                "log_path": "/tmp/app.log",
+                "git_remote": "origin",
+                "compose_files": ["dc.yml"],
+            }
+        },
     }
     config.save_config(data)
     loaded = config.load_config()

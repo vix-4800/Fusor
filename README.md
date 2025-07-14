@@ -33,10 +33,11 @@ The available tabs are:
 The Logs tab also provides an **Auto refresh** checkbox to reload logs
 automatically every few seconds.
 
-The application stores your list of projects, the currently selected project,
-PHP binary, framework, Yii template, Docker service name, server port and the
-"use docker" setting in `~/.fusor_config.json`. These values are restored
-automatically when the application starts.
+The application stores your list of projects and, for each project, its own
+settings such as PHP binary, Docker compose files, container name and server
+port in `~/.fusor_config.json` under the `project_settings` key. The currently
+selected project is remembered as well, so everything is restored automatically
+when the application starts.
 
 ## Running
 
