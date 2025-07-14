@@ -152,6 +152,7 @@ class MainWindow(QMainWindow):
         self.php_service = "php"
         self.server_port = 8000
         self.use_docker = False
+        self.yii_template = "basic"
         self.load_config()
 
         # initialize tabs
@@ -188,6 +189,7 @@ class MainWindow(QMainWindow):
         self.php_service = data.get("php_service", self.php_service)
         self.server_port = data.get("server_port", self.server_port)
         self.use_docker = data.get("use_docker", self.use_docker)
+        self.yii_template = data.get("yii_template", self.yii_template)
 
     def run_command(self, command):
         if self.use_docker and not (
@@ -267,6 +269,7 @@ class MainWindow(QMainWindow):
         php_service = self.php_service_edit.text() if hasattr(self, "php_service_edit") else self.php_service
         port_text = self.server_port_edit.text() if hasattr(self, "server_port_edit") else str(self.server_port)
         use_docker = self.docker_checkbox.isChecked()
+        yii_template = self.yii_template_combo.currentText() if hasattr(self, "yii_template_combo") else self.yii_template
 
         if (
             not project_path
@@ -296,6 +299,7 @@ class MainWindow(QMainWindow):
         self.php_service = php_service or self.php_service
         self.server_port = server_port
         self.use_docker = use_docker
+        self.yii_template = yii_template
 
         data = {
             "project_path": project_path,
@@ -304,6 +308,7 @@ class MainWindow(QMainWindow):
             "php_service": php_service,
             "server_port": server_port,
             "use_docker": use_docker,
+            "yii_template": yii_template,
         }
         try:
             save_config(data)

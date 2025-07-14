@@ -9,6 +9,7 @@ def test_save_then_load(tmp_path, monkeypatch):
         "use_docker": True,
         "php_service": "php",
         "server_port": 9000,
+        "yii_template": "advanced",
     }
     config.save_config(data)
     loaded = config.load_config()
@@ -21,6 +22,7 @@ def test_load_missing_file(tmp_path, monkeypatch):
         "use_docker": False,
         "php_service": "php",
         "server_port": 8000,
+        "yii_template": "basic",
     }
 
 def test_load_invalid_json(tmp_path, monkeypatch):
@@ -31,4 +33,5 @@ def test_load_invalid_json(tmp_path, monkeypatch):
         "use_docker": False,
         "php_service": "php",
         "server_port": 8000,
+        "yii_template": "basic",
     }

@@ -55,7 +55,15 @@ class SettingsTab(QWidget):
         self.framework_combo.addItems(["Laravel", "Yii", "None"])
         if self.main_window.framework_choice in ["Laravel", "Yii", "None"]:
             self.framework_combo.setCurrentText(self.main_window.framework_choice)
+        self.framework_combo.currentTextChanged.connect(self.on_framework_changed)
         form.addRow("Framework:", self.framework_combo)
+
+        self.yii_template_combo = QComboBox()
+        self.yii_template_combo.addItems(["basic", "advanced"])
+        if hasattr(self.main_window, "yii_template"):
+            self.yii_template_combo.setCurrentText(self.main_window.yii_template)
+        self.yii_template_row = self._wrap(self.yii_template_combo)
+        form.addRow("Yii Template:", self.yii_template_row)
 
         self.docker_checkbox = QCheckBox("Use Docker")
         self.docker_checkbox.setChecked(self.main_window.use_docker)
@@ -78,8 +86,10 @@ class SettingsTab(QWidget):
         self.main_window.php_service_edit = self.php_service_edit
         self.main_window.server_port_edit = self.server_port_edit
         self.main_window.docker_checkbox = self.docker_checkbox
+        self.main_window.yii_template_combo = self.yii_template_combo
 
         self.on_docker_toggled(self.docker_checkbox.isChecked())
+        self.on_framework_changed(self.framework_combo.currentText())
 
     def _wrap(self, layout):
         container = QWidget()
@@ -108,4 +118,7 @@ class SettingsTab(QWidget):
         )
         if file:
             self.php_path_edit.setText(file)
+
+    def on_framework_changed(self, text: str):
+        self.yii_template_row.setVisible(text == "Yii")
 

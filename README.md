@@ -20,14 +20,15 @@ The available tabs are:
 -   **Logs** – shows your project's log file (Laravel only) with a refresh
     button and optional auto refresh.
 -   **Settings** – fields for selecting the project directory, framework, PHP
-    executable or Docker service name, and the server port. Browse buttons let
-    you choose each path.
+    executable, Docker service name and the server port. When **Yii** is selected, a drop-down
+    lets you choose between the **basic** or **advanced** application template.
+    Browse buttons let you choose each path.
 
 The Logs tab also provides an **Auto refresh** checkbox to reload logs
 automatically every few seconds.
 
 The application stores your selected project path, PHP binary, framework,
-Docker service name, server port and the "use docker" setting in
+Yii template, Docker service name, server port and the "use docker" setting in
 `~/.fusor_config.json`. These values are restored automatically when the
 application starts.
 
