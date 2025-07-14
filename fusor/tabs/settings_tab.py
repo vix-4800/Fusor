@@ -61,7 +61,8 @@ class SettingsTab(QWidget):
         log_path_row.addWidget(self.log_path_edit)
         log_path_row.addWidget(log_browse_btn)
         self.log_path_row = self._wrap(log_path_row)
-        form.addRow("Log Path:", self.log_path_row)
+        self.log_path_label = QLabel("Log Path:")
+        form.addRow(self.log_path_label, self.log_path_row)
 
         self.framework_combo = QComboBox()
         self.framework_combo.addItems(["Laravel", "Yii", "None"])
@@ -152,5 +153,7 @@ class SettingsTab(QWidget):
         visible = text == "Yii"
         self.yii_template_row.setVisible(visible)
         self.yii_template_label.setVisible(visible)
-        self.log_path_row.setVisible(text == "Laravel")
+        log_visible = text == "Laravel"
+        self.log_path_row.setVisible(log_visible)
+        self.log_path_label.setVisible(log_visible)
 
