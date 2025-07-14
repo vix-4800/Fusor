@@ -565,7 +565,7 @@ class MainWindow(QMainWindow):
                 "-S",
                 f"localhost:{self.server_port}",
                 "-t",
-                os.path.join(self.project_path, "public"),
+                self.project_path, # os.path.join(self.project_path, "public")
             ]
 
         print(f"$ {' '.join(command)}")
