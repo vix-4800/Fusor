@@ -1,10 +1,8 @@
 import subprocess
-from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QMessageBox, QPushButton
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QPushButton
 
 from fusor.tabs.git_tab import GitTab
-
 
 class DummyMainWindow:
     def __init__(self, path="/repo"):
