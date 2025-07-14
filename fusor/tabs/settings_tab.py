@@ -37,9 +37,14 @@ class SettingsTab(QWidget):
         add_btn = QPushButton("Add")
         add_btn.setFixedHeight(30)
         add_btn.clicked.connect(self.add_project)
+        remove_btn = QPushButton("Remove")
+        remove_btn.setFixedHeight(30)
+        remove_btn.clicked.connect(self.remove_project)
+        self.remove_btn = remove_btn
         project_row = QHBoxLayout()
         project_row.addWidget(self.project_combo)
         project_row.addWidget(add_btn)
+        project_row.addWidget(remove_btn)
         form.addRow("Project:", self._wrap(project_row))
 
         self.php_path_edit = QLineEdit(self.main_window.php_path)
@@ -177,6 +182,24 @@ class SettingsTab(QWidget):
             self.project_combo.setCurrentText(directory)
             self.main_window.set_current_project(directory)
             self.main_window.save_settings()
+
+    def remove_project(self):
+        index = self.project_combo.currentIndex()
+        if index < 0:
+            return
+        project = self.project_combo.currentText()
+        self.project_combo.removeItem(index)
+        if project in self.main_window.projects:
+            self.main_window.projects.remove(project)
+
+        if self.main_window.project_path == project:
+            new_project = self.project_combo.currentText()
+            if new_project:
+                self.main_window.set_current_project(new_project)
+            else:
+                self.main_window.project_path = ""
+
+        self.main_window.save_settings()
 
     def browse_php_path(self):
         file, _ = QFileDialog.getOpenFileName(
