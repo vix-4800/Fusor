@@ -48,6 +48,9 @@ class SettingsTab(QWidget):
         self.php_service_edit = QLineEdit(self.main_window.php_service)
         form.addRow("PHP Service:", self.php_service_edit)
 
+        self.server_port_edit = QLineEdit(str(self.main_window.server_port))
+        form.addRow("Server Port:", self.server_port_edit)
+
         self.framework_combo = QComboBox()
         self.framework_combo.addItems(["Laravel", "Yii", "None"])
         if self.main_window.framework_choice in ["Laravel", "Yii", "None"]:
@@ -73,6 +76,7 @@ class SettingsTab(QWidget):
         self.main_window.framework_combo = self.framework_combo
         self.main_window.php_path_edit = self.php_path_edit
         self.main_window.php_service_edit = self.php_service_edit
+        self.main_window.server_port_edit = self.server_port_edit
         self.main_window.docker_checkbox = self.docker_checkbox
 
         self.on_docker_toggled(self.docker_checkbox.isChecked())

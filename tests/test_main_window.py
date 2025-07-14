@@ -83,6 +83,35 @@ class TestMainWindow:
 
         assert captured["cmd"][0] == "/custom/php"
 
+    def test_start_project_uses_configured_port(self, tmp_path: Path, main_window, monkeypatch):
+        main_window.project_path = str(tmp_path)
+        (tmp_path / "public").mkdir()
+
+        main_window.framework_choice = "None"
+        if hasattr(main_window, "framework_combo"):
+            main_window.framework_combo.setCurrentText("None")
+
+        main_window.server_port = 1234
+
+        captured = {}
+
+        class DummyProcess:
+            def poll(self):
+                return None
+
+            stdout: list[str] = []
+
+        def fake_popen(cmd, **_kw):
+            captured["cmd"] = cmd
+            return DummyProcess()
+
+        monkeypatch.setattr(subprocess, "Popen", fake_popen, raising=True)
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+
+        main_window.start_project()
+
+        assert f"localhost:1234" in captured["cmd"]
+
     def test_start_project_uses_docker_compose_up(self, tmp_path: Path, main_window, monkeypatch):
         main_window.project_path = str(tmp_path)
         (tmp_path / "public").mkdir()
