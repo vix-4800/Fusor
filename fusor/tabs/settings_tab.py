@@ -57,6 +57,13 @@ class SettingsTab(QWidget):
         self.server_port_edit = QLineEdit(str(self.main_window.server_port))
         form.addRow("Server Port:", self.server_port_edit)
 
+        self.framework_combo = QComboBox()
+        self.framework_combo.addItems(["Laravel", "Yii", "None"])
+        if self.main_window.framework_choice in ["Laravel", "Yii", "None"]:
+            self.framework_combo.setCurrentText(self.main_window.framework_choice)
+        self.framework_combo.currentTextChanged.connect(self.on_framework_changed)
+        form.addRow("Framework:", self.framework_combo)
+
         self.log_path_edit = QLineEdit(self.main_window.log_path)
         log_browse_btn = QPushButton("Browse")
         log_browse_btn.setFixedHeight(30)
@@ -67,13 +74,6 @@ class SettingsTab(QWidget):
         self.log_path_row = self._wrap(log_path_row)
         self.log_path_label = QLabel("Log Path:")
         form.addRow(self.log_path_label, self.log_path_row)
-
-        self.framework_combo = QComboBox()
-        self.framework_combo.addItems(["Laravel", "Yii", "None"])
-        if self.main_window.framework_choice in ["Laravel", "Yii", "None"]:
-            self.framework_combo.setCurrentText(self.main_window.framework_choice)
-        self.framework_combo.currentTextChanged.connect(self.on_framework_changed)
-        form.addRow("Framework:", self.framework_combo)
 
         self.yii_template_combo = QComboBox()
         self.yii_template_combo.addItems(["basic", "advanced"])
