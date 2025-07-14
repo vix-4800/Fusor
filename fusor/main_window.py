@@ -170,6 +170,7 @@ class MainWindow(QMainWindow):
         self.compose_files: list[str] = []
         self.yii_template = "basic"
         self.log_path = os.path.join("storage", "logs", "laravel.log")
+        self.git_remote = ""
         self.load_config()
 
         # initialize tabs
@@ -204,6 +205,7 @@ class MainWindow(QMainWindow):
 
         if self.project_path:
             self.git_tab.load_branches()
+            self.git_tab.load_remote_branches()
         else:
             QTimer.singleShot(0, self.choose_project)
 
@@ -222,6 +224,7 @@ class MainWindow(QMainWindow):
         self.use_docker = data.get("use_docker", self.use_docker)
         self.yii_template = data.get("yii_template", self.yii_template)
         self.log_path = data.get("log_path", self.log_path)
+        self.git_remote = data.get("git_remote", self.git_remote)
         self.compose_files = data.get("compose_files", self.compose_files)
 
     def _compose_prefix(self) -> list[str]:
@@ -294,6 +297,7 @@ class MainWindow(QMainWindow):
             self.project_combo.blockSignals(False)
         if hasattr(self, "git_tab"):
             self.git_tab.load_branches()
+            self.git_tab.load_remote_branches()
 
     def add_project(self):
         path = QFileDialog.getExistingDirectory(self, "Select Project Path")
@@ -350,6 +354,7 @@ class MainWindow(QMainWindow):
         use_docker = self.docker_checkbox.isChecked()
         yii_template = self.yii_template_combo.currentText() if hasattr(self, "yii_template_combo") else self.yii_template
         log_path = self.log_path_edit.text() if hasattr(self, "log_path_edit") else self.log_path
+        git_remote = self.remote_combo.currentText() if hasattr(self, "remote_combo") else self.git_remote
         compose_text = self.compose_files_edit.text() if hasattr(self, "compose_files_edit") else ";".join(self.compose_files)
 
         if (
@@ -384,6 +389,7 @@ class MainWindow(QMainWindow):
         self.use_docker = use_docker
         self.yii_template = yii_template
         self.log_path = log_path
+        self.git_remote = git_remote
         self.compose_files = [f for f in compose_text.split(";") if f]
 
         data = {
@@ -397,6 +403,7 @@ class MainWindow(QMainWindow):
             "use_docker": use_docker,
             "yii_template": yii_template,
             "log_path": log_path,
+            "git_remote": git_remote,
             "compose_files": self.compose_files,
         }
         try:
@@ -409,6 +416,7 @@ class MainWindow(QMainWindow):
 
         if hasattr(self, "git_tab"):
             self.git_tab.load_branches()
+            self.git_tab.load_remote_branches()
 
     def artisan(self, *args):
         self.ensure_project_path()

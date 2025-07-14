@@ -67,6 +67,14 @@ class SettingsTab(QWidget):
         self.compose_row = self._wrap(compose_row)
         self.compose_label = QLabel("Compose Files:")
         form.addRow(self.compose_label, self.compose_row)
+        
+        self.remote_combo = QComboBox()
+        remotes = self.main_window.git_tab.get_remotes()
+        if remotes:
+            self.remote_combo.addItems(remotes)
+        if self.main_window.git_remote in remotes:
+            self.remote_combo.setCurrentText(self.main_window.git_remote)
+        form.addRow("Git Remote:", self.remote_combo)
 
         self.framework_combo = QComboBox()
         self.framework_combo.addItems(["Laravel", "Yii", "None"])
@@ -117,6 +125,7 @@ class SettingsTab(QWidget):
         self.main_window.docker_checkbox = self.docker_checkbox
         self.main_window.yii_template_combo = self.yii_template_combo
         self.main_window.log_path_edit = self.log_path_edit
+        self.main_window.remote_combo = self.remote_combo
         self.main_window.compose_files_edit = self.compose_files_edit
 
         self.on_docker_toggled(self.docker_checkbox.isChecked())

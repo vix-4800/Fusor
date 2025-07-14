@@ -16,6 +16,7 @@ def load_config():
                 "server_port": 8000,
                 "yii_template": "basic",
                 "log_path": os.path.join("storage", "logs", "laravel.log"),
+                "git_remote": "",
                 "projects": [],
                 "current_project": "",
                 "compose_files": [],
@@ -25,6 +26,7 @@ def load_config():
         data.setdefault("server_port", 8000)
         data.setdefault("yii_template", "basic")
         data.setdefault("log_path", os.path.join("storage", "logs", "laravel.log"))
+        data.setdefault("git_remote", "")
         data.setdefault("projects", [])
         data.setdefault("current_project", "")
         data.setdefault("compose_files", [])
@@ -41,6 +43,7 @@ def load_config():
             "server_port": 8000,
             "yii_template": "basic",
             "log_path": os.path.join("storage", "logs", "laravel.log"),
+            "git_remote": "",
             "projects": [],
             "current_project": "",
             "compose_files": [],
@@ -53,6 +56,7 @@ def load_config():
             "server_port": 8000,
             "yii_template": "basic",
             "log_path": os.path.join("storage", "logs", "laravel.log"),
+            "git_remote": "",
             "projects": [],
             "current_project": "",
             "compose_files": [],

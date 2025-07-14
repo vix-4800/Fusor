@@ -13,6 +13,7 @@ def test_save_then_load(tmp_path, monkeypatch):
         "log_path": "/tmp/app.log",
         "projects": ["/one", "/two"],
         "current_project": "/two",
+        "git_remote": "origin",
         "compose_files": ["dc.yml"],
     }
     config.save_config(data)
@@ -30,6 +31,7 @@ def test_load_missing_file(tmp_path, monkeypatch):
         "log_path": "storage/logs/laravel.log",
         "projects": [],
         "current_project": "",
+        "git_remote": "",
         "compose_files": [],
     }
 
@@ -45,5 +47,6 @@ def test_load_invalid_json(tmp_path, monkeypatch):
         "log_path": "storage/logs/laravel.log",
         "projects": [],
         "current_project": "",
+        "git_remote": "",
         "compose_files": [],
     }

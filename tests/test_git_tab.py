@@ -13,6 +13,8 @@ class DummyMainWindow:
         self.ensure_called += 1
         return bool(self.project_path)
 
+    git_remote = "origin"
+
 
 def test_load_branches_and_run_git_command(monkeypatch, qtbot):
     main = DummyMainWindow()
@@ -106,3 +108,33 @@ def test_hard_reset_runs_command(monkeypatch, qtbot):
     tab.hard_reset()
 
     assert called["args"] == ("reset", "--hard")
+
+
+def test_remote_helpers(monkeypatch, qtbot):
+    main = DummyMainWindow()
+    tab = GitTab(main)
+    qtbot.addWidget(tab)
+
+    class DummyResult:
+        def __init__(self, stdout=""):
+            self.stdout = stdout
+            self.stderr = ""
+            self.returncode = 0
+
+    outputs = {
+        ("git", "remote"): DummyResult("origin\nupstream\n"),
+        ("git", "ls-remote", "--heads", "origin"): DummyResult("sha\trefs/heads/main\nsha\trefs/heads/feature\n"),
+    }
+
+    def fake_run(cmd, capture_output=True, text=True, cwd=None):
+        assert cwd == main.project_path
+        return outputs[tuple(cmd)]
+
+    monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
+
+    assert tab.get_remotes() == ["origin", "upstream"]
+    tab.load_remote_branches()
+    assert [tab.remote_branch_combo.itemText(i) for i in range(tab.remote_branch_combo.count())] == [
+        "main",
+        "feature",
+    ]
