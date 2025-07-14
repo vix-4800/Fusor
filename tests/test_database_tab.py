@@ -11,9 +11,13 @@ class DummyMainWindow:
         self.rollback = lambda: None
         self.fresh = lambda: None
         self.seed = lambda: None
+        self.framework_choice = "Laravel"
 
     def run_command(self, cmd):
         self.commands.append(cmd)
+
+    def artisan(self, *args):
+        self.commands.append(list(args))
 
 
 def test_dbeaver_button_runs_command(monkeypatch, qtbot):
@@ -56,3 +60,37 @@ def test_restore_button_runs_command(monkeypatch, qtbot):
     qtbot.mouseClick(tab.restore_btn, Qt.MouseButton.LeftButton)
 
     assert main.commands == [["mysql", "/tmp/d.sql"]]
+
+
+def test_optimize_button_runs_command(qtbot):
+    main = DummyMainWindow()
+    tab = DatabaseTab(main)
+    qtbot.addWidget(tab)
+
+    qtbot.mouseClick(tab.optimize_btn, Qt.MouseButton.LeftButton)
+
+    assert main.commands == [["optimize"]]
+
+
+def test_config_clear_button_runs_command(qtbot):
+    main = DummyMainWindow()
+    tab = DatabaseTab(main)
+    qtbot.addWidget(tab)
+
+    qtbot.mouseClick(tab.config_clear_btn, Qt.MouseButton.LeftButton)
+
+    assert main.commands == [["config:clear"]]
+
+
+def test_artisan_group_visibility_changes(qtbot):
+    main = DummyMainWindow()
+    tab = DatabaseTab(main)
+    qtbot.addWidget(tab)
+
+    tab.on_framework_changed("None")
+    assert tab.artisan_group.isHidden()
+    assert tab.migrate_group.isHidden()
+
+    tab.on_framework_changed("Laravel")
+    assert not tab.artisan_group.isHidden()
+    assert not tab.migrate_group.isHidden()
