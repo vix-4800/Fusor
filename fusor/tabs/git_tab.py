@@ -27,6 +27,19 @@ class GitTab(QWidget):
         branch_group.setLayout(branch_layout)
         outer_layout.addWidget(branch_group)
 
+        # --- Remote branches ---
+        remote_group = QGroupBox("Remote Branch")
+        remote_layout = QHBoxLayout()
+        self.remote_branch_combo = QComboBox()
+        self.remote_branch_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.remote_branch_combo.currentTextChanged.connect(self.on_remote_branch_changed)
+        refresh_btn = self._btn("🔄 Refresh", self.load_remote_branches)
+        remote_layout.addWidget(QLabel("Branch:"))
+        remote_layout.addWidget(self.remote_branch_combo)
+        remote_layout.addWidget(refresh_btn)
+        remote_group.setLayout(remote_layout)
+        outer_layout.addWidget(remote_group)
+
         # --- Git actions ---
         actions_group = QGroupBox("Git Commands")
         actions_layout = QVBoxLayout()
@@ -147,3 +160,67 @@ class GitTab(QWidget):
             print("Changes stashed successfully")
         else:
             print("Stash failed")
+
+    def get_remotes(self) -> list[str]:
+        if not self.main_window.project_path:
+            return []
+        try:
+            res = subprocess.run(
+                ["git", "remote"],
+                capture_output=True,
+                text=True,
+                cwd=self.main_window.project_path,
+            )
+            return [r.strip() for r in res.stdout.splitlines() if r.strip()]
+        except FileNotFoundError:
+            return []
+
+    def load_remote_branches(self):
+        remote = self.main_window.git_remote
+        self.remote_branch_combo.blockSignals(True)
+        self.remote_branch_combo.clear()
+        if not remote:
+            self.remote_branch_combo.blockSignals(False)
+            return
+        try:
+            result = subprocess.run(
+                ["git", "ls-remote", "--heads", remote],
+                capture_output=True,
+                text=True,
+                cwd=self.main_window.project_path,
+            )
+            branches = []
+            for line in result.stdout.splitlines():
+                parts = line.split()
+                if len(parts) >= 2 and parts[1].startswith("refs/heads/"):
+                    branches.append(parts[1].split("/", 2)[2])
+            self.remote_branch_combo.addItems(branches)
+        except FileNotFoundError:
+            print("Command not found: git")
+        finally:
+            self.remote_branch_combo.blockSignals(False)
+
+    def checkout_remote_branch(self, branch: str):
+        remote = self.main_window.git_remote
+        if not remote:
+            return
+        self.run_git_command("fetch", remote)
+        self.run_git_command("checkout", "-t", f"{remote}/{branch}")
+        self.current_branch = branch
+
+    def on_remote_branch_changed(self, branch: str):
+        if not branch:
+            return
+        if branch == self.current_branch:
+            return
+        reply = QMessageBox.question(
+            self,
+            "Checkout Remote Branch",
+            f"Switch to remote branch '{branch}'?",
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            self.checkout_remote_branch(branch)
+        else:
+            self.remote_branch_combo.blockSignals(True)
+            self.remote_branch_combo.setCurrentText(self.current_branch)
+            self.remote_branch_combo.blockSignals(False)

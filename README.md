@@ -15,7 +15,7 @@ the codebase easier to maintain. Each tab lives in its own file inside
 The available tabs are:
 
 -   **Project** – buttons to manage migrations and run PHPUnit tests.
--   **Git** – simple controls for common Git actions.
+-   **Git** – simple controls for common Git actions and switching between local and remote branches.
 -   **Database** – quick actions for opening and dumping a database.
 -   **Docker** – helpers for building, pulling and inspecting containers.
 -   **Logs** – shows your project's log file (Laravel only) with a refresh

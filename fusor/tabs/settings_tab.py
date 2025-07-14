@@ -56,6 +56,14 @@ class SettingsTab(QWidget):
         self.server_port_edit = QLineEdit(str(self.main_window.server_port))
         form.addRow("Server Port:", self.server_port_edit)
 
+        self.remote_combo = QComboBox()
+        remotes = self.main_window.git_tab.get_remotes()
+        if remotes:
+            self.remote_combo.addItems(remotes)
+        if self.main_window.git_remote in remotes:
+            self.remote_combo.setCurrentText(self.main_window.git_remote)
+        form.addRow("Git Remote:", self.remote_combo)
+
         self.log_path_edit = QLineEdit(self.main_window.log_path)
         log_browse_btn = QPushButton("Browse")
         log_browse_btn.setFixedHeight(30)
@@ -103,6 +111,7 @@ class SettingsTab(QWidget):
         self.main_window.docker_checkbox = self.docker_checkbox
         self.main_window.yii_template_combo = self.yii_template_combo
         self.main_window.log_path_edit = self.log_path_edit
+        self.main_window.remote_combo = self.remote_combo
 
         self.on_docker_toggled(self.docker_checkbox.isChecked())
         self.on_framework_changed(self.framework_combo.currentText())
