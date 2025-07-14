@@ -13,6 +13,8 @@ DEFAULT_CONFIG = {
     "log_path": os.path.join("storage", "logs", "laravel.log"),
     "projects": [],
     "current_project": "",
+    "git_remote": "",
+    "compose_files": [],
 }
 
 def load_config():
@@ -24,8 +26,6 @@ def load_config():
             return DEFAULT_CONFIG.copy()
         for key, value in DEFAULT_CONFIG.items():
             data.setdefault(key, value)
-        data.setdefault("git_remote", "")
-        data.setdefault("compose_files", [])
         if "project_path" in data and data["project_path"]:
             if data["project_path"] not in data["projects"]:
                 data["projects"].append(data["project_path"])
