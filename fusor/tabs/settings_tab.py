@@ -57,6 +57,17 @@ class SettingsTab(QWidget):
         self.server_port_edit = QLineEdit(str(self.main_window.server_port))
         form.addRow("Server Port:", self.server_port_edit)
 
+        self.compose_files_edit = QLineEdit(";".join(self.main_window.compose_files))
+        self.compose_browse_btn = QPushButton("Browse")
+        self.compose_browse_btn.setFixedHeight(30)
+        self.compose_browse_btn.clicked.connect(self.browse_compose_files)
+        compose_row = QHBoxLayout()
+        compose_row.addWidget(self.compose_files_edit)
+        compose_row.addWidget(self.compose_browse_btn)
+        self.compose_row = self._wrap(compose_row)
+        self.compose_label = QLabel("Compose Files:")
+        form.addRow(self.compose_label, self.compose_row)
+
         self.framework_combo = QComboBox()
         self.framework_combo.addItems(["Laravel", "Yii", "None"])
         if self.main_window.framework_choice in ["Laravel", "Yii", "None"]:
@@ -106,6 +117,7 @@ class SettingsTab(QWidget):
         self.main_window.docker_checkbox = self.docker_checkbox
         self.main_window.yii_template_combo = self.yii_template_combo
         self.main_window.log_path_edit = self.log_path_edit
+        self.main_window.compose_files_edit = self.compose_files_edit
 
         self.on_docker_toggled(self.docker_checkbox.isChecked())
         self.on_framework_changed(self.framework_combo.currentText())
@@ -125,6 +137,10 @@ class SettingsTab(QWidget):
         self.php_path_edit.setEnabled(not checked)
         self.php_browse_btn.setEnabled(not checked)
         self.php_service_edit.setEnabled(checked)
+        self.compose_files_edit.setEnabled(checked)
+        self.compose_browse_btn.setEnabled(checked)
+        self.compose_row.setVisible(checked)
+        self.compose_label.setVisible(checked)
         if hasattr(self.main_window, "docker_index"):
             self.main_window.tabs.setTabVisible(self.main_window.docker_index, checked)
             self.main_window.tabs.setTabEnabled(self.main_window.docker_index, checked)
@@ -151,6 +167,15 @@ class SettingsTab(QWidget):
         )
         if file:
             self.php_path_edit.setText(file)
+
+    def browse_compose_files(self):
+        files, _ = QFileDialog.getOpenFileNames(
+            self,
+            "Select Compose Files",
+            self.compose_files_edit.text() or self.main_window.project_path,
+        )
+        if files:
+            self.compose_files_edit.setText(";".join(files))
 
     def browse_log_path(self):
         file, _ = QFileDialog.getOpenFileName(
