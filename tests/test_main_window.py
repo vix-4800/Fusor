@@ -217,3 +217,14 @@ class TestMainWindow:
 
         assert opened == [str(log_file)]
         assert main_window.log_view.text == "log text"
+
+    def test_yii_template_row_visibility(self, main_window, qtbot):
+        main_window.framework_combo.setCurrentText("None")
+        qtbot.wait(10)
+        assert main_window.settings_tab.yii_template_row.isHidden()
+        assert main_window.settings_tab.yii_template_label.isHidden()
+
+        main_window.framework_combo.setCurrentText("Yii")
+        qtbot.wait(10)
+        assert not main_window.settings_tab.yii_template_row.isHidden()
+        assert not main_window.settings_tab.yii_template_label.isHidden()
