@@ -36,8 +36,9 @@ automatically every few seconds.
 The application stores your list of projects and, for each project, its own
 settings such as PHP binary, Docker compose files, container name and server
 port in `~/.fusor_config.json` under the `project_settings` key. The currently
-selected project is remembered as well, so everything is restored automatically
-when the application starts.
+selected project is remembered as well, and switching the active project
+refreshes the Settings tab automatically so everything is restored when the
+application starts.
 
 ## Running
 

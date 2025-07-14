@@ -447,3 +447,33 @@ class TestMainWindow:
 
         assert not warnings
         assert saved["project_settings"]["/tmp"]["php_path"] == "php"
+
+    def test_project_change_updates_settings(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(
+            mw_module,
+            "load_config",
+            lambda: {
+                "projects": ["/one", "/two"],
+                "current_project": "/one",
+                "project_settings": {
+                    "/one": {"server_port": 8000},
+                    "/two": {"server_port": 8001},
+                },
+            },
+            raising=True,
+        )
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        assert win.server_port == 8000
+        assert win.server_port_edit.text() == "8000"
+
+        win.project_combo.setCurrentText("/two")
+        qtbot.wait(10)
+
+        assert win.server_port == 8001
+        assert win.server_port_edit.text() == "8001"
+        win.close()

@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import QTimer
 
-from .config import load_config, save_config
+from .config import load_config, save_config, DEFAULT_PROJECT_SETTINGS
 from .qtextedit_logger import QTextEditLogger
 
 from .tabs.project_tab import ProjectTab
@@ -289,6 +289,46 @@ class MainWindow(QMainWindow):
             self.settings_dirty = False
             self.update_settings_tab_title()
 
+    def apply_project_settings(self):
+        """Load settings for the current project and update widgets."""
+        data = load_config()
+        settings = DEFAULT_PROJECT_SETTINGS.copy()
+        settings.update(data.get("project_settings", {}).get(self.project_path, {}))
+
+        self.framework_choice = settings["framework"]
+        self.php_path = settings["php_path"]
+        self.php_service = settings["php_service"]
+        self.server_port = settings["server_port"]
+        self.use_docker = settings["use_docker"]
+        self.yii_template = settings["yii_template"]
+        self.log_path = settings["log_path"]
+        self.git_remote = settings["git_remote"]
+        self.compose_files = settings["compose_files"]
+
+        if hasattr(self, "framework_combo"):
+            self.framework_combo.setCurrentText(self.framework_choice)
+        if hasattr(self, "php_path_edit"):
+            self.php_path_edit.setText(self.php_path)
+        if hasattr(self, "php_service_edit"):
+            self.php_service_edit.setText(self.php_service)
+        if hasattr(self, "server_port_edit"):
+            self.server_port_edit.setText(str(self.server_port))
+        if hasattr(self, "docker_checkbox"):
+            self.docker_checkbox.setChecked(self.use_docker)
+        if hasattr(self, "yii_template_combo"):
+            self.yii_template_combo.setCurrentText(self.yii_template)
+        if hasattr(self, "log_path_edit"):
+            self.log_path_edit.setText(self.log_path)
+        if hasattr(self, "remote_combo"):
+            remotes = self.git_tab.get_remotes() if hasattr(self, "git_tab") else []
+            if self.git_remote and self.git_remote not in remotes:
+                self.remote_combo.addItem(self.git_remote)
+            self.remote_combo.setCurrentText(self.git_remote)
+        if hasattr(self, "compose_files_edit"):
+            self.compose_files_edit.setText(";".join(self.compose_files))
+
+        self.mark_settings_saved()
+
     def run_command(self, command):
         if self.use_docker:
             if len(command) >= 2 and command[0] == "docker" and command[1] == "compose":
@@ -339,6 +379,8 @@ class MainWindow(QMainWindow):
         if hasattr(self, "git_tab"):
             self.git_tab.load_branches()
             self.git_tab.load_remote_branches()
+
+        self.apply_project_settings()
 
     def add_project(self):
         path = QFileDialog.getExistingDirectory(self, "Select Project Path")
