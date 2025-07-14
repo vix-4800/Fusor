@@ -365,4 +365,14 @@ class TestMainWindow:
 
         qtbot.mouseClick(main_window.help_button, Qt.MouseButton.LeftButton)
 
+
         assert shown == ["About Fusor"]
+
+    def test_clear_output_button_clears_text(self, main_window, qtbot):
+        main_window.output_view.setPlainText("hello")
+
+        qtbot.mouseClick(
+            main_window.clear_output_button, Qt.MouseButton.LeftButton
+        )
+
+        assert main_window.output_view.toPlainText() == ""
