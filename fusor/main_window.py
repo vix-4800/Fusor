@@ -71,6 +71,11 @@ class MainWindow(QMainWindow):
                 background-color: #1b5e20;
             }
 
+            QPushButton:disabled {
+                background-color: #555555;
+                color: #999999;
+            }
+
             QTextEdit, QLineEdit {
                 background-color: #2c2c2c;
                 color: #eeeeee;
@@ -78,6 +83,11 @@ class MainWindow(QMainWindow):
                 border: 1px solid #444444;
                 border-radius: 6px;
                 font-family: monospace;
+            }
+
+            QTextEdit:disabled, QLineEdit:disabled, QComboBox:disabled {
+                background-color: #3a3a3a;
+                color: #777777;
             }
 
             QComboBox {
