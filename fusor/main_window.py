@@ -1,6 +1,7 @@
 import sys
 import os
 import subprocess
+import signal
 import concurrent.futures
 import builtins
 from PyQt6.QtWidgets import (
@@ -386,13 +387,18 @@ class MainWindow(QMainWindow):
 
         print(f"$ {' '.join(command)}")
         try:
-            self.server_process = subprocess.Popen(
-                command,
-                cwd=self.project_path,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-            )
+            popen_args = {
+                "cwd": self.project_path,
+                "stdout": subprocess.PIPE,
+                "stderr": subprocess.STDOUT,
+                "text": True,
+            }
+            if os.name == "nt":
+                popen_args["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+            else:
+                popen_args["start_new_session"] = True
+
+            self.server_process = subprocess.Popen(command, **popen_args)
 
             def stream():
                 assert self.server_process is not None
@@ -410,24 +416,36 @@ class MainWindow(QMainWindow):
 
         if self.server_process and self.server_process.poll() is None:
             print("Stopping project...")
-            self.server_process.terminate()
             try:
-                self.server_process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                self.server_process.kill()
+                if os.name == "nt":
+                    if hasattr(self.server_process, "send_signal"):
+                        self.server_process.send_signal(signal.CTRL_BREAK_EVENT)
+                else:
+                    if hasattr(self.server_process, "pid"):
+                        os.killpg(self.server_process.pid, signal.SIGINT)
+                if hasattr(self.server_process, "wait"):
+                    self.server_process.wait(timeout=5)
+            except (subprocess.TimeoutExpired, OSError):
+                if hasattr(self.server_process, "kill"):
+                    self.server_process.kill()
             self.server_process = None
         else:
             print("Project is not running")
 
     def closeEvent(self, event):
         if self.server_process and self.server_process.poll() is None:
-            if hasattr(self.server_process, "terminate"):
-                self.server_process.terminate()
-                try:
+            try:
+                if os.name == "nt":
+                    if hasattr(self.server_process, "send_signal"):
+                        self.server_process.send_signal(signal.CTRL_BREAK_EVENT)
+                else:
+                    if hasattr(self.server_process, "pid"):
+                        os.killpg(self.server_process.pid, signal.SIGINT)
+                if hasattr(self.server_process, "wait"):
                     self.server_process.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    if hasattr(self.server_process, "kill"):
-                        self.server_process.kill()
+            except (subprocess.TimeoutExpired, OSError):
+                if hasattr(self.server_process, "kill"):
+                    self.server_process.kill()
             self.server_process = None
         self.executor.shutdown(wait=False)
         super().closeEvent(event)
