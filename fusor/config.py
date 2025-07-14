@@ -4,17 +4,24 @@ import os
 # Path used to store user settings
 CONFIG_FILE = os.path.expanduser("~/.fusor_config.json")
 
-# Default configuration values
-DEFAULT_CONFIG = {
-    "use_docker": False,
+# Default per-project settings
+DEFAULT_PROJECT_SETTINGS = {
+    "framework": "Laravel",
+    "php_path": "php",
     "php_service": "php",
     "server_port": 8000,
+    "use_docker": False,
     "yii_template": "basic",
     "log_path": os.path.join("storage", "logs", "laravel.log"),
-    "projects": [],
-    "current_project": "",
     "git_remote": "",
     "compose_files": [],
+}
+
+# Default configuration values
+DEFAULT_CONFIG = {
+    "projects": [],
+    "current_project": "",
+    "project_settings": {},
 }
 
 def load_config():
@@ -26,11 +33,21 @@ def load_config():
             return DEFAULT_CONFIG.copy()
         for key, value in DEFAULT_CONFIG.items():
             data.setdefault(key, value)
+
+        # migrate old flat settings into per-project block
+        current = data.get("current_project") or data.get("project_path")
+        if current:
+            settings = data.setdefault("project_settings", {}).setdefault(current, {})
+            for k in DEFAULT_PROJECT_SETTINGS:
+                if k in data and k not in settings:
+                    settings[k] = data[k]
+
         if "project_path" in data and data["project_path"]:
             if data["project_path"] not in data["projects"]:
                 data["projects"].append(data["project_path"])
             if not data["current_project"]:
                 data["current_project"] = data["project_path"]
+
         return data
     except FileNotFoundError:
         return DEFAULT_CONFIG.copy()
