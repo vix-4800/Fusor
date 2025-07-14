@@ -154,19 +154,24 @@ class TestMainWindow:
         assert captured["cmd"] == ["docker", "compose", "down"]
 
     def test_php_field_disabled_when_docker_enabled(self, main_window, qtbot):
+        assert not main_window.tabs.isTabVisible(main_window.docker_index)
+        assert not main_window.tabs.isTabEnabled(main_window.docker_index)
+
         # enable docker and ensure php path widgets become disabled
         main_window.docker_checkbox.setChecked(True)
         qtbot.wait(10)
         assert not main_window.php_path_edit.isEnabled()
         assert main_window.php_service_edit.isEnabled()
-        assert main_window.docker_tab.isEnabled()
+        assert main_window.tabs.isTabVisible(main_window.docker_index)
+        assert main_window.tabs.isTabEnabled(main_window.docker_index)
 
-        # disable docker again and widgets should be enabled
+        # disable docker again and widgets should be enabled and tab hidden
         main_window.docker_checkbox.setChecked(False)
         qtbot.wait(10)
         assert main_window.php_path_edit.isEnabled()
         assert not main_window.php_service_edit.isEnabled()
-        assert not main_window.docker_tab.isEnabled()
+        assert not main_window.tabs.isTabVisible(main_window.docker_index)
+        assert not main_window.tabs.isTabEnabled(main_window.docker_index)
 
     def test_composer_install_button_runs_command(self, main_window, qtbot, monkeypatch):
         captured = []

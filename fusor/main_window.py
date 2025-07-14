@@ -171,7 +171,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.database_tab, "Database")
 
         self.docker_tab = DockerTab(self)
-        self.tabs.addTab(self.docker_tab, "Docker")
+        self.docker_index = self.tabs.addTab(self.docker_tab, "Docker")
 
         self.logs_tab = LogsTab(self)
         self.tabs.addTab(self.logs_tab, "Logs")
@@ -180,7 +180,8 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.settings_tab, "Settings")
 
         # docker tab availability
-        self.docker_tab.setEnabled(self.use_docker)
+        self.tabs.setTabVisible(self.docker_index, self.use_docker)
+        self.tabs.setTabEnabled(self.docker_index, self.use_docker)
 
         # populate settings widgets with loaded values
         if hasattr(self, "project_combo"):

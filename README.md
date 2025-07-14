@@ -54,9 +54,9 @@ Set the **PHP Service** field to the name of the service running PHP so
 `docker compose exec` uses the correct container.
 The Start and Stop buttons will run `docker compose up -d` and `docker compose
 down` respectively.
-The new **Docker** tab becomes active in this mode and lets you rebuild
-images, pull updates, inspect container status, view logs and restart
-services with a single click.
+The **Docker** tab only appears in this mode and lets you rebuild images,
+pull updates, inspect container status, view logs and restart services with a
+single click.
 
 ## Testing
 
