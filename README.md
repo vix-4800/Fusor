@@ -32,11 +32,14 @@ application starts.
 
 ## Running
 
-Install the dependencies from `requirements.txt` and execute `main.py`:
+Install the dependencies from `requirements.txt` and run the application using
+the provided console script:
 
 ```bash
 pip install -r requirements.txt
-python3 main.py
+fusor
+# or
+python3 -m fusor
 ```
 
 ### Docker mode

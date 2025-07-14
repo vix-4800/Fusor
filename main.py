@@ -1,14 +1,4 @@
-import sys
-from PyQt6.QtWidgets import QApplication
-
-from fusor.main_window import MainWindow
-
-def main():
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
-
+from fusor.__main__ import main
 
 if __name__ == "__main__":
     main()
