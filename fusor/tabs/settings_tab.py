@@ -86,6 +86,9 @@ class SettingsTab(QWidget):
         if self.main_window.framework_choice in ["Laravel", "Yii", "None"]:
             self.framework_combo.setCurrentText(self.main_window.framework_choice)
         self.framework_combo.currentTextChanged.connect(self.on_framework_changed)
+        self.framework_combo.currentTextChanged.connect(
+            self.main_window.database_tab.on_framework_changed
+        )
         form.addRow("Framework:", self.framework_combo)
 
         self.log_path_edit = QLineEdit(self.main_window.log_path)
@@ -134,7 +137,9 @@ class SettingsTab(QWidget):
         self.main_window.compose_files_edit = self.compose_files_edit
 
         self.on_docker_toggled(self.docker_checkbox.isChecked())
-        self.on_framework_changed(self.framework_combo.currentText())
+        current_fw = self.framework_combo.currentText()
+        self.on_framework_changed(current_fw)
+        self.main_window.database_tab.on_framework_changed(current_fw)
 
         # track unsaved changes
         self.project_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
@@ -235,4 +240,6 @@ class SettingsTab(QWidget):
         log_visible = text == "Laravel"
         self.log_path_row.setVisible(log_visible)
         self.log_path_label.setVisible(log_visible)
+        if hasattr(self.main_window, "database_tab"):
+            self.main_window.database_tab.on_framework_changed(text)
 
