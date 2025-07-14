@@ -151,6 +151,7 @@ class MainWindow(QMainWindow):
         self.php_path = "php"
         self.php_service = "php"
         self.use_docker = False
+        self.yii_template = "basic"
         self.load_config()
 
         # initialize tabs
@@ -186,6 +187,7 @@ class MainWindow(QMainWindow):
         self.php_path = data.get("php_path", self.php_path)
         self.php_service = data.get("php_service", self.php_service)
         self.use_docker = data.get("use_docker", self.use_docker)
+        self.yii_template = data.get("yii_template", self.yii_template)
 
     def run_command(self, command):
         if self.use_docker and not (
@@ -264,6 +266,7 @@ class MainWindow(QMainWindow):
         php_path = self.php_path_edit.text()
         php_service = self.php_service_edit.text() if hasattr(self, "php_service_edit") else self.php_service
         use_docker = self.docker_checkbox.isChecked()
+        yii_template = self.yii_template_combo.currentText() if hasattr(self, "yii_template_combo") else self.yii_template
 
         if not project_path or (not php_path and not use_docker) or (use_docker and not php_service):
             QMessageBox.warning(self, "Invalid settings", "All settings fields must be filled out.")
@@ -285,6 +288,7 @@ class MainWindow(QMainWindow):
         self.php_path = php_path
         self.php_service = php_service or self.php_service
         self.use_docker = use_docker
+        self.yii_template = yii_template
 
         data = {
             "project_path": project_path,
@@ -292,6 +296,7 @@ class MainWindow(QMainWindow):
             "php_path": php_path,
             "php_service": php_service,
             "use_docker": use_docker,
+            "yii_template": yii_template,
         }
         try:
             save_config(data)
