@@ -366,3 +366,34 @@ class TestMainWindow:
         qtbot.mouseClick(main_window.help_button, Qt.MouseButton.LeftButton)
 
         assert shown == ["About Fusor"]
+
+    def test_remove_project_updates_config(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(
+            mw_module,
+            "load_config",
+            lambda: {
+                "projects": ["/one", "/two"],
+                "current_project": "/one",
+            },
+            raising=True,
+        )
+        saved = {}
+        monkeypatch.setattr(mw_module, "save_config", lambda data: saved.update(data), raising=True)
+        monkeypatch.setattr(os.path, "isdir", lambda p: True, raising=True)
+        monkeypatch.setattr(os.path, "isfile", lambda p: True, raising=True)
+        monkeypatch.setattr(
+            "PyQt6.QtWidgets.QMessageBox.warning", lambda *a, **k: None, raising=True
+        )
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        qtbot.mouseClick(win.settings_tab.remove_btn, Qt.MouseButton.LeftButton)
+
+        assert [win.project_combo.itemText(i) for i in range(win.project_combo.count())] == ["/two"]
+        assert win.project_path == "/two"
+        assert saved["projects"] == ["/two"]
+        assert saved["current_project"] == "/two"
+        win.close()
