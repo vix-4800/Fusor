@@ -143,6 +143,7 @@ class MainWindow(QMainWindow):
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
         self.server_process = None
+        self.settings_dirty = False
 
         # Redirect stdout to the output view
         self._stdout_logger = QTextEditLogger(self.output_view, sys.stdout)
@@ -177,7 +178,8 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.logs_tab, "Logs")
 
         self.settings_tab = SettingsTab(self)
-        self.tabs.addTab(self.settings_tab, "Settings")
+        self.settings_index = self.tabs.addTab(self.settings_tab, "Settings")
+        self.update_settings_tab_title()
 
         # docker tab availability
         self.tabs.setTabVisible(self.docker_index, self.use_docker)
@@ -209,6 +211,21 @@ class MainWindow(QMainWindow):
         self.use_docker = data.get("use_docker", self.use_docker)
         self.yii_template = data.get("yii_template", self.yii_template)
         self.log_path = data.get("log_path", self.log_path)
+
+    def update_settings_tab_title(self):
+        if hasattr(self, "settings_index"):
+            label = "Settings*" if self.settings_dirty else "Settings"
+            self.tabs.setTabText(self.settings_index, label)
+
+    def mark_settings_dirty(self):
+        if not self.settings_dirty:
+            self.settings_dirty = True
+            self.update_settings_tab_title()
+
+    def mark_settings_saved(self):
+        if self.settings_dirty:
+            self.settings_dirty = False
+            self.update_settings_tab_title()
 
     def run_command(self, command):
         if self.use_docker and not (
@@ -366,6 +383,7 @@ class MainWindow(QMainWindow):
             print(f"Failed to write config: {e}")
 
         print("Settings saved!")
+        self.mark_settings_saved()
 
         if hasattr(self, "git_tab"):
             self.git_tab.load_branches()

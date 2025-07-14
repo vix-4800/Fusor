@@ -246,3 +246,18 @@ class TestMainWindow:
         qtbot.wait(10)
         assert not main_window.settings_tab.log_path_row.isHidden()
         assert not main_window.settings_tab.log_path_label.isHidden()
+
+    def test_settings_unsaved_indicator(self, main_window, qtbot):
+        idx = main_window.tabs.indexOf(main_window.settings_tab)
+        assert main_window.tabs.tabText(idx) == "Settings"
+
+        main_window.project_combo.setCurrentText("/tmp")
+        main_window.project_path = "/tmp"
+        main_window.php_path_edit.setText("/tmp/php")
+        qtbot.wait(10)
+        assert main_window.tabs.tabText(idx) == "Settings*"
+
+        main_window.docker_checkbox.setChecked(True)
+        main_window.mark_settings_saved()
+        qtbot.wait(10)
+        assert main_window.tabs.tabText(idx) == "Settings"

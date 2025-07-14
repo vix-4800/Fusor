@@ -110,6 +110,16 @@ class SettingsTab(QWidget):
         self.on_docker_toggled(self.docker_checkbox.isChecked())
         self.on_framework_changed(self.framework_combo.currentText())
 
+        # track unsaved changes
+        self.project_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
+        self.php_path_edit.textChanged.connect(self.main_window.mark_settings_dirty)
+        self.php_service_edit.textChanged.connect(self.main_window.mark_settings_dirty)
+        self.server_port_edit.textChanged.connect(self.main_window.mark_settings_dirty)
+        self.framework_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
+        self.log_path_edit.textChanged.connect(self.main_window.mark_settings_dirty)
+        self.yii_template_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
+        self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
+
     def _wrap(self, child):
         """Return a QWidget containing the given layout or widget."""
         container = QWidget()
