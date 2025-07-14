@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QGroupBox,
     QLayout,
+    QLabel,
 )
 
 from PyQt6.QtCore import Qt
@@ -64,7 +65,8 @@ class SettingsTab(QWidget):
         log_path_row.addWidget(self.log_path_edit)
         log_path_row.addWidget(log_browse_btn)
         self.log_path_row = self._wrap(log_path_row)
-        form.addRow("Log Path:", self.log_path_row)
+        self.log_path_label = QLabel("Log Path:")
+        form.addRow(self.log_path_label, self.log_path_row)
 
         self.framework_combo = QComboBox()
         self.framework_combo.addItems(["Laravel", "Yii", "None"])
@@ -78,7 +80,8 @@ class SettingsTab(QWidget):
         if hasattr(self.main_window, "yii_template"):
             self.yii_template_combo.setCurrentText(self.main_window.yii_template)
         self.yii_template_row = self._wrap(self.yii_template_combo)
-        form.addRow("Yii Template:", self.yii_template_row)
+        self.yii_template_label = QLabel("Yii Template:")
+        form.addRow(self.yii_template_label, self.yii_template_row)
 
         self.docker_checkbox = QCheckBox("Use Docker")
         self.docker_checkbox.setChecked(self.main_window.use_docker)
@@ -158,6 +161,10 @@ class SettingsTab(QWidget):
             self.log_path_edit.setText(file)
 
     def on_framework_changed(self, text: str):
-        self.yii_template_row.setVisible(text == "Yii")
-        self.log_path_row.setVisible(text == "Laravel")
+        visible = text == "Yii"
+        self.yii_template_row.setVisible(visible)
+        self.yii_template_label.setVisible(visible)
+        log_visible = text == "Laravel"
+        self.log_path_row.setVisible(log_visible)
+        self.log_path_label.setVisible(log_visible)
 
