@@ -350,3 +350,19 @@ class TestMainWindow:
         main_window.mark_settings_saved()
         qtbot.wait(10)
         assert main_window.tabs.tabText(idx) == "Settings"
+       
+    def test_help_button_opens_dialog(self, main_window, qtbot, monkeypatch):
+        shown = []
+
+        def fake_exec(self):
+            shown.append(self.windowTitle())
+
+        monkeypatch.setattr(
+            "fusor.about_dialog.AboutDialog.exec",
+            fake_exec,
+            raising=True,
+        )
+
+        qtbot.mouseClick(main_window.help_button, Qt.MouseButton.LeftButton)
+
+        assert shown == ["About Fusor"]

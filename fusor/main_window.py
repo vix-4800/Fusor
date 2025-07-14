@@ -9,7 +9,9 @@ from PyQt6.QtWidgets import (
     QTabWidget,
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
     QTextEdit,
+    QPushButton,
     QMessageBox,
     QFileDialog,
     QInputDialog,
@@ -34,6 +36,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Fusor – Laravel/PHP QA Toolbox")
         self.resize(1024, 768)
+
 
         self.setStyleSheet("""
             QMainWindow {
@@ -130,6 +133,13 @@ class MainWindow(QMainWindow):
 
         central_widget = QWidget()
         main_layout = QVBoxLayout(central_widget)
+
+        header_layout = QHBoxLayout()
+        header_layout.addStretch()
+        self.help_button = QPushButton("Help")
+        self.help_button.clicked.connect(self.show_about_dialog)
+        header_layout.addWidget(self.help_button)
+        main_layout.addLayout(header_layout)
 
         main_layout.addWidget(self.tabs)
 
@@ -523,3 +533,9 @@ class MainWindow(QMainWindow):
             self.server_process = None
         self.executor.shutdown(wait=False)
         super().closeEvent(event)
+
+    def show_about_dialog(self):
+        from .about_dialog import AboutDialog
+
+        dlg = AboutDialog(self)
+        dlg.exec()
