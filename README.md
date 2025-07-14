@@ -17,6 +17,7 @@ The available tabs are:
 -   **Project** – buttons to manage migrations and run PHPUnit tests.
 -   **Git** – simple controls for common Git actions.
 -   **Database** – quick actions for opening and dumping a database.
+-   **Docker** – helpers for building, pulling and inspecting containers.
 -   **Logs** – shows your project's log file (Laravel only) with a refresh
     button and optional auto refresh.
 -   **Settings** – manage multiple projects using an **Add** button and project
@@ -53,6 +54,9 @@ Set the **PHP Service** field to the name of the service running PHP so
 `docker compose exec` uses the correct container.
 The Start and Stop buttons will run `docker compose up -d` and `docker compose
 down` respectively.
+The new **Docker** tab becomes active in this mode and lets you rebuild
+images, pull updates, inspect container status, view logs and restart
+services with a single click.
 
 ## Testing
 

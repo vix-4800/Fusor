@@ -159,12 +159,14 @@ class TestMainWindow:
         qtbot.wait(10)
         assert not main_window.php_path_edit.isEnabled()
         assert main_window.php_service_edit.isEnabled()
+        assert main_window.docker_tab.isEnabled()
 
         # disable docker again and widgets should be enabled
         main_window.docker_checkbox.setChecked(False)
         qtbot.wait(10)
         assert main_window.php_path_edit.isEnabled()
         assert not main_window.php_service_edit.isEnabled()
+        assert not main_window.docker_tab.isEnabled()
 
     def test_composer_install_button_runs_command(self, main_window, qtbot, monkeypatch):
         captured = []
