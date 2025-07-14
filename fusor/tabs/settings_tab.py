@@ -89,6 +89,10 @@ class SettingsTab(QWidget):
         self.framework_combo.currentTextChanged.connect(
             self.main_window.database_tab.on_framework_changed
         )
+        if hasattr(self.main_window, "framework_tab"):
+            self.framework_combo.currentTextChanged.connect(
+                self.main_window.framework_tab.on_framework_changed
+            )
         form.addRow("Framework:", self.framework_combo)
 
         self.log_path_edit = QLineEdit(self.main_window.log_path)
@@ -140,6 +144,8 @@ class SettingsTab(QWidget):
         current_fw = self.framework_combo.currentText()
         self.on_framework_changed(current_fw)
         self.main_window.database_tab.on_framework_changed(current_fw)
+        if hasattr(self.main_window, "framework_tab"):
+            self.main_window.framework_tab.on_framework_changed(current_fw)
 
         # track unsaved changes
         self.project_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
@@ -242,4 +248,10 @@ class SettingsTab(QWidget):
         self.log_path_label.setVisible(log_visible)
         if hasattr(self.main_window, "database_tab"):
             self.main_window.database_tab.on_framework_changed(text)
+        if hasattr(self.main_window, "framework_tab"):
+            self.main_window.framework_tab.on_framework_changed(text)
+        if hasattr(self.main_window, "framework_index"):
+            show_fw = text != "None"
+            self.main_window.tabs.setTabVisible(self.main_window.framework_index, show_fw)
+            self.main_window.tabs.setTabEnabled(self.main_window.framework_index, show_fw)
 
