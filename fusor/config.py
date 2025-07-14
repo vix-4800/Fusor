@@ -19,6 +19,7 @@ def load_config():
                 "git_remote": "",
                 "projects": [],
                 "current_project": "",
+                "compose_files": [],
             }
         data.setdefault("use_docker", False)
         data.setdefault("php_service", "php")
@@ -28,6 +29,7 @@ def load_config():
         data.setdefault("git_remote", "")
         data.setdefault("projects", [])
         data.setdefault("current_project", "")
+        data.setdefault("compose_files", [])
         if "project_path" in data and data["project_path"]:
             if data["project_path"] not in data["projects"]:
                 data["projects"].append(data["project_path"])
@@ -44,6 +46,7 @@ def load_config():
             "git_remote": "",
             "projects": [],
             "current_project": "",
+            "compose_files": [],
         }
     except json.JSONDecodeError:
         print("Failed to load config: invalid JSON")
@@ -56,6 +59,7 @@ def load_config():
             "git_remote": "",
             "projects": [],
             "current_project": "",
+            "compose_files": [],
         }
 
 def save_config(data):

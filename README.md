@@ -4,6 +4,9 @@ Fusor is a minimal PyQt6 application with a main window titled
 **"Fusor – Laravel/PHP QA Toolbox"**. The UI is organized into several tabs
 that provide helper actions for typical PHP development tasks.
 
+An **About** dialog with the project's name, author and version is available
+via the **Help** button in the top-right corner.
+
 The interface now uses a dark theme defined in `fusor/main_window.py` and larger buttons for better visibility.
 The Project tab places the **Start** and **Stop** buttons side by side for
 quicker access, and other tabs feature taller buttons as well.
@@ -53,10 +56,12 @@ PHPUnit or starting the development server are executed via `docker compose`.
 Set the **PHP Service** field to the name of the service running PHP so
 `docker compose exec` uses the correct container.
 The Start and Stop buttons will run `docker compose up -d` and `docker compose
-down` respectively.
-The new **Docker** tab becomes active in this mode and lets you rebuild
-images, pull updates, inspect container status, view logs and restart
-services with a single click.
+down` respectively.  If your project uses a non-default compose file you can
+enter its path in **Compose Files**. Multiple files may be separated with
+semicolons and will be passed as `-f` options to all compose commands.
+The **Docker** tab only appears in this mode and lets you rebuild images,
+pull updates, inspect container status, view logs and restart services with a
+single click.
 
 ## Testing
 

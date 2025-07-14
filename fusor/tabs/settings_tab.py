@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QGroupBox,
     QLayout,
+    QLabel,
 )
 
 from PyQt6.QtCore import Qt
@@ -56,6 +57,17 @@ class SettingsTab(QWidget):
         self.server_port_edit = QLineEdit(str(self.main_window.server_port))
         form.addRow("Server Port:", self.server_port_edit)
 
+        self.compose_files_edit = QLineEdit(";".join(self.main_window.compose_files))
+        self.compose_browse_btn = QPushButton("Browse")
+        self.compose_browse_btn.setFixedHeight(30)
+        self.compose_browse_btn.clicked.connect(self.browse_compose_files)
+        compose_row = QHBoxLayout()
+        compose_row.addWidget(self.compose_files_edit)
+        compose_row.addWidget(self.compose_browse_btn)
+        self.compose_row = self._wrap(compose_row)
+        self.compose_label = QLabel("Compose Files:")
+        form.addRow(self.compose_label, self.compose_row)
+        
         self.remote_combo = QComboBox()
         remotes = self.main_window.git_tab.get_remotes()
         if remotes:
@@ -63,6 +75,13 @@ class SettingsTab(QWidget):
         if self.main_window.git_remote in remotes:
             self.remote_combo.setCurrentText(self.main_window.git_remote)
         form.addRow("Git Remote:", self.remote_combo)
+
+        self.framework_combo = QComboBox()
+        self.framework_combo.addItems(["Laravel", "Yii", "None"])
+        if self.main_window.framework_choice in ["Laravel", "Yii", "None"]:
+            self.framework_combo.setCurrentText(self.main_window.framework_choice)
+        self.framework_combo.currentTextChanged.connect(self.on_framework_changed)
+        form.addRow("Framework:", self.framework_combo)
 
         self.log_path_edit = QLineEdit(self.main_window.log_path)
         log_browse_btn = QPushButton("Browse")
@@ -72,21 +91,16 @@ class SettingsTab(QWidget):
         log_path_row.addWidget(self.log_path_edit)
         log_path_row.addWidget(log_browse_btn)
         self.log_path_row = self._wrap(log_path_row)
-        form.addRow("Log Path:", self.log_path_row)
-
-        self.framework_combo = QComboBox()
-        self.framework_combo.addItems(["Laravel", "Yii", "None"])
-        if self.main_window.framework_choice in ["Laravel", "Yii", "None"]:
-            self.framework_combo.setCurrentText(self.main_window.framework_choice)
-        self.framework_combo.currentTextChanged.connect(self.on_framework_changed)
-        form.addRow("Framework:", self.framework_combo)
+        self.log_path_label = QLabel("Log Path:")
+        form.addRow(self.log_path_label, self.log_path_row)
 
         self.yii_template_combo = QComboBox()
         self.yii_template_combo.addItems(["basic", "advanced"])
         if hasattr(self.main_window, "yii_template"):
             self.yii_template_combo.setCurrentText(self.main_window.yii_template)
         self.yii_template_row = self._wrap(self.yii_template_combo)
-        form.addRow("Yii Template:", self.yii_template_row)
+        self.yii_template_label = QLabel("Yii Template:")
+        form.addRow(self.yii_template_label, self.yii_template_row)
 
         self.docker_checkbox = QCheckBox("Use Docker")
         self.docker_checkbox.setChecked(self.main_window.use_docker)
@@ -112,9 +126,20 @@ class SettingsTab(QWidget):
         self.main_window.yii_template_combo = self.yii_template_combo
         self.main_window.log_path_edit = self.log_path_edit
         self.main_window.remote_combo = self.remote_combo
+        self.main_window.compose_files_edit = self.compose_files_edit
 
         self.on_docker_toggled(self.docker_checkbox.isChecked())
         self.on_framework_changed(self.framework_combo.currentText())
+
+        # track unsaved changes
+        self.project_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
+        self.php_path_edit.textChanged.connect(self.main_window.mark_settings_dirty)
+        self.php_service_edit.textChanged.connect(self.main_window.mark_settings_dirty)
+        self.server_port_edit.textChanged.connect(self.main_window.mark_settings_dirty)
+        self.framework_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
+        self.log_path_edit.textChanged.connect(self.main_window.mark_settings_dirty)
+        self.yii_template_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
+        self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
 
     def _wrap(self, child):
         """Return a QWidget containing the given layout or widget."""
@@ -131,8 +156,13 @@ class SettingsTab(QWidget):
         self.php_path_edit.setEnabled(not checked)
         self.php_browse_btn.setEnabled(not checked)
         self.php_service_edit.setEnabled(checked)
-        if hasattr(self.main_window, "docker_tab"):
-            self.main_window.docker_tab.setEnabled(checked)
+        self.compose_files_edit.setEnabled(checked)
+        self.compose_browse_btn.setEnabled(checked)
+        self.compose_row.setVisible(checked)
+        self.compose_label.setVisible(checked)
+        if hasattr(self.main_window, "docker_index"):
+            self.main_window.tabs.setTabVisible(self.main_window.docker_index, checked)
+            self.main_window.tabs.setTabEnabled(self.main_window.docker_index, checked)
 
     def add_project(self):
         directory = QFileDialog.getExistingDirectory(
@@ -157,6 +187,15 @@ class SettingsTab(QWidget):
         if file:
             self.php_path_edit.setText(file)
 
+    def browse_compose_files(self):
+        files, _ = QFileDialog.getOpenFileNames(
+            self,
+            "Select Compose Files",
+            self.compose_files_edit.text() or self.main_window.project_path,
+        )
+        if files:
+            self.compose_files_edit.setText(";".join(files))
+
     def browse_log_path(self):
         file, _ = QFileDialog.getOpenFileName(
             self,
@@ -167,6 +206,10 @@ class SettingsTab(QWidget):
             self.log_path_edit.setText(file)
 
     def on_framework_changed(self, text: str):
-        self.yii_template_row.setVisible(text == "Yii")
-        self.log_path_row.setVisible(text == "Laravel")
+        visible = text == "Yii"
+        self.yii_template_row.setVisible(visible)
+        self.yii_template_label.setVisible(visible)
+        log_visible = text == "Laravel"
+        self.log_path_row.setVisible(log_visible)
+        self.log_path_label.setVisible(log_visible)
 
