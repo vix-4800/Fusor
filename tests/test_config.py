@@ -1,4 +1,5 @@
 from fusor import config
+from fusor.config import DEFAULT_CONFIG
 
 def test_save_then_load(tmp_path, monkeypatch):
     cfg_file = tmp_path / "config.json"
@@ -23,30 +24,10 @@ def test_save_then_load(tmp_path, monkeypatch):
 def test_load_missing_file(tmp_path, monkeypatch):
     cfg_file = tmp_path / "missing.json"
     monkeypatch.setattr(config, "CONFIG_FILE", str(cfg_file))
-    assert config.load_config() == {
-        "use_docker": False,
-        "php_service": "php",
-        "server_port": 8000,
-        "yii_template": "basic",
-        "log_path": "storage/logs/laravel.log",
-        "projects": [],
-        "current_project": "",
-        "git_remote": "",
-        "compose_files": [],
-    }
+    assert config.load_config() == DEFAULT_CONFIG
 
 def test_load_invalid_json(tmp_path, monkeypatch):
     cfg_file = tmp_path / "broken.json"
     cfg_file.write_text("{ invalid json")
     monkeypatch.setattr(config, "CONFIG_FILE", str(cfg_file))
-    assert config.load_config() == {
-        "use_docker": False,
-        "php_service": "php",
-        "server_port": 8000,
-        "yii_template": "basic",
-        "log_path": "storage/logs/laravel.log",
-        "projects": [],
-        "current_project": "",
-        "git_remote": "",
-        "compose_files": [],
-    }
+    assert config.load_config() == DEFAULT_CONFIG
