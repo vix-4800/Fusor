@@ -350,7 +350,7 @@ class TestMainWindow:
         main_window.mark_settings_saved()
         qtbot.wait(10)
         assert main_window.tabs.tabText(idx) == "Settings"
-       
+
     def test_help_button_opens_dialog(self, main_window, qtbot, monkeypatch):
         shown = []
 
@@ -397,8 +397,6 @@ class TestMainWindow:
         assert saved["projects"] == ["/two"]
         assert saved["current_project"] == "/two"
         win.close()
-        
-        assert shown == ["About Fusor"]
 
     def test_clear_output_button_clears_text(self, main_window, qtbot):
         main_window.output_view.setPlainText("hello")
