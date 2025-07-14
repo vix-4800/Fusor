@@ -110,7 +110,7 @@ class TestMainWindow:
 
         main_window.start_project()
 
-        assert f"localhost:1234" in captured["cmd"]
+        assert "localhost:1234" in captured["cmd"]
 
     def test_start_project_uses_docker_compose_up(self, tmp_path: Path, main_window, monkeypatch):
         main_window.project_path = str(tmp_path)
