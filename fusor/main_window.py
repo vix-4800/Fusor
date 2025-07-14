@@ -3,9 +3,6 @@ import os
 import subprocess
 import concurrent.futures
 import builtins
-
-# allow tests to monkeypatch file operations easily
-open = builtins.open
 from PyQt6.QtWidgets import (
     QMainWindow,
     QTabWidget,
@@ -25,6 +22,9 @@ from .tabs.git_tab import GitTab
 from .tabs.database_tab import DatabaseTab
 from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
+
+# allow tests to monkeypatch file operations easily
+open = builtins.open
 
 class MainWindow(QMainWindow):
     def __init__(self):

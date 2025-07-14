@@ -1,7 +1,6 @@
 import subprocess
 from PyQt6.QtWidgets import QMessageBox
 
-import fusor.tabs.git_tab as gt_module
 from fusor.tabs.git_tab import GitTab
 
 
