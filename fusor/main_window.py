@@ -153,6 +153,7 @@ class MainWindow(QMainWindow):
         self.server_port = 8000
         self.use_docker = False
         self.yii_template = "basic"
+        self.log_path = os.path.join("storage", "logs", "laravel.log")
         self.load_config()
 
         # initialize tabs
@@ -190,6 +191,7 @@ class MainWindow(QMainWindow):
         self.server_port = data.get("server_port", self.server_port)
         self.use_docker = data.get("use_docker", self.use_docker)
         self.yii_template = data.get("yii_template", self.yii_template)
+        self.log_path = data.get("log_path", self.log_path)
 
     def run_command(self, command):
         if self.use_docker and not (
@@ -246,9 +248,9 @@ class MainWindow(QMainWindow):
         framework = self.current_framework()
         log_contents = ""
         if framework == "Laravel":
-            log_file = os.path.join(
-                self.project_path, "storage", "logs", "laravel.log"
-            )
+            log_file = self.log_path
+            if not os.path.isabs(log_file):
+                log_file = os.path.join(self.project_path, log_file)
             if os.path.exists(log_file):
                 try:
                     with open(log_file, "r", encoding="utf-8") as f:
@@ -270,6 +272,7 @@ class MainWindow(QMainWindow):
         port_text = self.server_port_edit.text() if hasattr(self, "server_port_edit") else str(self.server_port)
         use_docker = self.docker_checkbox.isChecked()
         yii_template = self.yii_template_combo.currentText() if hasattr(self, "yii_template_combo") else self.yii_template
+        log_path = self.log_path_edit.text() if hasattr(self, "log_path_edit") else self.log_path
 
         if (
             not project_path
@@ -300,6 +303,7 @@ class MainWindow(QMainWindow):
         self.server_port = server_port
         self.use_docker = use_docker
         self.yii_template = yii_template
+        self.log_path = log_path
 
         data = {
             "project_path": project_path,
@@ -309,6 +313,7 @@ class MainWindow(QMainWindow):
             "server_port": server_port,
             "use_docker": use_docker,
             "yii_template": yii_template,
+            "log_path": log_path,
         }
         try:
             save_config(data)
