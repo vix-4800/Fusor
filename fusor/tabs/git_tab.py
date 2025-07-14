@@ -46,10 +46,12 @@ class GitTab(QWidget):
         actions_layout.setSpacing(10)
 
         pull_btn = self._btn("⬇ Pull", lambda: self.run_git_command("pull"))
+        push_btn = self._btn("⬆ Push", lambda: self.run_git_command("push"))
         reset_btn = self._btn("↩ Hard Reset", self.hard_reset)
         stash_btn = self._btn("💾 Stash", self.stash)
 
         actions_layout.addWidget(pull_btn)
+        actions_layout.addWidget(push_btn)
         actions_layout.addWidget(reset_btn)
         actions_layout.addWidget(stash_btn)
 

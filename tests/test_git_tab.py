@@ -1,8 +1,8 @@
 import subprocess
-from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QMessageBox, QPushButton
+from PyQt6.QtCore import Qt
 
 from fusor.tabs.git_tab import GitTab
-
 
 class DummyMainWindow:
     def __init__(self, path="/repo"):
@@ -138,3 +138,27 @@ def test_remote_helpers(monkeypatch, qtbot):
         "main",
         "feature",
     ]
+
+
+def test_push_button_runs_push(monkeypatch, qtbot):
+    main = DummyMainWindow()
+    tab = GitTab(main)
+    qtbot.addWidget(tab)
+
+    called = {}
+
+    def fake_run_git_command(*args):
+        called["args"] = args
+
+    monkeypatch.setattr(tab, "run_git_command", fake_run_git_command, raising=True)
+
+    push_btn: QPushButton | None = None
+    for btn in tab.findChildren(QPushButton):
+        if btn.text() == "⬆ Push":
+            push_btn = btn
+            break
+    assert push_btn is not None
+
+    qtbot.mouseClick(push_btn, Qt.MouseButton.LeftButton)
+
+    assert called["args"] == ("push",)
