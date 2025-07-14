@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QPushButton,
     QSizePolicy,
+    QGroupBox
 )
 
 class ProjectTab(QWidget):
@@ -12,28 +13,35 @@ class ProjectTab(QWidget):
         self.main_window = main_window
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(12)
+        layout.setSpacing(16)
+        layout.setContentsMargins(20, 20, 20, 20)
 
+        server_group = QGroupBox("Server Control")
+        server_layout = QHBoxLayout()
         start_btn = self._btn("▶ Start", main_window.start_project)
         stop_btn = self._btn("■ Stop", main_window.stop_project)
-        row1 = QHBoxLayout()
-        row1.addWidget(start_btn)
-        row1.addWidget(stop_btn)
-        layout.addLayout(row1)
+        server_layout.addWidget(start_btn)
+        server_layout.addWidget(stop_btn)
+        server_group.setLayout(server_layout)
+        layout.addWidget(server_group)
 
-        layout.addWidget(self._btn("Run PHPUnit", main_window.phpunit))
+        phpunit_btn = self._btn("🧪 Run PHPUnit", main_window.phpunit)
+        layout.addWidget(phpunit_btn)
 
+        composer_group = QGroupBox("Composer")
+        composer_layout = QVBoxLayout()
         self.composer_install_btn = self._btn(
-            "Composer install",
-            lambda: main_window.run_command(["composer", "install"]),
+            "📦 Composer install",
+            lambda: main_window.run_command(["composer", "install"])
         )
-        layout.addWidget(self.composer_install_btn)
-
         self.composer_update_btn = self._btn(
-            "Composer update",
-            lambda: main_window.run_command(["composer", "update"]),
+            "⬆ Composer update",
+            lambda: main_window.run_command(["composer", "update"])
         )
-        layout.addWidget(self.composer_update_btn)
+        composer_layout.addWidget(self.composer_install_btn)
+        composer_layout.addWidget(self.composer_update_btn)
+        composer_group.setLayout(composer_layout)
+        layout.addWidget(composer_group)
 
         layout.addStretch(1)
 
