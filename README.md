@@ -19,14 +19,15 @@ The available tabs are:
 -   **Database** – quick actions for opening and dumping a database.
 -   **Logs** – shows your project's log file (Laravel only) with a refresh
     button and optional auto refresh.
--   **Settings** – fields for selecting the project directory, framework and PHP
-    executable or Docker service name. Browse buttons let you choose each path.
+-   **Settings** – fields for selecting the project directory, framework, PHP
+    executable or Docker service name, and the server port. Browse buttons let
+    you choose each path.
 
 The Logs tab also provides an **Auto refresh** checkbox to reload logs
 automatically every few seconds.
 
 The application stores your selected project path, PHP binary, framework,
-Docker service name and the "use docker" setting in
+Docker service name, server port and the "use docker" setting in
 `~/.fusor_config.json`. These values are restored automatically when the
 application starts.
 
