@@ -148,6 +148,10 @@ class MainWindow(QMainWindow):
         self.output_view.setMaximumHeight(180)
         main_layout.addWidget(self.output_view)
 
+        self.clear_output_button = QPushButton("Clear Output")
+        self.clear_output_button.clicked.connect(self.clear_output)
+        main_layout.addWidget(self.clear_output_button)
+
         self.setCentralWidget(central_widget)
 
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
@@ -547,3 +551,6 @@ class MainWindow(QMainWindow):
 
         dlg = AboutDialog(self)
         dlg.exec()
+
+    def clear_output(self):
+        self.output_view.clear()
