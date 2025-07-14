@@ -18,6 +18,7 @@ def load_config():
                 "log_path": os.path.join("storage", "logs", "laravel.log"),
                 "projects": [],
                 "current_project": "",
+                "compose_files": [],
             }
         data.setdefault("use_docker", False)
         data.setdefault("php_service", "php")
@@ -26,6 +27,7 @@ def load_config():
         data.setdefault("log_path", os.path.join("storage", "logs", "laravel.log"))
         data.setdefault("projects", [])
         data.setdefault("current_project", "")
+        data.setdefault("compose_files", [])
         if "project_path" in data and data["project_path"]:
             if data["project_path"] not in data["projects"]:
                 data["projects"].append(data["project_path"])
@@ -41,6 +43,7 @@ def load_config():
             "log_path": os.path.join("storage", "logs", "laravel.log"),
             "projects": [],
             "current_project": "",
+            "compose_files": [],
         }
     except json.JSONDecodeError:
         print("Failed to load config: invalid JSON")
@@ -52,6 +55,7 @@ def load_config():
             "log_path": os.path.join("storage", "logs", "laravel.log"),
             "projects": [],
             "current_project": "",
+            "compose_files": [],
         }
 
 def save_config(data):

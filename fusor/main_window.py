@@ -153,6 +153,7 @@ class MainWindow(QMainWindow):
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
         self.server_process = None
+        self.settings_dirty = False
 
         # Redirect stdout to the output view
         self._stdout_logger = QTextEditLogger(self.output_view, sys.stdout)
@@ -166,6 +167,7 @@ class MainWindow(QMainWindow):
         self.php_service = "php"
         self.server_port = 8000
         self.use_docker = False
+        self.compose_files: list[str] = []
         self.yii_template = "basic"
         self.log_path = os.path.join("storage", "logs", "laravel.log")
         self.load_config()
@@ -187,7 +189,8 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.logs_tab, "Logs")
 
         self.settings_tab = SettingsTab(self)
-        self.tabs.addTab(self.settings_tab, "Settings")
+        self.settings_index = self.tabs.addTab(self.settings_tab, "Settings")
+        self.update_settings_tab_title()
 
         # docker tab availability
         self.tabs.setTabVisible(self.docker_index, self.use_docker)
@@ -219,20 +222,43 @@ class MainWindow(QMainWindow):
         self.use_docker = data.get("use_docker", self.use_docker)
         self.yii_template = data.get("yii_template", self.yii_template)
         self.log_path = data.get("log_path", self.log_path)
+        self.compose_files = data.get("compose_files", self.compose_files)
+
+    def _compose_prefix(self) -> list[str]:
+        prefix = ["docker", "compose"]
+        for f in self.compose_files:
+            prefix.extend(["-f", f])
+        return prefix
+
+    def update_settings_tab_title(self):
+        if hasattr(self, "settings_index"):
+            label = "Settings*" if self.settings_dirty else "Settings"
+            self.tabs.setTabText(self.settings_index, label)
+
+    def mark_settings_dirty(self):
+        if not self.settings_dirty:
+            self.settings_dirty = True
+            self.update_settings_tab_title()
+
+    def mark_settings_saved(self):
+        if self.settings_dirty:
+            self.settings_dirty = False
+            self.update_settings_tab_title()
 
     def run_command(self, command):
-        if self.use_docker and not (
-            len(command) >= 2 and command[0] == "docker" and command[1] == "compose"
-        ):
-            command = [
-                "docker",
-                "compose",
-                "exec",
-                "-T",
-                self.php_service,
-                *command,
-            ]
-        cwd = self.project_path if self.use_docker else None
+        if self.use_docker:
+            if len(command) >= 2 and command[0] == "docker" and command[1] == "compose":
+                command = self._compose_prefix() + command[2:]
+            else:
+                command = self._compose_prefix() + [
+                    "exec",
+                    "-T",
+                    self.php_service,
+                    *command,
+                ]
+            cwd = self.project_path
+        else:
+            cwd = None
 
         def task():
             try:
@@ -324,6 +350,7 @@ class MainWindow(QMainWindow):
         use_docker = self.docker_checkbox.isChecked()
         yii_template = self.yii_template_combo.currentText() if hasattr(self, "yii_template_combo") else self.yii_template
         log_path = self.log_path_edit.text() if hasattr(self, "log_path_edit") else self.log_path
+        compose_text = self.compose_files_edit.text() if hasattr(self, "compose_files_edit") else ";".join(self.compose_files)
 
         if (
             not project_path
@@ -357,6 +384,7 @@ class MainWindow(QMainWindow):
         self.use_docker = use_docker
         self.yii_template = yii_template
         self.log_path = log_path
+        self.compose_files = [f for f in compose_text.split(";") if f]
 
         data = {
             "projects": self.projects,
@@ -369,6 +397,7 @@ class MainWindow(QMainWindow):
             "use_docker": use_docker,
             "yii_template": yii_template,
             "log_path": log_path,
+            "compose_files": self.compose_files,
         }
         try:
             save_config(data)
@@ -376,6 +405,7 @@ class MainWindow(QMainWindow):
             print(f"Failed to write config: {e}")
 
         print("Settings saved!")
+        self.mark_settings_saved()
 
         if hasattr(self, "git_tab"):
             self.git_tab.load_branches()

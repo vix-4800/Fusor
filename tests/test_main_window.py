@@ -134,6 +134,38 @@ class TestMainWindow:
 
         assert captured["cmd"] == ["docker", "compose", "up", "-d"]
 
+    def test_start_project_includes_compose_files(self, tmp_path: Path, main_window, monkeypatch):
+        main_window.project_path = str(tmp_path)
+        (tmp_path / "public").mkdir()
+
+        main_window.use_docker = True
+        main_window.compose_files = ["a.yml", "b.yml"]
+
+        captured = {}
+
+        def fake_run(cmd, capture_output=True, text=True, cwd=None):
+            captured["cmd"] = cmd
+            class Result:
+                stdout = ""
+                stderr = ""
+            return Result()
+
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
+
+        main_window.start_project()
+
+        assert captured["cmd"][:8] == [
+            "docker",
+            "compose",
+            "-f",
+            "a.yml",
+            "-f",
+            "b.yml",
+            "up",
+            "-d",
+        ]
+
     def test_stop_project_uses_docker_compose_down(self, main_window, monkeypatch):
         main_window.use_docker = True
 
@@ -152,6 +184,34 @@ class TestMainWindow:
         main_window.stop_project()
 
         assert captured["cmd"] == ["docker", "compose", "down"]
+
+    def test_stop_project_includes_compose_files(self, main_window, monkeypatch):
+        main_window.use_docker = True
+        main_window.compose_files = ["a.yml", "b.yml"]
+
+        captured = {}
+
+        def fake_run(cmd, capture_output=True, text=True, cwd=None):
+            captured["cmd"] = cmd
+            class Result:
+                stdout = ""
+                stderr = ""
+            return Result()
+
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
+
+        main_window.stop_project()
+
+        assert captured["cmd"][:7] == [
+            "docker",
+            "compose",
+            "-f",
+            "a.yml",
+            "-f",
+            "b.yml",
+            "down",
+        ]
 
     def test_php_field_disabled_when_docker_enabled(self, main_window, qtbot):
         assert not main_window.tabs.isTabVisible(main_window.docker_index)
@@ -204,6 +264,35 @@ class TestMainWindow:
 
         assert captured["cmd"][:5] == ["docker", "compose", "exec", "-T", "myphp"]
 
+    def test_run_command_adds_compose_files(self, main_window, monkeypatch):
+        main_window.use_docker = True
+        main_window.compose_files = ["a.yml", "b.yml"]
+        captured = {}
+
+        def fake_run(cmd, capture_output=True, text=True, cwd=None):
+            captured["cmd"] = cmd
+            class Result:
+                stdout = ""
+                stderr = ""
+            return Result()
+
+        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+
+        main_window.run_command(["php", "-v"])
+
+        assert captured["cmd"][:9] == [
+            "docker",
+            "compose",
+            "-f",
+            "a.yml",
+            "-f",
+            "b.yml",
+            "exec",
+            "-T",
+            main_window.php_service,
+        ]
+
     def test_refresh_logs_reads_custom_path(self, tmp_path: Path, main_window, monkeypatch):
         log_file = tmp_path / "custom.log"
         log_file.write_text("log text")
@@ -247,6 +336,21 @@ class TestMainWindow:
         assert not main_window.settings_tab.log_path_row.isHidden()
         assert not main_window.settings_tab.log_path_label.isHidden()
 
+    def test_settings_unsaved_indicator(self, main_window, qtbot):
+        idx = main_window.tabs.indexOf(main_window.settings_tab)
+        assert main_window.tabs.tabText(idx) == "Settings"
+
+        main_window.project_combo.setCurrentText("/tmp")
+        main_window.project_path = "/tmp"
+        main_window.php_path_edit.setText("/tmp/php")
+        qtbot.wait(10)
+        assert main_window.tabs.tabText(idx) == "Settings*"
+
+        main_window.docker_checkbox.setChecked(True)
+        main_window.mark_settings_saved()
+        qtbot.wait(10)
+        assert main_window.tabs.tabText(idx) == "Settings"
+       
     def test_help_button_opens_dialog(self, main_window, qtbot, monkeypatch):
         shown = []
 
