@@ -1,4 +1,3 @@
-import pytest
 from PyQt6.QtCore import Qt
 
 from fusor.tabs.database_tab import DatabaseTab

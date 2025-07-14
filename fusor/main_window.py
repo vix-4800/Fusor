@@ -3,9 +3,6 @@ import os
 import subprocess
 import concurrent.futures
 import builtins
-
-# allow tests to monkeypatch file operations easily
-open = builtins.open
 from PyQt6.QtWidgets import (
     QMainWindow,
     QTabWidget,
@@ -25,6 +22,9 @@ from .tabs.git_tab import GitTab
 from .tabs.database_tab import DatabaseTab
 from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
+
+# allow tests to monkeypatch file operations easily
+open = builtins.open
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -150,6 +150,7 @@ class MainWindow(QMainWindow):
         self.framework_choice = "Laravel"
         self.php_path = "php"
         self.php_service = "php"
+        self.server_port = 8000
         self.use_docker = False
         self.yii_template = "basic"
         self.load_config()
@@ -186,6 +187,7 @@ class MainWindow(QMainWindow):
         self.framework_choice = data.get("framework", self.framework_choice)
         self.php_path = data.get("php_path", self.php_path)
         self.php_service = data.get("php_service", self.php_service)
+        self.server_port = data.get("server_port", self.server_port)
         self.use_docker = data.get("use_docker", self.use_docker)
         self.yii_template = data.get("yii_template", self.yii_template)
 
@@ -265,10 +267,16 @@ class MainWindow(QMainWindow):
         framework = self.framework_combo.currentText()
         php_path = self.php_path_edit.text()
         php_service = self.php_service_edit.text() if hasattr(self, "php_service_edit") else self.php_service
+        port_text = self.server_port_edit.text() if hasattr(self, "server_port_edit") else str(self.server_port)
         use_docker = self.docker_checkbox.isChecked()
         yii_template = self.yii_template_combo.currentText() if hasattr(self, "yii_template_combo") else self.yii_template
 
-        if not project_path or (not php_path and not use_docker) or (use_docker and not php_service):
+        if (
+            not project_path
+            or (not php_path and not use_docker)
+            or (use_docker and not php_service)
+            or not port_text.isdigit()
+        ):
             QMessageBox.warning(self, "Invalid settings", "All settings fields must be filled out.")
             print("Failed to save settings: one or more fields were empty")
             return
@@ -283,10 +291,13 @@ class MainWindow(QMainWindow):
             print(f"Failed to save settings: php not found - {php_path}")
             return
 
+        server_port = int(port_text)
+
         self.project_path = project_path
         self.framework_choice = framework
         self.php_path = php_path
         self.php_service = php_service or self.php_service
+        self.server_port = server_port
         self.use_docker = use_docker
         self.yii_template = yii_template
 
@@ -295,6 +306,7 @@ class MainWindow(QMainWindow):
             "framework": framework,
             "php_path": php_path,
             "php_service": php_service,
+            "server_port": server_port,
             "use_docker": use_docker,
             "yii_template": yii_template,
         }
@@ -359,7 +371,13 @@ class MainWindow(QMainWindow):
             command = [self.php_path, artisan_file, "serve"]
         else:
             # fallback generic PHP server
-            command = [self.php_path, "-S", "localhost:8000", "-t", os.path.join(self.project_path, "public")]
+            command = [
+                self.php_path,
+                "-S",
+                f"localhost:{self.server_port}",
+                "-t",
+                os.path.join(self.project_path, "public"),
+            ]
 
         print(f"$ {' '.join(command)}")
         try:
