@@ -234,6 +234,20 @@ class TestMainWindow:
         assert not main_window.tabs.isTabVisible(main_window.docker_index)
         assert not main_window.tabs.isTabEnabled(main_window.docker_index)
 
+    def test_framework_tab_visibility(self, main_window, qtbot):
+        assert main_window.tabs.isTabVisible(main_window.framework_index)
+        assert main_window.tabs.isTabEnabled(main_window.framework_index)
+
+        main_window.framework_combo.setCurrentText("None")
+        qtbot.wait(10)
+        assert not main_window.tabs.isTabVisible(main_window.framework_index)
+        assert not main_window.tabs.isTabEnabled(main_window.framework_index)
+
+        main_window.framework_combo.setCurrentText("Laravel")
+        qtbot.wait(10)
+        assert main_window.tabs.isTabVisible(main_window.framework_index)
+        assert main_window.tabs.isTabEnabled(main_window.framework_index)
+
     def test_composer_install_button_runs_command(self, main_window, qtbot, monkeypatch):
         captured = []
         monkeypatch.setattr(main_window, "run_command", lambda cmd: captured.append(cmd), raising=True)

@@ -25,6 +25,7 @@ from .qtextedit_logger import QTextEditLogger
 from .tabs.project_tab import ProjectTab
 from .tabs.git_tab import GitTab
 from .tabs.database_tab import DatabaseTab
+from .tabs.framework_tab import FrameworkTab
 from .tabs.docker_tab import DockerTab
 from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
@@ -198,6 +199,9 @@ class MainWindow(QMainWindow):
         self.database_tab = DatabaseTab(self)
         self.tabs.addTab(self.database_tab, "Database")
 
+        self.framework_tab = FrameworkTab(self)
+        self.framework_index = self.tabs.addTab(self.framework_tab, "Framework")
+
         self.docker_tab = DockerTab(self)
         self.docker_index = self.tabs.addTab(self.docker_tab, "Docker")
 
@@ -211,6 +215,11 @@ class MainWindow(QMainWindow):
         # docker tab availability
         self.tabs.setTabVisible(self.docker_index, self.use_docker)
         self.tabs.setTabEnabled(self.docker_index, self.use_docker)
+
+        # framework tab availability
+        show_fw = self.framework_choice != "None"
+        self.tabs.setTabVisible(self.framework_index, show_fw)
+        self.tabs.setTabEnabled(self.framework_index, show_fw)
 
         # populate settings widgets with loaded values
         if hasattr(self, "project_combo"):
