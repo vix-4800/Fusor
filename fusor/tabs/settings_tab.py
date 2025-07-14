@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QVBoxLayout,
     QGroupBox,
+    QLayout,
 )
 
 from PyQt6.QtCore import Qt
@@ -91,9 +92,15 @@ class SettingsTab(QWidget):
         self.on_docker_toggled(self.docker_checkbox.isChecked())
         self.on_framework_changed(self.framework_combo.currentText())
 
-    def _wrap(self, layout):
+    def _wrap(self, child):
+        """Return a QWidget containing the given layout or widget."""
         container = QWidget()
-        container.setLayout(layout)
+        if isinstance(child, QLayout):
+            container.setLayout(child)
+        else:
+            layout = QHBoxLayout()
+            layout.addWidget(child)
+            container.setLayout(layout)
         return container
 
     def on_docker_toggled(self, checked: bool):
