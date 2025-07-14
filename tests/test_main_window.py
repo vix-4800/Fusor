@@ -1,5 +1,6 @@
 import os
 import subprocess
+import shutil
 from pathlib import Path
 
 import pytest
@@ -340,6 +341,8 @@ class TestMainWindow:
         idx = main_window.tabs.indexOf(main_window.settings_tab)
         assert main_window.tabs.tabText(idx) == "Settings"
 
+        main_window.project_combo.addItem("/tmp")
+        main_window.project_combo.addItem("/tmp")
         main_window.project_combo.setCurrentText("/tmp")
         main_window.project_path = "/tmp"
         main_window.php_path_edit.setText("/tmp/php")
@@ -406,3 +409,27 @@ class TestMainWindow:
         )
 
         assert main_window.output_view.toPlainText() == ""
+
+    def test_save_settings_accepts_executable_name(self, main_window, monkeypatch):
+        main_window.project_combo.addItem("/tmp")
+        main_window.project_combo.setCurrentText("/tmp")
+        main_window.project_path = "/tmp"
+        main_window.php_path_edit.setText("php")
+        main_window.docker_checkbox.setChecked(False)
+        main_window.server_port_edit.setText("8000")
+
+        monkeypatch.setattr(os.path, "isdir", lambda p: True, raising=True)
+        monkeypatch.setattr(os.path, "isfile", lambda p: False, raising=True)
+        monkeypatch.setattr(shutil, "which", lambda cmd: "/usr/bin/php" if cmd == "php" else None, raising=True)
+
+        warnings = []
+        monkeypatch.setattr(
+            "PyQt6.QtWidgets.QMessageBox.warning", lambda *a, **k: warnings.append(True), raising=True
+        )
+        saved = {}
+        monkeypatch.setattr(mw_module, "save_config", lambda data: saved.update(data), raising=True)
+
+        main_window.save_settings()
+
+        assert not warnings
+        assert saved["php_path"] == "php"
