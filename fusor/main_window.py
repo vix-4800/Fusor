@@ -4,6 +4,7 @@ import subprocess
 import signal
 import concurrent.futures
 import builtins
+import shutil
 from PyQt6.QtWidgets import (
     QMainWindow,
     QTabWidget,
@@ -386,10 +387,14 @@ class MainWindow(QMainWindow):
             print(f"Failed to save settings: directory does not exist - {project_path}")
             return
 
-        if not use_docker and not os.path.isfile(php_path):
-            QMessageBox.warning(self, "Invalid PHP path", "The specified PHP executable was not found.")
-            print(f"Failed to save settings: php not found - {php_path}")
-            return
+        if not use_docker:
+            valid_path = os.path.isfile(php_path)
+            if not valid_path:
+                valid_path = shutil.which(php_path) is not None
+            if not valid_path:
+                QMessageBox.warning(self, "Invalid PHP path", "The specified PHP executable was not found.")
+                print(f"Failed to save settings: php not found - {php_path}")
+                return
 
         server_port = int(port_text)
 
