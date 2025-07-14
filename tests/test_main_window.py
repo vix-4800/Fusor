@@ -246,3 +246,19 @@ class TestMainWindow:
         qtbot.wait(10)
         assert not main_window.settings_tab.log_path_row.isHidden()
         assert not main_window.settings_tab.log_path_label.isHidden()
+
+    def test_about_action_opens_dialog(self, main_window, monkeypatch):
+        shown = []
+
+        def fake_exec(self):
+            shown.append(self.windowTitle())
+
+        monkeypatch.setattr(
+            "fusor.about_dialog.AboutDialog.exec",
+            fake_exec,
+            raising=True,
+        )
+
+        main_window.about_action.trigger()
+
+        assert shown == ["About Fusor"]

@@ -35,6 +35,10 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Fusor – Laravel/PHP QA Toolbox")
         self.resize(1024, 768)
 
+        help_menu = self.menuBar().addMenu("Help")
+        self.about_action = help_menu.addAction("About")
+        self.about_action.triggered.connect(self.show_about_dialog)
+
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #1e1e1e;
@@ -493,3 +497,9 @@ class MainWindow(QMainWindow):
             self.server_process = None
         self.executor.shutdown(wait=False)
         super().closeEvent(event)
+
+    def show_about_dialog(self):
+        from .about_dialog import AboutDialog
+
+        dlg = AboutDialog(self)
+        dlg.exec()

@@ -4,6 +4,9 @@ Fusor is a minimal PyQt6 application with a main window titled
 **"Fusor – Laravel/PHP QA Toolbox"**. The UI is organized into several tabs
 that provide helper actions for typical PHP development tasks.
 
+An **About** dialog with the project's name, author and version is available
+from the **Help** menu.
+
 The interface now uses a dark theme defined in `fusor/main_window.py` and larger buttons for better visibility.
 The Project tab places the **Start** and **Stop** buttons side by side for
 quicker access, and other tabs feature taller buttons as well.
