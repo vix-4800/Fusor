@@ -421,6 +421,20 @@ class TestMainWindow:
         for part in ["frontend", "backend", "console"]:
             assert f"{part} log" in main_window.log_view.text
 
+    def test_refresh_logs_truncates_large_files(self, tmp_path: Path, main_window):
+        log_file = tmp_path / "large.log"
+        lines = [f"line {i}" for i in range(2000)]
+        log_file.write_text("\n".join(lines))
+        main_window.project_path = str(tmp_path)
+        main_window.log_view = FakeLogView()
+        main_window.log_path = "large.log"
+        main_window.max_log_lines = 1000
+
+        main_window.refresh_logs()
+
+        result = main_window.log_view.text.splitlines()
+        assert result == lines[-1000:]
+
     def test_yii_template_row_visibility(self, main_window, qtbot):
         main_window.framework_combo.setCurrentText("None")
         qtbot.wait(10)
