@@ -642,3 +642,14 @@ class TestMainWindow:
 
         assert saved["window_size"] == [777, 555]
         assert saved["window_position"] == [11, 22]
+
+    def test_clear_log_button_truncates_file(self, tmp_path: Path, main_window, qtbot):
+        log_file = tmp_path / "app.log"
+        log_file.write_text("hello")
+        main_window.project_path = str(tmp_path)
+        main_window.log_path = "app.log"
+
+        qtbot.mouseClick(main_window.logs_tab.clear_btn, Qt.MouseButton.LeftButton)
+        qtbot.wait(10)
+
+        assert log_file.read_text() == ""

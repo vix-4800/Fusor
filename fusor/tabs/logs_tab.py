@@ -72,6 +72,12 @@ class LogsTab(QWidget):
         refresh_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         control_layout.addWidget(refresh_btn)
 
+        self.clear_btn = QPushButton("Clear Log")
+        self.clear_btn.setMinimumHeight(36)
+        self.clear_btn.clicked.connect(self.main_window.clear_log_file)
+        self.clear_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        control_layout.addWidget(self.clear_btn)
+
         self.auto_checkbox = QCheckBox()
         self.auto_checkbox.setMinimumHeight(36)
         self.auto_checkbox.setChecked(False)
