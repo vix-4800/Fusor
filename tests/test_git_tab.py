@@ -2,12 +2,26 @@ import subprocess
 from PyQt6.QtWidgets import QMessageBox, QPushButton
 from PyQt6.QtCore import Qt
 
+
+class DummyFuture:
+    def __init__(self, value):
+        self._value = value
+
+    def result(self):
+        return self._value
+
+
+class DummyExecutor:
+    def submit(self, fn, *args, **kwargs):
+        return DummyFuture(fn(*args, **kwargs))
+
 from fusor.tabs.git_tab import GitTab
 
 class DummyMainWindow:
     def __init__(self, path="/repo"):
         self.project_path = path
         self.ensure_called = 0
+        self.executor = DummyExecutor()
 
     def ensure_project_path(self):
         self.ensure_called += 1
@@ -43,14 +57,15 @@ def test_load_branches_and_run_git_command(monkeypatch, qtbot):
     monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
 
     tab.load_branches()
+    qtbot.wait(10)
     assert [tab.branch_combo.itemText(i) for i in range(tab.branch_combo.count())] == [
         "main",
         "develop",
     ]
     assert tab.current_branch == "main"
 
-    res = tab.run_git_command("status")
-    assert res is results[("git", "status")]
+    future = tab.run_git_command("status")
+    assert future.result() is results[("git", "status")]
 
 
 def test_on_branch_changed_triggers_checkout(monkeypatch, qtbot):
@@ -101,7 +116,7 @@ def test_hard_reset_runs_command(monkeypatch, qtbot):
 
     def fake_run_git_command(*args):
         called["args"] = args
-        return DummyResult()
+        return DummyFuture(DummyResult())
 
     monkeypatch.setattr(tab, "run_git_command", fake_run_git_command, raising=True)
 
@@ -134,6 +149,7 @@ def test_remote_helpers(monkeypatch, qtbot):
 
     assert tab.get_remotes() == ["origin", "upstream"]
     tab.load_remote_branches()
+    qtbot.wait(10)
     assert [tab.remote_branch_combo.itemText(i) for i in range(tab.remote_branch_combo.count())] == [
         "main",
         "feature",
