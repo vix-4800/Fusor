@@ -852,10 +852,23 @@ class MainWindow(QMainWindow):
         log_file = self.log_path
         if not os.path.isabs(log_file):
             log_file = os.path.join(self.project_path, log_file)
-        if os.path.exists(log_file):
+
+        if not os.path.exists(log_file):
+            self.refresh_logs()
+            return
+
+        reply = QMessageBox.question(
+            self,
+            "Clear Log",
+            "Are you sure you want to clear the log file?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
             try:
                 with open(log_file, "w", encoding="utf-8"):
                     pass
             except OSError as e:
                 print(f"Failed to clear log file: {e}")
+
         self.refresh_logs()
