@@ -21,18 +21,20 @@ class ProjectTab(QWidget):
 
         server_group = QGroupBox("Server Control")
         server_layout = QHBoxLayout()
-        start_btn = self._btn(
-            "Start",
+
+        self.start_btn = self._btn(
+            "▶ Start",
             main_window.start_project,
             icon="media-playback-start",
         )
-        stop_btn = self._btn(
-            "Stop",
+        self.stop_btn = self._btn(
+            "■ Stop",
             main_window.stop_project,
             icon="media-playback-stop",
         )
-        server_layout.addWidget(start_btn)
-        server_layout.addWidget(stop_btn)
+        server_layout.addWidget(self.start_btn)
+        server_layout.addWidget(self.stop_btn)
+
         server_group.setLayout(server_layout)
         layout.addWidget(server_group)
 

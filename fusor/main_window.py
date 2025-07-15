@@ -277,6 +277,7 @@ class MainWindow(QMainWindow):
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
         self.server_process = None
+        self.project_running = False
         self.settings_dirty = False
 
         # Redirect stdout to the output view
@@ -360,6 +361,7 @@ class MainWindow(QMainWindow):
             self.move(*self._geom_pos)
 
         self.tabs.currentChanged.connect(self.on_tab_changed)
+        self.update_run_buttons()
 
     def load_config(self):
         data = load_config()
@@ -430,6 +432,14 @@ class MainWindow(QMainWindow):
         if self.settings_dirty:
             self.settings_dirty = False
             self.update_settings_tab_title()
+
+    def update_run_buttons(self):
+        """Enable/disable start and stop buttons based on running state."""
+        if hasattr(self, "project_tab"):
+            if hasattr(self.project_tab, "start_btn"):
+                self.project_tab.start_btn.setEnabled(not self.project_running)
+            if hasattr(self.project_tab, "stop_btn"):
+                self.project_tab.stop_btn.setEnabled(self.project_running)
 
     def apply_project_settings(self):
         """Load settings for the current project and update widgets."""
@@ -739,8 +749,14 @@ class MainWindow(QMainWindow):
         self.run_command([self.php_path, phpunit_file])
 
     def start_project(self):
+        if self.project_running:
+            print("Project already running")
+            return
+
         if self.use_docker:
             self.run_command(["docker", "compose", "up", "-d"])
+            self.project_running = True
+            self.update_run_buttons()
             return
 
         if self.server_process and self.server_process.poll() is None:
@@ -784,12 +800,20 @@ class MainWindow(QMainWindow):
                     print(line.rstrip())
 
             self.executor.submit(stream)
+            self.project_running = True
+            self.update_run_buttons()
         except FileNotFoundError:
             print(f"Command not found: {command[0]}")
 
     def stop_project(self):
         if self.use_docker:
             self.run_command(["docker", "compose", "down"])
+            self.project_running = False
+            self.update_run_buttons()
+            return
+
+        if not self.project_running:
+            print("Project is not running")
             return
 
         if self.server_process and self.server_process.poll() is None:
@@ -809,6 +833,8 @@ class MainWindow(QMainWindow):
             self.server_process = None
         else:
             print("Project is not running")
+        self.project_running = False
+        self.update_run_buttons()
 
     def closeEvent(self, event):
         if self.server_process and self.server_process.poll() is None:
