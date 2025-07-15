@@ -7,6 +7,8 @@ class DummyMainWindow:
         self.auto_refresh_secs = 12
     def refresh_logs(self):
         pass
+    def clear_log_file(self):
+        pass
 
 def test_timer_interval(qtbot):
     main = DummyMainWindow()

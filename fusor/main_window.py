@@ -711,3 +711,16 @@ class MainWindow(QMainWindow):
 
     def clear_output(self):
         self.output_view.clear()
+
+    def clear_log_file(self):
+        """Truncate the configured log file if it exists."""
+        log_file = self.log_path
+        if not os.path.isabs(log_file):
+            log_file = os.path.join(self.project_path, log_file)
+        if os.path.exists(log_file):
+            try:
+                with open(log_file, "w", encoding="utf-8"):
+                    pass
+            except OSError as e:
+                print(f"Failed to clear log file: {e}")
+        self.refresh_logs()
