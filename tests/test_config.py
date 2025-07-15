@@ -21,6 +21,7 @@ def test_save_then_load(tmp_path, monkeypatch):
                 "auto_refresh_secs": 7,
             }
         },
+        "theme": "light",
         "window_size": [800, 600],
         "window_position": [10, 20],
     }

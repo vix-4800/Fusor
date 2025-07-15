@@ -33,7 +33,210 @@ from .tabs.settings_tab import SettingsTab
 # allow tests to monkeypatch file operations easily
 open = builtins.open
 
-# Number of log lines to read from the end of a log file
+DARK_STYLESHEET = """
+    QMainWindow {
+        background-color: #1e1e1e;
+    }
+
+    QTabWidget::pane {
+        border: none;
+    }
+
+    QWidget {
+        background-color: #1e1e1e;
+        color: #dddddd;
+        font-family: "Segoe UI", "Arial", sans-serif;
+        font-size: 14px;
+    }
+
+    QPushButton {
+        background-color: #2e7d32;
+        color: #ffffff;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+
+    QPushButton:hover {
+        background-color: #388e3c;
+    }
+
+    QPushButton:pressed {
+        background-color: #1b5e20;
+    }
+
+    QPushButton:disabled {
+        background-color: #555555;
+        color: #999999;
+    }
+
+    QTextEdit, QLineEdit {
+        background-color: #2c2c2c;
+        color: #eeeeee;
+        padding: 8px;
+        border: 1px solid #444444;
+        border-radius: 6px;
+        font-family: monospace;
+    }
+
+    QTextEdit:disabled, QLineEdit:disabled, QComboBox:disabled {
+        background-color: #3a3a3a;
+        color: #777777;
+    }
+
+    QComboBox {
+        background-color: #2c2c2c;
+        color: #eeeeee;
+        padding: 6px;
+        border: 1px solid #444444;
+        border-radius: 6px;
+    }
+
+    QComboBox QAbstractItemView {
+        background-color: #2c2c2c;
+        selection-background-color: #388e3c;
+        selection-color: white;
+    }
+
+    QTabBar::tab {
+        background: transparent;
+        color: #888888;
+        padding: 12px;
+        border: none;
+    }
+
+    QTabBar::tab:selected {
+        color: #4caf50;
+        font-weight: bold;
+    }
+
+    QScrollBar:vertical {
+        background: #2c2c2c;
+        width: 10px;
+        margin: 0px 0px 0px 0px;
+    }
+
+    QScrollBar::handle:vertical {
+        background: #555;
+        min-height: 20px;
+        border-radius: 5px;
+    }
+
+    QScrollBar::handle:vertical:hover {
+        background: #666;
+    }
+
+    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+        height: 0;
+    }
+"""
+
+LIGHT_STYLESHEET = """
+    QMainWindow {
+        background-color: #ffffff;
+    }
+
+    QTabWidget::pane {
+        border: none;
+    }
+
+    QWidget {
+        background-color: #ffffff;
+        color: #000000;
+        font-family: "Segoe UI", "Arial", sans-serif;
+        font-size: 14px;
+    }
+
+    QPushButton {
+        background-color: #007bff;
+        color: #ffffff;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+
+    QPushButton:hover {
+        background-color: #339cff;
+    }
+
+    QPushButton:pressed {
+        background-color: #0062cc;
+    }
+
+    QPushButton:disabled {
+        background-color: #cccccc;
+        color: #666666;
+    }
+
+    QTextEdit, QLineEdit {
+        background-color: #ffffff;
+        color: #000000;
+        padding: 8px;
+        border: 1px solid #aaaaaa;
+        border-radius: 6px;
+        font-family: monospace;
+    }
+
+    QTextEdit:disabled, QLineEdit:disabled, QComboBox:disabled {
+        background-color: #eeeeee;
+        color: #777777;
+    }
+
+    QComboBox {
+        background-color: #ffffff;
+        color: #000000;
+        padding: 6px;
+        border: 1px solid #aaaaaa;
+        border-radius: 6px;
+    }
+
+    QComboBox QAbstractItemView {
+        background-color: #ffffff;
+        selection-background-color: #339cff;
+        selection-color: black;
+    }
+
+    QTabBar::tab {
+        background: transparent;
+        color: #444444;
+        padding: 12px;
+        border: none;
+    }
+
+    QTabBar::tab:selected {
+        color: #007bff;
+        font-weight: bold;
+    }
+
+    QScrollBar:vertical {
+        background: #ffffff;
+        width: 10px;
+        margin: 0px 0px 0px 0px;
+    }
+
+    QScrollBar::handle:vertical {
+        background: #cccccc;
+        min-height: 20px;
+        border-radius: 5px;
+    }
+
+    QScrollBar::handle:vertical:hover {
+        background: #bbbbbb;
+    }
+
+    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+        height: 0;
+    }
+"""
+
+THEME_STYLES = {"dark": DARK_STYLESHEET, "light": LIGHT_STYLESHEET}
+
+def apply_theme(widget: QMainWindow, theme: str) -> None:
+    widget.setStyleSheet(THEME_STYLES.get(theme, DARK_STYLESHEET))
+
+    # Number of log lines to read from the end of a log file
 MAX_LOG_LINES = 1000
 
 class MainWindow(QMainWindow):
@@ -41,109 +244,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Fusor – Laravel/PHP QA Toolbox")
         self.resize(1024, 768)
-
-
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #1e1e1e;
-            }
-
-            QTabWidget::pane {
-                border: none;
-            }
-
-            QWidget {
-                background-color: #1e1e1e;
-                color: #dddddd;
-                font-family: "Segoe UI", "Arial", sans-serif;
-                font-size: 14px;
-            }
-
-            QPushButton {
-                background-color: #2e7d32;
-                color: #ffffff;
-                padding: 8px 16px;
-                border: none;
-                border-radius: 6px;
-                font-weight: 500;
-            }
-
-            QPushButton:hover {
-                background-color: #388e3c;
-            }
-
-            QPushButton:pressed {
-                background-color: #1b5e20;
-            }
-
-            QPushButton:disabled {
-                background-color: #555555;
-                color: #999999;
-            }
-
-            QTextEdit, QLineEdit {
-                background-color: #2c2c2c;
-                color: #eeeeee;
-                padding: 8px;
-                border: 1px solid #444444;
-                border-radius: 6px;
-                font-family: monospace;
-            }
-
-            QTextEdit:disabled, QLineEdit:disabled, QComboBox:disabled {
-                background-color: #3a3a3a;
-                color: #777777;
-            }
-
-            QComboBox {
-                background-color: #2c2c2c;
-                color: #eeeeee;
-                padding: 6px;
-                border: 1px solid #444444;
-                border-radius: 6px;
-            }
-
-            QComboBox QAbstractItemView {
-                background-color: #2c2c2c;
-                selection-background-color: #388e3c;
-                selection-color: white;
-            }
-
-            QTabBar::tab {
-                background: transparent;
-                color: #888888;
-                padding: 12px;
-                border: none;
-            }
-
-            QTabBar::tab:selected {
-                color: #4caf50;
-                font-weight: bold;
-            }
-
-            QScrollBar:vertical {
-                background: #2c2c2c;
-                width: 10px;
-                margin: 0px 0px 0px 0px;
-            }
-
-            QScrollBar::handle:vertical {
-                background: #555;
-                min-height: 20px;
-                border-radius: 5px;
-            }
-
-            QScrollBar::handle:vertical:hover {
-                background: #666;
-            }
-
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                height: 0;
-            }
-        """)
+        self.theme = "dark"
 
         self.tabs = QTabWidget()
-
         central_widget = QWidget()
         main_layout = QVBoxLayout(central_widget)
 
@@ -192,6 +295,7 @@ class MainWindow(QMainWindow):
         self.max_log_lines = MAX_LOG_LINES
         self.auto_refresh_secs = 5
         self.load_config()
+        apply_theme(self, self.theme)
 
         # initialize tabs
         self.project_tab = ProjectTab(self)
@@ -292,6 +396,9 @@ class MainWindow(QMainWindow):
             "auto_refresh_secs",
             data.get("auto_refresh_secs", self.auto_refresh_secs),
         )
+
+        self.theme = data.get("theme", self.theme)
+
         self.max_log_lines = settings.get(
             "max_log_lines",
             data.get("max_log_lines", self.max_log_lines),
@@ -514,6 +621,7 @@ class MainWindow(QMainWindow):
         git_remote = self.remote_combo.currentText() if hasattr(self, "remote_combo") else self.git_remote
         compose_text = self.compose_files_edit.text() if hasattr(self, "compose_files_edit") else ";".join(self.compose_files)
         auto_refresh_secs = self.refresh_spin.value() if hasattr(self, "refresh_spin") else self.auto_refresh_secs
+        theme = self.theme_combo.currentText().lower() if hasattr(self, "theme_combo") else self.theme
 
         if (
             not project_path
@@ -554,6 +662,7 @@ class MainWindow(QMainWindow):
         self.git_remote = git_remote
         self.compose_files = [f for f in compose_text.split(";") if f]
         self.auto_refresh_secs = int(auto_refresh_secs)
+        self.theme = theme
         self.max_log_lines = int(getattr(self, "max_log_lines", MAX_LOG_LINES))
 
         data = load_config()
@@ -575,12 +684,14 @@ class MainWindow(QMainWindow):
             "projects": self.projects,
             "current_project": project_path,
             "project_settings": settings,
+            "theme": self.theme,
         })
         try:
             save_config(data)
         except OSError as e:
             print(f"Failed to write config: {e}")
 
+        apply_theme(self, self.theme)
         print("Settings saved!")
         self.mark_settings_saved()
 

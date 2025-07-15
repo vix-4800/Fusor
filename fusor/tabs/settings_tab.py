@@ -112,6 +112,12 @@ class SettingsTab(QWidget):
         self.refresh_spin.setValue(self.main_window.auto_refresh_secs)
         form.addRow("Auto refresh (seconds):", self.refresh_spin)
 
+        self.theme_combo = QComboBox()
+        self.theme_combo.addItems(["Dark", "Light"])
+        if getattr(self.main_window, "theme", "dark") == "light":
+            self.theme_combo.setCurrentText("Light")
+        form.addRow("Theme:", self.theme_combo)
+
         self.yii_template_combo = QComboBox()
         self.yii_template_combo.addItems(["basic", "advanced"])
         if hasattr(self.main_window, "yii_template"):
@@ -146,6 +152,7 @@ class SettingsTab(QWidget):
         self.main_window.remote_combo = self.remote_combo
         self.main_window.compose_files_edit = self.compose_files_edit
         self.main_window.refresh_spin = self.refresh_spin
+        self.main_window.theme_combo = self.theme_combo
 
         self.on_docker_toggled(self.docker_checkbox.isChecked())
         current_fw = self.framework_combo.currentText()
@@ -164,6 +171,7 @@ class SettingsTab(QWidget):
         self.yii_template_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
         self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
         self.refresh_spin.valueChanged.connect(self.main_window.mark_settings_dirty)
+        self.theme_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
 
     def _wrap(self, child):
         """Return a QWidget containing the given layout or widget."""

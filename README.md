@@ -10,6 +10,7 @@ An **About** dialog with the project's name, author and version is available
 via the **Help** button in the top-right corner.
 
 The interface now uses a dark theme defined in `fusor/main_window.py` and larger buttons for better visibility.
+A "Theme" selector in the Settings tab lets you switch between Dark and Light modes.
 The Project tab places the **Start** and **Stop** buttons side by side for
 quicker access, and other tabs feature taller buttons as well.
 
