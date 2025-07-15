@@ -33,6 +33,9 @@ from .tabs.settings_tab import SettingsTab
 # allow tests to monkeypatch file operations easily
 open = builtins.open
 
+# Number of log lines to read from the end of a log file
+MAX_LOG_LINES = 1000
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -186,6 +189,7 @@ class MainWindow(QMainWindow):
         self.yii_template = "basic"
         self.log_path = os.path.join("storage", "logs", "laravel.log")
         self.git_remote = ""
+        self.max_log_lines = MAX_LOG_LINES
         self.auto_refresh_secs = 5
         self.load_config()
 
@@ -288,6 +292,10 @@ class MainWindow(QMainWindow):
             "auto_refresh_secs",
             data.get("auto_refresh_secs", self.auto_refresh_secs),
         )
+        self.max_log_lines = settings.get(
+            "max_log_lines",
+            data.get("max_log_lines", self.max_log_lines),
+        )
 
         self._geom_size = data.get("window_size")
         self._geom_pos = data.get("window_position")
@@ -329,6 +337,7 @@ class MainWindow(QMainWindow):
         self.git_remote = settings["git_remote"]
         self.compose_files = settings["compose_files"]
         self.auto_refresh_secs = settings["auto_refresh_secs"]
+        self.max_log_lines = settings.get("max_log_lines", self.max_log_lines)
 
         if hasattr(self, "framework_combo"):
             self.framework_combo.setCurrentText(self.framework_choice)
@@ -434,6 +443,27 @@ class MainWindow(QMainWindow):
     def current_framework(self):
         return self.framework_combo.currentText() if hasattr(self, "framework_combo") else "None"
 
+    def _tail_file(self, path: str, lines: int) -> str:
+        """Return the last ``lines`` lines from ``path``."""
+        try:
+            with open(path, "rb") as f:
+                f.seek(0, os.SEEK_END)
+                remaining = f.tell()
+                block_size = 4096
+                data = b""
+                line_count = 0
+                while remaining > 0 and line_count <= lines:
+                    read_size = block_size if remaining >= block_size else remaining
+                    remaining -= read_size
+                    f.seek(remaining)
+                    chunk = f.read(read_size)
+                    data = chunk + data
+                    line_count = data.count(b"\n")
+                lines_data = data.splitlines()[-lines:]
+                return "\n".join(line.decode("utf-8", "replace") for line in lines_data)
+        except OSError as e:
+            return f"Failed to read log file: {e}"
+
     def refresh_logs(self):
         if not self.ensure_project_path():
             return
@@ -445,11 +475,7 @@ class MainWindow(QMainWindow):
             if not os.path.isabs(log_file):
                 log_file = os.path.join(self.project_path, log_file)
             if os.path.exists(log_file):
-                try:
-                    with open(log_file, "r", encoding="utf-8") as f:
-                        log_contents = f.read()
-                except OSError as e:
-                    log_contents = f"Failed to read log file: {e}"
+                log_contents = self._tail_file(log_file, self.max_log_lines)
             else:
                 log_contents = f"Log file not found: {log_file}"
         elif framework == "Yii":
@@ -466,11 +492,7 @@ class MainWindow(QMainWindow):
             parts: list[str] = []
             for file in log_files:
                 if os.path.exists(file):
-                    try:
-                        with open(file, "r", encoding="utf-8") as f:
-                            content = f.read()
-                    except OSError as e:
-                        content = f"Failed to read log file: {e}"
+                    content = self._tail_file(file, self.max_log_lines)
                 else:
                     content = f"Log file not found: {file}"
                 parts.append(content)
@@ -532,6 +554,7 @@ class MainWindow(QMainWindow):
         self.git_remote = git_remote
         self.compose_files = [f for f in compose_text.split(";") if f]
         self.auto_refresh_secs = int(auto_refresh_secs)
+        self.max_log_lines = int(getattr(self, "max_log_lines", MAX_LOG_LINES))
 
         data = load_config()
         settings = data.get("project_settings", {})
@@ -546,6 +569,7 @@ class MainWindow(QMainWindow):
             "git_remote": git_remote,
             "compose_files": self.compose_files,
             "auto_refresh_secs": self.auto_refresh_secs,
+            "max_log_lines": self.max_log_lines,
         }
         data.update({
             "projects": self.projects,
