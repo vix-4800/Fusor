@@ -433,6 +433,29 @@ class MainWindow(QMainWindow):
                     log_contents = f"Failed to read log file: {e}"
             else:
                 log_contents = f"Log file not found: {log_file}"
+        elif framework == "Yii":
+            if self.yii_template == "advanced":
+                log_files = [
+                    os.path.join(self.project_path, part, "runtime", "logs", "app.log")
+                    for part in ["frontend", "backend", "console"]
+                ]
+            else:
+                log_files = [
+                    os.path.join(self.project_path, "runtime", "log", "app.log")
+                ]
+
+            parts: list[str] = []
+            for file in log_files:
+                if os.path.exists(file):
+                    try:
+                        with open(file, "r", encoding="utf-8") as f:
+                            content = f.read()
+                    except OSError as e:
+                        content = f"Failed to read log file: {e}"
+                else:
+                    content = f"Log file not found: {file}"
+                parts.append(content)
+            log_contents = "\n\n".join(parts)
         else:
             log_contents = f"Logs not implemented for {framework}"
 
