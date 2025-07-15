@@ -570,6 +570,7 @@ class TestMainWindow:
             },
             raising=True,
         )
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
 
         win = MainWindow()
         qtbot.addWidget(win)
