@@ -11,7 +11,6 @@ from PyQt6.QtWidgets import (
     QLineEdit,
 )
 from PyQt6.QtCore import QTimer
-import os
 
 import subprocess
 
@@ -94,8 +93,6 @@ class GitTab(QWidget):
         """Run ``git`` with the given ``args`` in a background thread."""
         if not self.main_window.ensure_project_path():
             return None
-        if not os.path.isdir(self.main_window.project_path):
-            return None
 
         command = ["git", *args]
         print(f"$ {' '.join(command)}")
@@ -120,9 +117,7 @@ class GitTab(QWidget):
         return self.main_window.executor.submit(task)
 
     def load_branches(self):
-        if not self.main_window.project_path or not os.path.isdir(
-            self.main_window.project_path
-        ):
+        if not self.main_window.project_path:
             return None
 
         def task():
@@ -234,7 +229,7 @@ class GitTab(QWidget):
         remote = self.main_window.git_remote
         self.remote_branch_combo.blockSignals(True)
         self.remote_branch_combo.clear()
-        if not remote or not os.path.isdir(self.main_window.project_path):
+        if not remote:
             self.remote_branch_combo.blockSignals(False)
             return None
 
