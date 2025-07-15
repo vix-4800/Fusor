@@ -134,7 +134,7 @@ DARK_STYLESHEET = """
 
 LIGHT_STYLESHEET = """
     QMainWindow {
-        background-color: #ffffff;
+        background-color: #f9f9f9;
     }
 
     QTabWidget::pane {
@@ -142,8 +142,8 @@ LIGHT_STYLESHEET = """
     }
 
     QWidget {
-        background-color: #ffffff;
-        color: #000000;
+        background-color: #f9f9f9;
+        color: #1e1e1e;
         font-family: "Segoe UI", "Arial", sans-serif;
         font-size: 14px;
     }
@@ -166,41 +166,41 @@ LIGHT_STYLESHEET = """
     }
 
     QPushButton:disabled {
-        background-color: #cccccc;
-        color: #666666;
+        background-color: #e0e0e0;
+        color: #a0a0a0;
     }
 
     QTextEdit, QLineEdit, QSpinBox {
         background-color: #ffffff;
-        color: #000000;
+        color: #1e1e1e;
         padding: 8px;
-        border: 1px solid #aaaaaa;
+        border: 1px solid #cccccc;
         border-radius: 6px;
         font-family: monospace;
     }
 
-    QTextEdit:disabled, QLineEdit:disabled, QComboBox:disabled, QSpinBox:disabled, {
-        background-color: #eeeeee;
-        color: #777777;
+    QTextEdit:disabled, QLineEdit:disabled, QComboBox:disabled, QSpinBox:disabled {
+        background-color: #f0f0f0;
+        color: #999999;
     }
 
     QComboBox {
         background-color: #ffffff;
-        color: #000000;
+        color: #1e1e1e;
         padding: 6px;
-        border: 1px solid #aaaaaa;
+        border: 1px solid #cccccc;
         border-radius: 6px;
     }
 
     QComboBox QAbstractItemView {
         background-color: #ffffff;
-        selection-background-color: #339cff;
-        selection-color: black;
+        selection-background-color: #cce5ff;
+        selection-color: #000000;
     }
 
     QTabBar::tab {
         background: transparent;
-        color: #444444;
+        color: #555555;
         padding: 12px;
         border: none;
     }
@@ -211,9 +211,9 @@ LIGHT_STYLESHEET = """
     }
 
     QScrollBar:vertical {
-        background: #ffffff;
+        background: #f5f5f5;
         width: 10px;
-        margin: 0px 0px 0px 0px;
+        margin: 0;
     }
 
     QScrollBar::handle:vertical {
@@ -230,6 +230,7 @@ LIGHT_STYLESHEET = """
         height: 0;
     }
 """
+
 
 THEME_STYLES = {"dark": DARK_STYLESHEET, "light": LIGHT_STYLESHEET}
 
