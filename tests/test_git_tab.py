@@ -154,7 +154,7 @@ def test_push_button_runs_push(monkeypatch, qtbot):
 
     push_btn: QPushButton | None = None
     for btn in tab.findChildren(QPushButton):
-        if btn.text() == "⬆ Push":
+        if btn.text() == "Push":
             push_btn = btn
             break
     assert push_btn is not None
@@ -203,7 +203,7 @@ def test_view_log_button_runs_log(monkeypatch, qtbot):
 
     view_btn: QPushButton | None = None
     for btn in tab.findChildren(QPushButton):
-        if btn.text() == "📜 View Log":
+        if btn.text() == "View Log":
             view_btn = btn
             break
     assert view_btn is not None
