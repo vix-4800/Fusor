@@ -1,10 +1,12 @@
+import os
+import subprocess
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
     QPushButton,
     QSizePolicy,
-    QGroupBox
+    QGroupBox,
 )
 
 class ProjectTab(QWidget):
@@ -27,6 +29,9 @@ class ProjectTab(QWidget):
 
         phpunit_btn = self._btn("🧪 Run PHPUnit", main_window.phpunit)
         layout.addWidget(phpunit_btn)
+
+        self.terminal_btn = self._btn("Open Terminal", self.open_terminal)
+        layout.addWidget(self.terminal_btn)
 
         composer_group = QGroupBox("Composer")
         composer_layout = QVBoxLayout()
@@ -51,3 +56,16 @@ class ProjectTab(QWidget):
         btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         btn.clicked.connect(slot)
         return btn
+
+    def open_terminal(self):
+        """Open a new terminal window in the current project directory."""
+        path = self.main_window.project_path
+        if not path:
+            print("Project path not set")
+            return
+
+        cmd = ["cmd.exe"] if os.name == "nt" else ["x-terminal-emulator"]
+        try:
+            subprocess.Popen(cmd, cwd=path)
+        except FileNotFoundError:
+            print(f"Command not found: {cmd[0]}")
