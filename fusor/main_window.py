@@ -71,7 +71,7 @@ DARK_STYLESHEET = """
         color: #999999;
     }
 
-    QTextEdit, QLineEdit {
+    QTextEdit, QLineEdit, QSpinBox {
         background-color: #2c2c2c;
         color: #eeeeee;
         padding: 8px;
@@ -80,7 +80,7 @@ DARK_STYLESHEET = """
         font-family: monospace;
     }
 
-    QTextEdit:disabled, QLineEdit:disabled, QComboBox:disabled {
+    QTextEdit:disabled, QLineEdit:disabled, QComboBox:disabled, QSpinBox:disabled {
         background-color: #3a3a3a;
         color: #777777;
     }
@@ -170,7 +170,7 @@ LIGHT_STYLESHEET = """
         color: #666666;
     }
 
-    QTextEdit, QLineEdit {
+    QTextEdit, QLineEdit, QSpinBox {
         background-color: #ffffff;
         color: #000000;
         padding: 8px;
@@ -179,7 +179,7 @@ LIGHT_STYLESHEET = """
         font-family: monospace;
     }
 
-    QTextEdit:disabled, QLineEdit:disabled, QComboBox:disabled {
+    QTextEdit:disabled, QLineEdit:disabled, QComboBox:disabled, QSpinBox:disabled, {
         background-color: #eeeeee;
         color: #777777;
     }
