@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import (
     QGroupBox,
     QLayout,
     QLabel,
+    QSpinBox,
 )
 
 from PyQt6.QtCore import Qt
@@ -106,6 +107,11 @@ class SettingsTab(QWidget):
         self.log_path_label = QLabel("Log Path:")
         form.addRow(self.log_path_label, self.log_path_row)
 
+        self.refresh_spin = QSpinBox()
+        self.refresh_spin.setRange(1, 3600)
+        self.refresh_spin.setValue(self.main_window.auto_refresh_secs)
+        form.addRow("Auto refresh (seconds):", self.refresh_spin)
+
         self.yii_template_combo = QComboBox()
         self.yii_template_combo.addItems(["basic", "advanced"])
         if hasattr(self.main_window, "yii_template"):
@@ -139,6 +145,7 @@ class SettingsTab(QWidget):
         self.main_window.log_path_edit = self.log_path_edit
         self.main_window.remote_combo = self.remote_combo
         self.main_window.compose_files_edit = self.compose_files_edit
+        self.main_window.refresh_spin = self.refresh_spin
 
         self.on_docker_toggled(self.docker_checkbox.isChecked())
         current_fw = self.framework_combo.currentText()
@@ -156,6 +163,7 @@ class SettingsTab(QWidget):
         self.log_path_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.yii_template_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
         self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
+        self.refresh_spin.valueChanged.connect(self.main_window.mark_settings_dirty)
 
     def _wrap(self, child):
         """Return a QWidget containing the given layout or widget."""
