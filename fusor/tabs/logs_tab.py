@@ -17,6 +17,10 @@ class LogsTab(QWidget):
         super().__init__()
         self.main_window = main_window
 
+        # search state
+        self._search_positions: list[int] = []
+        self._current_search_index = 0
+
         outer_layout = QVBoxLayout(self)
         outer_layout.setContentsMargins(20, 20, 20, 20)
         outer_layout.setSpacing(16)
@@ -26,12 +30,26 @@ class LogsTab(QWidget):
         search_layout.setSpacing(12)
         self.search_edit = QLineEdit()
         self.search_edit.setPlaceholderText("Search logs...")
+
         self.search_btn = QPushButton("Search")
         self.search_btn.setMinimumHeight(36)
         self.search_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.search_btn.clicked.connect(self.search_logs)
+
+        self.prev_btn = QPushButton("Previous")
+        self.prev_btn.setMinimumHeight(36)
+        self.prev_btn.setEnabled(False)
+        self.prev_btn.clicked.connect(lambda: self.cycle_match(-1))
+
+        self.next_btn = QPushButton("Next")
+        self.next_btn.setMinimumHeight(36)
+        self.next_btn.setEnabled(False)
+        self.next_btn.clicked.connect(lambda: self.cycle_match(1))
+
         search_layout.addWidget(self.search_edit)
         search_layout.addWidget(self.search_btn)
+        search_layout.addWidget(self.prev_btn)
+        search_layout.addWidget(self.next_btn)
         outer_layout.addLayout(search_layout)
 
         # --- Log Output ---
@@ -88,16 +106,68 @@ class LogsTab(QWidget):
         text = self.search_edit.text().strip()
         if not text:
             return
+
         content = self.log_view.toPlainText()
-        idx = content.lower().find(text.lower())
-        if idx == -1:
+        text_lower = text.lower()
+
+        # Find all match positions
+        self._search_positions.clear()
+        start = 0
+        while True:
+            idx = content.lower().find(text_lower, start)
+            if idx == -1:
+                break
+            self._search_positions.append(idx)
+            start = idx + len(text)
+
+        if not self._search_positions:
+            self.log_view.setExtraSelections([])
+            self.prev_btn.setEnabled(False)
+            self.next_btn.setEnabled(False)
             return
+
+        # Highlight all matches
+        selections = []
+        for pos in self._search_positions:
+            cursor = self.log_view.textCursor()
+            cursor.setPosition(pos)
+            cursor.movePosition(
+                QTextCursor.MoveOperation.Right,
+                QTextCursor.MoveMode.KeepAnchor,
+                len(text),
+            )
+            selection = QTextEdit.ExtraSelection()
+            selection.cursor = cursor
+            selection.format.setBackground(Qt.GlobalColor.yellow)
+            selections.append(selection)
+        self.log_view.setExtraSelections(selections)
+
+        self._current_search_index = 0
+        self.prev_btn.setEnabled(len(self._search_positions) > 1)
+        self.next_btn.setEnabled(len(self._search_positions) > 1)
+        self._move_to_current_match(len(text))
+
+    def _move_to_current_match(self, length: int):
+        if not self._search_positions:
+            return
+        pos = self._search_positions[self._current_search_index]
         cursor = self.log_view.textCursor()
-        cursor.setPosition(idx)
+        cursor.setPosition(pos)
         cursor.movePosition(
             QTextCursor.MoveOperation.Right,
             QTextCursor.MoveMode.KeepAnchor,
-            len(text),
+            length,
         )
         self.log_view.setTextCursor(cursor)
         self.log_view.ensureCursorVisible()
+
+    def cycle_match(self, delta: int):
+        if not self._search_positions:
+            return
+        length = len(self.search_edit.text().strip())
+        if length == 0:
+            return
+        self._current_search_index = (
+            self._current_search_index + delta
+        ) % len(self._search_positions)
+        self._move_to_current_match(length)

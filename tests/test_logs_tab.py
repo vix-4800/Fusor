@@ -35,3 +35,40 @@ def test_search_highlights_first_match(qtbot):
     assert text[start:end] == "foo"
     assert start == text.find("foo")
 
+
+def test_search_cycle_multiple_matches(qtbot):
+    main = DummyMainWindow()
+    tab = LogsTab(main)
+    qtbot.addWidget(tab)
+
+    text = "foo bar foo bar foo"
+    tab.log_view.setPlainText(text)
+    tab.search_edit.setText("foo")
+
+    qtbot.mouseClick(tab.search_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(10)
+
+    assert tab._search_positions == [0, 8, 16]
+    assert tab.next_btn.isEnabled()
+    assert tab.prev_btn.isEnabled()
+
+    def current_start():
+        c = tab.log_view.textCursor()
+        return c.selectionStart()
+
+    qtbot.mouseClick(tab.next_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(10)
+    assert current_start() == 8
+
+    qtbot.mouseClick(tab.next_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(10)
+    assert current_start() == 16
+
+    qtbot.mouseClick(tab.next_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(10)
+    assert current_start() == 0
+
+    qtbot.mouseClick(tab.prev_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(10)
+    assert current_start() == 16
+
