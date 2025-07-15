@@ -1,6 +1,14 @@
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QComboBox, QSizePolicy, QMessageBox, QGroupBox, QLabel
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QComboBox,
+    QSizePolicy,
+    QMessageBox,
+    QGroupBox,
+    QLabel,
+    QLineEdit,
 )
 
 import subprocess
@@ -39,6 +47,16 @@ class GitTab(QWidget):
         remote_layout.addWidget(refresh_btn)
         remote_group.setLayout(remote_layout)
         outer_layout.addWidget(remote_group)
+
+        # --- Create branch ---
+        create_group = QGroupBox("Create Branch")
+        create_layout = QHBoxLayout()
+        self.branch_name_edit = QLineEdit()
+        create_btn = self._btn("Create Branch", self.create_branch)
+        create_layout.addWidget(self.branch_name_edit)
+        create_layout.addWidget(create_btn)
+        create_group.setLayout(create_layout)
+        outer_layout.addWidget(create_group)
 
         # --- Git actions ---
         actions_group = QGroupBox("Git Commands")
@@ -162,6 +180,14 @@ class GitTab(QWidget):
             print("Changes stashed successfully")
         else:
             print("Stash failed")
+
+    def create_branch(self):
+        branch = self.branch_name_edit.text().strip()
+        if not branch:
+            return
+        self.run_git_command("checkout", "-b", branch)
+        self.load_branches()
+        self.branch_combo.setCurrentText(branch)
 
     def get_remotes(self) -> list[str]:
         if not self.main_window.project_path:
