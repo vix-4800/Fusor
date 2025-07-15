@@ -67,11 +67,13 @@ class GitTab(QWidget):
         push_btn = self._btn("⬆ Push", lambda: self.run_git_command("push"))
         reset_btn = self._btn("↩ Hard Reset", self.hard_reset)
         stash_btn = self._btn("💾 Stash", self.stash)
+        view_log_btn = self._btn("📜 View Log", self.view_log)
 
         actions_layout.addWidget(pull_btn)
         actions_layout.addWidget(push_btn)
         actions_layout.addWidget(reset_btn)
         actions_layout.addWidget(stash_btn)
+        actions_layout.addWidget(view_log_btn)
 
         actions_group.setLayout(actions_layout)
         outer_layout.addWidget(actions_group)
@@ -180,6 +182,10 @@ class GitTab(QWidget):
             print("Changes stashed successfully")
         else:
             print("Stash failed")
+
+    def view_log(self):
+        """Show recent git log entries."""
+        self.run_git_command("log", "-n", "20", "--oneline")
 
     def create_branch(self):
         branch = self.branch_name_edit.text().strip()
