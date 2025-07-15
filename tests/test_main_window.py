@@ -506,6 +506,7 @@ class TestMainWindow:
         monkeypatch.setattr(mw_module, "save_config", lambda data: saved.update(data), raising=True)
         monkeypatch.setattr(os.path, "isdir", lambda p: True, raising=True)
         monkeypatch.setattr(os.path, "isfile", lambda p: True, raising=True)
+        monkeypatch.setattr(mw_module.GitTab, "load_branches", lambda self: None, raising=True)
         monkeypatch.setattr(
             "PyQt6.QtWidgets.QMessageBox.warning", lambda *a, **k: None, raising=True
         )

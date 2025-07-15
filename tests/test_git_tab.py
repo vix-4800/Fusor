@@ -1,4 +1,5 @@
 import subprocess
+import os
 from PyQt6.QtWidgets import QMessageBox, QPushButton
 from PyQt6.QtCore import Qt
 
@@ -32,6 +33,8 @@ def test_load_branches_and_run_git_command(monkeypatch, qtbot):
     main = DummyMainWindow()
     tab = GitTab(main)
     qtbot.addWidget(tab)
+
+    monkeypatch.setattr(os.path, "isdir", lambda p: True, raising=True)
 
     results = {}
 
@@ -127,6 +130,7 @@ def test_remote_helpers(monkeypatch, qtbot):
     main = DummyMainWindow()
     tab = GitTab(main)
     qtbot.addWidget(tab)
+    monkeypatch.setattr(os.path, "isdir", lambda p: True, raising=True)
 
     class DummyResult:
         def __init__(self, stdout=""):
