@@ -352,7 +352,7 @@ class MainWindow(QMainWindow):
                 ]
             cwd = self.project_path
         else:
-            cwd = None
+            cwd = self.project_path
 
         def task():
             try:

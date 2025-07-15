@@ -1,8 +1,16 @@
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QTextEdit, QPushButton,
-    QCheckBox, QSizePolicy, QHBoxLayout, QGroupBox
+    QWidget,
+    QVBoxLayout,
+    QTextEdit,
+    QPushButton,
+    QCheckBox,
+    QSizePolicy,
+    QHBoxLayout,
+    QGroupBox,
+    QLineEdit,
 )
 from PyQt6.QtCore import QTimer, Qt
+from PyQt6.QtGui import QTextCursor
 
 class LogsTab(QWidget):
     def __init__(self, main_window):
@@ -12,6 +20,19 @@ class LogsTab(QWidget):
         outer_layout = QVBoxLayout(self)
         outer_layout.setContentsMargins(20, 20, 20, 20)
         outer_layout.setSpacing(16)
+
+        # --- Search ---
+        search_layout = QHBoxLayout()
+        search_layout.setSpacing(12)
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText("Search logs...")
+        self.search_btn = QPushButton("Search")
+        self.search_btn.setMinimumHeight(36)
+        self.search_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.search_btn.clicked.connect(self.search_logs)
+        search_layout.addWidget(self.search_edit)
+        search_layout.addWidget(self.search_btn)
+        outer_layout.addLayout(search_layout)
 
         # --- Log Output ---
         self.log_view = QTextEdit()
@@ -62,3 +83,21 @@ class LogsTab(QWidget):
             self.main_window.refresh_logs()
         else:
             self._timer.stop()
+
+    def search_logs(self):
+        text = self.search_edit.text().strip()
+        if not text:
+            return
+        content = self.log_view.toPlainText()
+        idx = content.lower().find(text.lower())
+        if idx == -1:
+            return
+        cursor = self.log_view.textCursor()
+        cursor.setPosition(idx)
+        cursor.movePosition(
+            QTextCursor.MoveOperation.Right,
+            QTextCursor.MoveMode.KeepAnchor,
+            len(text),
+        )
+        self.log_view.setTextCursor(cursor)
+        self.log_view.ensureCursorVisible()

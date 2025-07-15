@@ -1,3 +1,5 @@
+from PyQt6.QtCore import Qt
+
 from fusor.tabs.logs_tab import LogsTab
 
 class DummyMainWindow:
@@ -6,7 +8,6 @@ class DummyMainWindow:
     def refresh_logs(self):
         pass
 
-
 def test_timer_interval(qtbot):
     main = DummyMainWindow()
     tab = LogsTab(main)
@@ -14,3 +15,23 @@ def test_timer_interval(qtbot):
 
     assert tab._timer.interval() == 12000
     assert "12s" in tab.auto_checkbox.text()
+
+def test_search_highlights_first_match(qtbot):
+    main = DummyMainWindow()
+    tab = LogsTab(main)
+    qtbot.addWidget(tab)
+
+    text = "foo bar foo"
+    tab.log_view.setPlainText(text)
+    tab.search_edit.setText("foo")
+
+    qtbot.mouseClick(tab.search_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(10)
+
+    cursor = tab.log_view.textCursor()
+    start = cursor.selectionStart()
+    end = cursor.selectionEnd()
+
+    assert text[start:end] == "foo"
+    assert start == text.find("foo")
+

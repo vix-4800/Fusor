@@ -308,6 +308,38 @@ class TestMainWindow:
             main_window.php_service,
         ]
 
+    def test_run_command_sets_cwd_when_using_docker(self, main_window, monkeypatch):
+        main_window.use_docker = True
+        main_window.project_path = "/repo"
+        captured = {}
+
+        def fake_run(cmd, capture_output=True, text=True, cwd=None):
+            captured["cwd"] = cwd
+            return type("R", (), {"stdout": "", "stderr": ""})()
+
+        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+
+        main_window.run_command(["php", "-v"])
+
+        assert captured["cwd"] == "/repo"
+
+    def test_run_command_sets_cwd_without_docker(self, main_window, monkeypatch):
+        main_window.use_docker = False
+        main_window.project_path = "/repo"
+        captured = {}
+
+        def fake_run(cmd, capture_output=True, text=True, cwd=None):
+            captured["cwd"] = cwd
+            return type("R", (), {"stdout": "", "stderr": ""})()
+
+        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+
+        main_window.run_command(["echo", "hi"])
+
+        assert captured["cwd"] == "/repo"
+
     def test_refresh_logs_reads_custom_path(self, tmp_path: Path, main_window, monkeypatch):
         log_file = tmp_path / "custom.log"
         log_file.write_text("log text")
@@ -477,3 +509,23 @@ class TestMainWindow:
         assert win.server_port == 8001
         assert win.server_port_edit.text() == "8001"
         win.close()
+
+    def test_open_terminal_launches_with_project_cwd(self, tmp_path: Path, main_window, qtbot, monkeypatch):
+        main_window.project_path = str(tmp_path)
+
+        captured = {}
+
+        def fake_popen(cmd, cwd=None, *a, **kw):
+            captured["cmd"] = cmd
+            captured["cwd"] = cwd
+            class Dummy:
+                pass
+            return Dummy()
+
+        monkeypatch.setattr(subprocess, "Popen", fake_popen, raising=True)
+
+        qtbot.mouseClick(main_window.project_tab.terminal_btn, Qt.MouseButton.LeftButton)
+
+        assert captured["cwd"] == str(tmp_path)
+        expected_cmd = ["cmd.exe"] if os.name == "nt" else ["x-terminal-emulator"]
+        assert captured["cmd"] == expected_cmd
