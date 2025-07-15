@@ -523,7 +523,7 @@ class TestMainWindow:
         main_window.project_path = "/tmp"
         main_window.php_path_edit.setText("php")
         main_window.docker_checkbox.setChecked(False)
-        main_window.server_port_edit.setText("8000")
+        main_window.server_port_edit.setValue(8000)
 
         monkeypatch.setattr(os.path, "isdir", lambda p: True, raising=True)
         monkeypatch.setattr(os.path, "isfile", lambda p: False, raising=True)
@@ -562,13 +562,13 @@ class TestMainWindow:
         win.show()
 
         assert win.server_port == 8000
-        assert win.server_port_edit.text() == "8000"
+        assert win.server_port_edit.value() == 8000
 
         win.project_combo.setCurrentText("/two")
         qtbot.wait(10)
 
         assert win.server_port == 8001
-        assert win.server_port_edit.text() == "8001"
+        assert win.server_port_edit.value() == 8001
         win.close()
 
     def test_open_terminal_launches_with_project_cwd(self, tmp_path: Path, main_window, qtbot, monkeypatch):
