@@ -713,7 +713,7 @@ class TestMainWindow:
 
         refresh_btn = None
         for btn in win.git_tab.findChildren(QPushButton):
-            if btn.text() == "🔄 Refresh":
+            if btn.text() == "Refresh":
                 refresh_btn = btn
                 break
         assert refresh_btn is not None
