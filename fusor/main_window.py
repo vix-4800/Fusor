@@ -253,7 +253,7 @@ class MainWindow(QMainWindow):
 
         header_layout = QHBoxLayout()
         header_layout.addStretch()
-        self.help_button = QPushButton("?")
+        self.help_button = QPushButton("")
         self.help_button.setIcon(get_icon("help-about"))
         self.help_button.clicked.connect(self.show_about_dialog)
         header_layout.addWidget(self.help_button)

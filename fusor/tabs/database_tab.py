@@ -23,17 +23,17 @@ class DatabaseTab(QWidget):
         tools_layout.setSpacing(10)
 
         self.dbeaver_btn = self._btn(
-            "🧩 Open in DBeaver",
+            "Open in DBeaver",
             self.open_dbeaver,
             icon="database",
         )
         self.dump_btn = self._btn(
-            "💾 Dump to SQL",
+            "Dump to SQL",
             self.dump_sql,
             icon="document-save",
         )
         self.restore_btn = self._btn(
-            "📂 Restore dump",
+            "Restore dump",
             self.restore_dump,
             icon="document-open",
         )

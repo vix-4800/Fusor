@@ -143,7 +143,7 @@ class SettingsTab(QWidget):
         project_group.setLayout(form)
         outer_layout.addWidget(project_group)
 
-        save_btn = QPushButton("💾 Save Settings")
+        save_btn = QPushButton("Save Settings")
         save_btn.setIcon(get_icon("document-save"))
         save_btn.setMinimumHeight(36)
         save_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)

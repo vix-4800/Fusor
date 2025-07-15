@@ -45,7 +45,7 @@ class GitTab(QWidget):
         self.remote_branch_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.remote_branch_combo.currentTextChanged.connect(self.on_remote_branch_changed)
         refresh_btn = self._btn(
-            "🔄 Refresh",
+            "Refresh",
             self.load_remote_branches,
             icon="view-refresh",
         )
@@ -75,27 +75,27 @@ class GitTab(QWidget):
         actions_layout.setSpacing(10)
 
         pull_btn = self._btn(
-            "⬇ Pull",
+            "Pull",
             lambda: self.run_git_command("pull"),
             icon="go-down",
         )
         push_btn = self._btn(
-            "⬆ Push",
+            "Push",
             lambda: self.run_git_command("push"),
             icon="go-up",
         )
         reset_btn = self._btn(
-            "↩ Hard Reset",
+            "Hard Reset",
             self.hard_reset,
             icon="edit-undo",
         )
         stash_btn = self._btn(
-            "💾 Stash",
+            "Stash",
             self.stash,
             icon="document-save",
         )
         view_log_btn = self._btn(
-            "📜 View Log",
+            "View Log",
             self.view_log,
             icon="text-x-generic",
         )

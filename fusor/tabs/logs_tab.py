@@ -70,7 +70,7 @@ class LogsTab(QWidget):
         control_layout = QHBoxLayout()
         control_layout.setSpacing(12)
 
-        refresh_btn = QPushButton("🔄 Refresh")
+        refresh_btn = QPushButton("Refresh")
         refresh_btn.setIcon(get_icon("view-refresh"))
         refresh_btn.setMinimumHeight(36)
         refresh_btn.clicked.connect(self.main_window.refresh_logs)

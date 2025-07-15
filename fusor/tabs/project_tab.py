@@ -22,12 +22,12 @@ class ProjectTab(QWidget):
         server_group = QGroupBox("Server Control")
         server_layout = QHBoxLayout()
         start_btn = self._btn(
-            "▶ Start",
+            "Start",
             main_window.start_project,
             icon="media-playback-start",
         )
         stop_btn = self._btn(
-            "■ Stop",
+            "Stop",
             main_window.stop_project,
             icon="media-playback-stop",
         )
@@ -37,7 +37,7 @@ class ProjectTab(QWidget):
         layout.addWidget(server_group)
 
         phpunit_btn = self._btn(
-            "🧪 Run PHPUnit",
+            "Run PHPUnit",
             main_window.phpunit,
             icon="system-run",
         )
@@ -53,12 +53,12 @@ class ProjectTab(QWidget):
         composer_group = QGroupBox("Composer")
         composer_layout = QVBoxLayout()
         self.composer_install_btn = self._btn(
-            "📦 Composer install",
+            "Composer install",
             lambda: main_window.run_command(["composer", "install"]),
             icon="package-install",
         )
         self.composer_update_btn = self._btn(
-            "⬆ Composer update",
+            "Composer update",
             lambda: main_window.run_command(["composer", "update"]),
             icon="system-software-update",
         )

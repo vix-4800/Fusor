@@ -24,7 +24,7 @@ class FrameworkTab(QWidget):
             self._btn("Migrate", self.main_window.migrate, icon="system-run")
         )
         migrate_layout.addWidget(
-            self._btn("↩ Rollback", self.main_window.rollback, icon="edit-undo")
+            self._btn("Rollback", self.main_window.rollback, icon="edit-undo")
         )
         migrate_layout.addWidget(
             self._btn("Fresh", self.main_window.fresh, icon="view-refresh")
