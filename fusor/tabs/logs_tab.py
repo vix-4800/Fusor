@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QTextCursor
+from ..icons import get_icon
 
 class LogsTab(QWidget):
     def __init__(self, main_window):
@@ -32,16 +33,19 @@ class LogsTab(QWidget):
         self.search_edit.setPlaceholderText("Search logs...")
 
         self.search_btn = QPushButton("Search")
+        self.search_btn.setIcon(get_icon("edit-find"))
         self.search_btn.setMinimumHeight(36)
         self.search_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.search_btn.clicked.connect(self.search_logs)
 
         self.prev_btn = QPushButton("Previous")
+        self.prev_btn.setIcon(get_icon("go-previous"))
         self.prev_btn.setMinimumHeight(36)
         self.prev_btn.setEnabled(False)
         self.prev_btn.clicked.connect(lambda: self.cycle_match(-1))
 
         self.next_btn = QPushButton("Next")
+        self.next_btn.setIcon(get_icon("go-next"))
         self.next_btn.setMinimumHeight(36)
         self.next_btn.setEnabled(False)
         self.next_btn.clicked.connect(lambda: self.cycle_match(1))
@@ -67,12 +71,14 @@ class LogsTab(QWidget):
         control_layout.setSpacing(12)
 
         refresh_btn = QPushButton("🔄 Refresh")
+        refresh_btn.setIcon(get_icon("view-refresh"))
         refresh_btn.setMinimumHeight(36)
         refresh_btn.clicked.connect(self.main_window.refresh_logs)
         refresh_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         control_layout.addWidget(refresh_btn)
 
         self.clear_btn = QPushButton("Clear Log")
+        self.clear_btn.setIcon(get_icon("edit-clear"))
         self.clear_btn.setMinimumHeight(36)
         self.clear_btn.clicked.connect(self.main_window.clear_log_file)
         self.clear_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)

@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
 )
 
 from PyQt6.QtCore import Qt
+from ..icons import get_icon
 
 class SettingsTab(QWidget):
     def __init__(self, main_window):
@@ -36,9 +37,11 @@ class SettingsTab(QWidget):
         self.project_combo.currentTextChanged.connect(self.main_window.set_current_project)
 
         add_btn = QPushButton("Add")
+        add_btn.setIcon(get_icon("list-add"))
         add_btn.setFixedHeight(30)
         add_btn.clicked.connect(self.add_project)
         remove_btn = QPushButton("Remove")
+        remove_btn.setIcon(get_icon("list-remove"))
         remove_btn.setFixedHeight(30)
         remove_btn.clicked.connect(self.remove_project)
         self.remove_btn = remove_btn
@@ -50,6 +53,7 @@ class SettingsTab(QWidget):
 
         self.php_path_edit = QLineEdit(self.main_window.php_path)
         self.php_browse_btn = QPushButton("Browse")
+        self.php_browse_btn.setIcon(get_icon("document-open"))
         self.php_browse_btn.setFixedHeight(30)
         self.php_browse_btn.clicked.connect(self.browse_php_path)
         php_path_row = QHBoxLayout()
@@ -67,6 +71,7 @@ class SettingsTab(QWidget):
 
         self.compose_files_edit = QLineEdit(";".join(self.main_window.compose_files))
         self.compose_browse_btn = QPushButton("Browse")
+        self.compose_browse_btn.setIcon(get_icon("document-open"))
         self.compose_browse_btn.setFixedHeight(30)
         self.compose_browse_btn.clicked.connect(self.browse_compose_files)
         compose_row = QHBoxLayout()
@@ -100,6 +105,7 @@ class SettingsTab(QWidget):
 
         self.log_path_edit = QLineEdit(self.main_window.log_path)
         log_browse_btn = QPushButton("Browse")
+        log_browse_btn.setIcon(get_icon("document-open"))
         log_browse_btn.setFixedHeight(30)
         log_browse_btn.clicked.connect(self.browse_log_path)
         log_path_row = QHBoxLayout()
@@ -138,6 +144,7 @@ class SettingsTab(QWidget):
         outer_layout.addWidget(project_group)
 
         save_btn = QPushButton("💾 Save Settings")
+        save_btn.setIcon(get_icon("document-save"))
         save_btn.setMinimumHeight(36)
         save_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         save_btn.clicked.connect(self.main_window.save_settings)
