@@ -23,8 +23,10 @@ The available tabs are:
 -   **Git** – simple controls for common Git actions and switching between local and remote branches.
 -   **Database** – quick actions for opening and dumping a database.
 -   **Docker** – helpers for building, pulling and inspecting containers.
--   **Logs** – shows your project's log file (Laravel only) with a refresh
-    button and optional auto refresh.
+-   **Logs** – shows your project's log file. For Laravel the path is
+    configurable in **Settings**, while Yii logs are loaded automatically
+    depending on the selected application template. A refresh button and an
+    optional auto refresh are provided.
 -   **Settings** – manage multiple projects using an **Add** button and project
     selector. The tab also lets you choose the framework, PHP executable, Docker
     service name and the server port. When **Yii** is selected, a drop-down

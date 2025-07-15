@@ -361,6 +361,64 @@ class TestMainWindow:
         assert opened == [str(log_file)]
         assert main_window.log_view.text == "log text"
 
+    def test_refresh_logs_reads_yii_basic_logs(self, tmp_path: Path, main_window, monkeypatch):
+        log_file = tmp_path / "runtime" / "log" / "app.log"
+        log_file.parent.mkdir(parents=True)
+        log_file.write_text("basic log")
+        main_window.project_path = str(tmp_path)
+        main_window.framework_choice = "Yii"
+        if hasattr(main_window, "framework_combo"):
+            main_window.framework_combo.setCurrentText("Yii")
+        main_window.yii_template = "basic"
+        if hasattr(main_window, "yii_template_combo"):
+            main_window.yii_template_combo.setCurrentText("basic")
+        main_window.log_view = FakeLogView()
+
+        opened = []
+        real_open = mw_module.open
+
+        def fake_open(path, *args, **kwargs):
+            opened.append(path)
+            return real_open(path, *args, **kwargs)
+
+        monkeypatch.setattr(mw_module, "open", fake_open, raising=True)
+
+        main_window.refresh_logs()
+
+        assert opened == [str(log_file)]
+        assert "basic log" in main_window.log_view.text
+
+    def test_refresh_logs_reads_yii_advanced_logs(self, tmp_path: Path, main_window, monkeypatch):
+        files = []
+        for part in ["frontend", "backend", "console"]:
+            f = tmp_path / part / "runtime" / "logs" / "app.log"
+            f.parent.mkdir(parents=True)
+            f.write_text(f"{part} log")
+            files.append(f)
+        main_window.project_path = str(tmp_path)
+        main_window.framework_choice = "Yii"
+        if hasattr(main_window, "framework_combo"):
+            main_window.framework_combo.setCurrentText("Yii")
+        main_window.yii_template = "advanced"
+        if hasattr(main_window, "yii_template_combo"):
+            main_window.yii_template_combo.setCurrentText("advanced")
+        main_window.log_view = FakeLogView()
+
+        opened = []
+        real_open = mw_module.open
+
+        def fake_open(path, *args, **kwargs):
+            opened.append(path)
+            return real_open(path, *args, **kwargs)
+
+        monkeypatch.setattr(mw_module, "open", fake_open, raising=True)
+
+        main_window.refresh_logs()
+
+        assert opened == [str(f) for f in files]
+        for part in ["frontend", "backend", "console"]:
+            assert f"{part} log" in main_window.log_view.text
+
     def test_yii_template_row_visibility(self, main_window, qtbot):
         main_window.framework_combo.setCurrentText("None")
         qtbot.wait(10)
