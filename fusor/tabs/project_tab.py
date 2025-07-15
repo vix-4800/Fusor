@@ -23,12 +23,12 @@ class ProjectTab(QWidget):
         server_layout = QHBoxLayout()
 
         self.start_btn = self._btn(
-            "▶ Start",
+            "Start",
             main_window.start_project,
             icon="media-playback-start",
         )
         self.stop_btn = self._btn(
-            "■ Stop",
+            "Stop",
             main_window.stop_project,
             icon="media-playback-stop",
         )
