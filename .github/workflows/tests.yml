@@ -31,5 +31,7 @@ jobs:
           pip install -r requirements-dev.txt
       - name: Run ruff
         run: ruff check .
+      - name: Run mypy
+        run: mypy fusor
       - name: Run tests
         run: pytest -q
