@@ -18,6 +18,7 @@ class GitTab(QWidget):
         super().__init__()
         self.main_window = main_window
         self.current_branch = ""
+        self.remote_branches_loaded = False
 
         outer_layout = QVBoxLayout(self)
         outer_layout.setContentsMargins(20, 20, 20, 20)
@@ -233,6 +234,7 @@ class GitTab(QWidget):
             print("Command not found: git")
         finally:
             self.remote_branch_combo.blockSignals(False)
+            self.remote_branches_loaded = True
 
     def checkout_remote_branch(self, branch: str):
         remote = self.main_window.git_remote
