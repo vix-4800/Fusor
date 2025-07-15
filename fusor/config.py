@@ -23,6 +23,9 @@ DEFAULT_CONFIG = {
     "projects": [],
     "current_project": "",
     "project_settings": {},
+    # Window geometry (width, height) and position (x, y)
+    "window_size": [1024, 768],
+    "window_position": [100, 100],
 }
 
 def load_config():

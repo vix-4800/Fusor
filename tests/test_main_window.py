@@ -8,6 +8,7 @@ from PyQt6.QtCore import QTimer, Qt
 
 import fusor.main_window as mw_module
 from fusor.main_window import MainWindow
+from PyQt6.QtWidgets import QMainWindow
 
 # ---------------------------------------------------------------------------
 # Helpers & fixtures
@@ -24,6 +25,7 @@ class FakeLogView:
 def main_window(monkeypatch, qtbot):
     monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
     monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+    monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
 
     win = MainWindow()
     qtbot.addWidget(win)
@@ -587,3 +589,56 @@ class TestMainWindow:
         assert captured["cwd"] == str(tmp_path)
         expected_cmd = ["cmd.exe"] if os.name == "nt" else ["x-terminal-emulator"]
         assert captured["cmd"] == expected_cmd
+
+    def test_geometry_loaded_from_config(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(
+            mw_module,
+            "load_config",
+            lambda: {"window_size": [640, 480], "window_position": [30, 40]},
+            raising=True,
+        )
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+        called = {}
+        orig_resize = QMainWindow.resize
+        orig_move = QMainWindow.move
+
+        def fake_resize(self, w, h):
+            called["resize"] = (w, h)
+            orig_resize(self, w, h)
+
+        def fake_move(self, x, y):
+            called["move"] = (x, y)
+            orig_move(self, x, y)
+
+        monkeypatch.setattr(QMainWindow, "resize", fake_resize, raising=True)
+        monkeypatch.setattr(QMainWindow, "move", fake_move, raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        assert called["resize"] == (640, 480)
+        assert called["move"] == (30, 40)
+        win.close()
+
+    def test_close_event_saves_geometry(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+        saved = {}
+        monkeypatch.setattr(mw_module, "save_config", lambda data: saved.update(data), raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+        qtbot.wait(10)
+        win.resize(777, 555)
+        win.move(11, 22)
+        monkeypatch.setattr(win, "width", lambda: 777, raising=True)
+        monkeypatch.setattr(win, "height", lambda: 555, raising=True)
+        monkeypatch.setattr(win, "x", lambda: 11, raising=True)
+        monkeypatch.setattr(win, "y", lambda: 22, raising=True)
+        win.close()
+
+        assert saved["window_size"] == [777, 555]
+        assert saved["window_position"] == [11, 22]

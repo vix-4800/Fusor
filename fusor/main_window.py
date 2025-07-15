@@ -234,6 +234,22 @@ class MainWindow(QMainWindow):
         else:
             QTimer.singleShot(0, self.choose_project)
 
+        if (
+            hasattr(self, "_geom_size")
+            and isinstance(self._geom_size, list)
+            and len(self._geom_size) == 2
+            and all(isinstance(i, int) for i in self._geom_size)
+        ):
+            self.resize(*self._geom_size)
+
+        if (
+            hasattr(self, "_geom_pos")
+            and isinstance(self._geom_pos, list)
+            and len(self._geom_pos) == 2
+            and all(isinstance(i, int) for i in self._geom_pos)
+        ):
+            self.move(*self._geom_pos)
+
     def load_config(self):
         data = load_config()
         self.projects = data.get("projects", [])
@@ -272,6 +288,9 @@ class MainWindow(QMainWindow):
             "auto_refresh_secs",
             data.get("auto_refresh_secs", self.auto_refresh_secs),
         )
+
+        self._geom_size = data.get("window_size")
+        self._geom_pos = data.get("window_position")
 
     def _compose_prefix(self) -> list[str]:
         prefix = ["docker", "compose"]
@@ -670,6 +689,13 @@ class MainWindow(QMainWindow):
                     self.server_process.kill()
             self.server_process = None
         self.executor.shutdown(wait=False)
+        data = load_config()
+        data["window_size"] = [self.width(), self.height()]
+        data["window_position"] = [self.x(), self.y()]
+        try:
+            save_config(data)
+        except OSError as e:
+            print(f"Failed to write config: {e}")
         super().closeEvent(event)
 
     def show_about_dialog(self):
