@@ -308,6 +308,38 @@ class TestMainWindow:
             main_window.php_service,
         ]
 
+    def test_run_command_sets_cwd_when_using_docker(self, main_window, monkeypatch):
+        main_window.use_docker = True
+        main_window.project_path = "/repo"
+        captured = {}
+
+        def fake_run(cmd, capture_output=True, text=True, cwd=None):
+            captured["cwd"] = cwd
+            return type("R", (), {"stdout": "", "stderr": ""})()
+
+        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+
+        main_window.run_command(["php", "-v"])
+
+        assert captured["cwd"] == "/repo"
+
+    def test_run_command_sets_cwd_without_docker(self, main_window, monkeypatch):
+        main_window.use_docker = False
+        main_window.project_path = "/repo"
+        captured = {}
+
+        def fake_run(cmd, capture_output=True, text=True, cwd=None):
+            captured["cwd"] = cwd
+            return type("R", (), {"stdout": "", "stderr": ""})()
+
+        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+
+        main_window.run_command(["echo", "hi"])
+
+        assert captured["cwd"] == "/repo"
+
     def test_refresh_logs_reads_custom_path(self, tmp_path: Path, main_window, monkeypatch):
         log_file = tmp_path / "custom.log"
         log_file.write_text("log text")
