@@ -194,7 +194,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.project_tab, "Project")
 
         self.git_tab = GitTab(self)
-        self.tabs.addTab(self.git_tab, "Git")
+        self.git_index = self.tabs.addTab(self.git_tab, "Git")
 
         self.database_tab = DatabaseTab(self)
         self.tabs.addTab(self.database_tab, "Database")
@@ -229,7 +229,6 @@ class MainWindow(QMainWindow):
 
         if self.project_path:
             self.git_tab.load_branches()
-            self.git_tab.load_remote_branches()
         else:
             QTimer.singleShot(0, self.choose_project)
 
@@ -248,6 +247,8 @@ class MainWindow(QMainWindow):
             and all(isinstance(i, int) for i in self._geom_pos)
         ):
             self.move(*self._geom_pos)
+
+        self.tabs.currentChanged.connect(self.on_tab_changed)
 
     def load_config(self):
         data = load_config()
@@ -405,8 +406,8 @@ class MainWindow(QMainWindow):
             self.project_combo.setCurrentText(path)
             self.project_combo.blockSignals(False)
         if hasattr(self, "git_tab"):
+            self.git_tab.remote_branches_loaded = False
             self.git_tab.load_branches()
-            self.git_tab.load_remote_branches()
 
         self.apply_project_settings()
 
@@ -563,8 +564,8 @@ class MainWindow(QMainWindow):
             self.logs_tab.update_timer_interval(self.auto_refresh_secs)
 
         if hasattr(self, "git_tab"):
+            self.git_tab.remote_branches_loaded = False
             self.git_tab.load_branches()
-            self.git_tab.load_remote_branches()
 
     def artisan(self, *args):
         self.ensure_project_path()
@@ -702,6 +703,11 @@ class MainWindow(QMainWindow):
 
         dlg = AboutDialog(self)
         dlg.exec()
+
+    def on_tab_changed(self, index: int):
+        if index == getattr(self, "git_index", -1):
+            if not self.git_tab.remote_branches_loaded:
+                self.git_tab.load_remote_branches()
 
     def clear_output(self):
         self.output_view.clear()
