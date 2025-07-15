@@ -231,7 +231,6 @@ LIGHT_STYLESHEET = """
     }
 """
 
-
 THEME_STYLES = {"dark": DARK_STYLESHEET, "light": LIGHT_STYLESHEET}
 
 def apply_theme(widget: QMainWindow, theme: str) -> None:
@@ -243,7 +242,7 @@ MAX_LOG_LINES = 1000
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Fusor – Laravel/PHP QA Toolbox")
+        self.setWindowTitle("Fusor – PHP QA Toolbox")
         self.resize(1024, 768)
         self.theme = "dark"
 

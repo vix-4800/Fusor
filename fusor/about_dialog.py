@@ -3,7 +3,6 @@ from PyQt6.QtCore import Qt
 
 from . import APP_NAME, __version__, DESCRIPTION, AUTHOR
 
-
 class AboutDialog(QDialog):
     """Simple dialog showing project information."""
 

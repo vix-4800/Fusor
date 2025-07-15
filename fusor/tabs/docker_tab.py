@@ -1,6 +1,5 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy
 
-
 class DockerTab(QWidget):
     """Additional Docker helper commands."""
 
