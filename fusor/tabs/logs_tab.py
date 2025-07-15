@@ -33,7 +33,7 @@ class LogsTab(QWidget):
         refresh_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         control_layout.addWidget(refresh_btn)
 
-        self.auto_checkbox = QCheckBox("Auto refresh (5s)")
+        self.auto_checkbox = QCheckBox()
         self.auto_checkbox.setMinimumHeight(36)
         self.auto_checkbox.setChecked(False)
         control_layout.addWidget(self.auto_checkbox, alignment=Qt.AlignmentFlag.AlignVCenter)
@@ -48,9 +48,13 @@ class LogsTab(QWidget):
 
         # Timer for auto-refresh
         self._timer = QTimer(self)
-        self._timer.setInterval(5000)
+        self.update_timer_interval(self.main_window.auto_refresh_secs)
         self._timer.timeout.connect(self.main_window.refresh_logs)
         self.auto_checkbox.toggled.connect(self.on_auto_refresh_toggled)
+
+    def update_timer_interval(self, seconds: int):
+        self._timer.setInterval(int(seconds) * 1000)
+        self.auto_checkbox.setText(f"Auto refresh ({int(seconds)}s)")
 
     def on_auto_refresh_toggled(self, checked: bool):
         if checked:

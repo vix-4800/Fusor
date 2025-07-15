@@ -187,6 +187,7 @@ class MainWindow(QMainWindow):
         self.yii_template = "basic"
         self.log_path = os.path.join("storage", "logs", "laravel.log")
         self.git_remote = ""
+        self.auto_refresh_secs = 5
         self.load_config()
 
         # initialize tabs
@@ -267,6 +268,10 @@ class MainWindow(QMainWindow):
         self.compose_files = settings.get(
             "compose_files", data.get("compose_files", self.compose_files)
         )
+        self.auto_refresh_secs = settings.get(
+            "auto_refresh_secs",
+            data.get("auto_refresh_secs", self.auto_refresh_secs),
+        )
 
     def _compose_prefix(self) -> list[str]:
         prefix = ["docker", "compose"]
@@ -304,6 +309,7 @@ class MainWindow(QMainWindow):
         self.log_path = settings["log_path"]
         self.git_remote = settings["git_remote"]
         self.compose_files = settings["compose_files"]
+        self.auto_refresh_secs = settings["auto_refresh_secs"]
 
         if hasattr(self, "framework_combo"):
             self.framework_combo.setCurrentText(self.framework_choice)
@@ -326,6 +332,10 @@ class MainWindow(QMainWindow):
             self.remote_combo.setCurrentText(self.git_remote)
         if hasattr(self, "compose_files_edit"):
             self.compose_files_edit.setText(";".join(self.compose_files))
+        if hasattr(self, "refresh_spin"):
+            self.refresh_spin.setValue(self.auto_refresh_secs)
+        if hasattr(self, "logs_tab"):
+            self.logs_tab.update_timer_interval(self.auto_refresh_secs)
 
         self.mark_settings_saved()
 
@@ -439,6 +449,7 @@ class MainWindow(QMainWindow):
         log_path = self.log_path_edit.text() if hasattr(self, "log_path_edit") else self.log_path
         git_remote = self.remote_combo.currentText() if hasattr(self, "remote_combo") else self.git_remote
         compose_text = self.compose_files_edit.text() if hasattr(self, "compose_files_edit") else ";".join(self.compose_files)
+        auto_refresh_secs = self.refresh_spin.value() if hasattr(self, "refresh_spin") else self.auto_refresh_secs
 
         if (
             not project_path
@@ -478,6 +489,7 @@ class MainWindow(QMainWindow):
         self.log_path = log_path
         self.git_remote = git_remote
         self.compose_files = [f for f in compose_text.split(";") if f]
+        self.auto_refresh_secs = int(auto_refresh_secs)
 
         data = load_config()
         settings = data.get("project_settings", {})
@@ -491,6 +503,7 @@ class MainWindow(QMainWindow):
             "log_path": log_path,
             "git_remote": git_remote,
             "compose_files": self.compose_files,
+            "auto_refresh_secs": self.auto_refresh_secs,
         }
         data.update({
             "projects": self.projects,
@@ -504,6 +517,9 @@ class MainWindow(QMainWindow):
 
         print("Settings saved!")
         self.mark_settings_saved()
+
+        if hasattr(self, "logs_tab"):
+            self.logs_tab.update_timer_interval(self.auto_refresh_secs)
 
         if hasattr(self, "git_tab"):
             self.git_tab.load_branches()

@@ -31,7 +31,8 @@ The available tabs are:
     lets you choose between the **basic** or **advanced** application template.
 
 The Logs tab also provides an **Auto refresh** checkbox to reload logs
-automatically every few seconds.
+automatically every few seconds. The interval can be customized in the
+Settings tab via the **Auto refresh (seconds)** field.
 
 The application stores your list of projects and, for each project, its own
 settings such as PHP binary, Docker compose files, container name and server
