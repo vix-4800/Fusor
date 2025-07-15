@@ -60,7 +60,9 @@ class SettingsTab(QWidget):
         self.php_service_edit = QLineEdit(self.main_window.php_service)
         form.addRow("PHP Service:", self.php_service_edit)
 
-        self.server_port_edit = QLineEdit(str(self.main_window.server_port))
+        self.server_port_edit = QSpinBox()
+        self.server_port_edit.setRange(1, 65535)
+        self.server_port_edit.setValue(self.main_window.server_port)
         form.addRow("Server Port:", self.server_port_edit)
 
         self.compose_files_edit = QLineEdit(";".join(self.main_window.compose_files))
@@ -165,7 +167,7 @@ class SettingsTab(QWidget):
         self.project_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
         self.php_path_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.php_service_edit.textChanged.connect(self.main_window.mark_settings_dirty)
-        self.server_port_edit.textChanged.connect(self.main_window.mark_settings_dirty)
+        self.server_port_edit.valueChanged.connect(self.main_window.mark_settings_dirty)
         self.framework_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
         self.log_path_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.yii_template_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)

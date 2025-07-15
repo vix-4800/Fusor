@@ -453,7 +453,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "php_service_edit"):
             self.php_service_edit.setText(self.php_service)
         if hasattr(self, "server_port_edit"):
-            self.server_port_edit.setText(str(self.server_port))
+            self.server_port_edit.setValue(self.server_port)
         if hasattr(self, "docker_checkbox"):
             self.docker_checkbox.setChecked(self.use_docker)
         if hasattr(self, "yii_template_combo"):
@@ -614,7 +614,7 @@ class MainWindow(QMainWindow):
         framework = self.framework_combo.currentText()
         php_path = self.php_path_edit.text()
         php_service = self.php_service_edit.text() if hasattr(self, "php_service_edit") else self.php_service
-        port_text = self.server_port_edit.text() if hasattr(self, "server_port_edit") else str(self.server_port)
+        server_port = self.server_port_edit.value() if hasattr(self, "server_port_edit") else self.server_port
         use_docker = self.docker_checkbox.isChecked()
         yii_template = self.yii_template_combo.currentText() if hasattr(self, "yii_template_combo") else self.yii_template
         log_path = self.log_path_edit.text() if hasattr(self, "log_path_edit") else self.log_path
@@ -627,7 +627,7 @@ class MainWindow(QMainWindow):
             not project_path
             or (not php_path and not use_docker)
             or (use_docker and not php_service)
-            or not port_text.isdigit()
+            or server_port <= 0
         ):
             QMessageBox.warning(self, "Invalid settings", "All settings fields must be filled out.")
             print("Failed to save settings: one or more fields were empty")
@@ -647,7 +647,6 @@ class MainWindow(QMainWindow):
                 print(f"Failed to save settings: php not found - {php_path}")
                 return
 
-        server_port = int(port_text)
 
         self.project_path = project_path
         if project_path not in self.projects:
