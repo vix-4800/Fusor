@@ -8,6 +8,18 @@ class DummyMainWindow:
     def __init__(self, path="/repo"):
         self.project_path = path
         self.ensure_called = 0
+        class InlineFuture:
+            def __init__(self, result):
+                self._result = result
+
+            def result(self, timeout=None):
+                return self._result
+
+        class InlineExecutor:
+            def submit(self, fn, *args, **kwargs):
+                return InlineFuture(fn(*args, **kwargs))
+
+        self.executor = InlineExecutor()
 
     def ensure_project_path(self):
         self.ensure_called += 1
@@ -42,14 +54,15 @@ def test_load_branches_and_run_git_command(monkeypatch, qtbot):
 
     monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
 
-    tab.load_branches()
+    tab.load_branches().result()
+    qtbot.wait(10)
     assert [tab.branch_combo.itemText(i) for i in range(tab.branch_combo.count())] == [
         "main",
         "develop",
     ]
     assert tab.current_branch == "main"
 
-    res = tab.run_git_command("status")
+    res = tab.run_git_command("status").result()
     assert res is results[("git", "status")]
 
 
@@ -133,7 +146,8 @@ def test_remote_helpers(monkeypatch, qtbot):
     monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
 
     assert tab.get_remotes() == ["origin", "upstream"]
-    tab.load_remote_branches()
+    tab.load_remote_branches().result()
+    qtbot.wait(10)
     assert [tab.remote_branch_combo.itemText(i) for i in range(tab.remote_branch_combo.count())] == [
         "main",
         "feature",
