@@ -16,6 +16,7 @@ DEFAULT_PROJECT_SETTINGS = {
     "git_remote": "",
     "compose_files": [],
     "auto_refresh_secs": 5,
+    "max_log_lines": 1000,
 }
 
 # Default configuration values

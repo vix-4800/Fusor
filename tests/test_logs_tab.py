@@ -7,6 +7,8 @@ class DummyMainWindow:
         self.auto_refresh_secs = 12
     def refresh_logs(self):
         pass
+    def clear_log_file(self):
+        pass
 
 def test_timer_interval(qtbot):
     main = DummyMainWindow()
@@ -71,4 +73,30 @@ def test_search_cycle_multiple_matches(qtbot):
     qtbot.mouseClick(tab.prev_btn, Qt.MouseButton.LeftButton)
     qtbot.wait(10)
     assert current_start() == 16
+
+def test_auto_refresh_truncates_large_file(tmp_path, qtbot, monkeypatch):
+    from PyQt6.QtCore import QTimer
+    from fusor import main_window as mw_module
+    from fusor.main_window import MainWindow
+
+    monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+    monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+    monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+    win = MainWindow()
+    qtbot.addWidget(win)
+    win.show()
+
+    win.project_path = str(tmp_path)
+    win.log_path = "big.log"
+    win.max_log_lines = 1000
+
+    lines = [f"line {i}" for i in range(2000)]
+    (tmp_path / "big.log").write_text("\n".join(lines))
+
+    win.logs_tab.auto_checkbox.setChecked(True)
+    qtbot.wait(10)
+
+    result = win.log_view.toPlainText().splitlines()
+    assert result == lines[-1000:]
 

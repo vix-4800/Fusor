@@ -8,7 +8,8 @@ from PyQt6.QtCore import QTimer, Qt
 
 import fusor.main_window as mw_module
 from fusor.main_window import MainWindow
-from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtWidgets import QMainWindow, QPushButton
+from fusor.tabs.git_tab import GitTab
 
 # ---------------------------------------------------------------------------
 # Helpers & fixtures
@@ -421,6 +422,20 @@ class TestMainWindow:
         for part in ["frontend", "backend", "console"]:
             assert f"{part} log" in main_window.log_view.text
 
+    def test_refresh_logs_truncates_large_files(self, tmp_path: Path, main_window):
+        log_file = tmp_path / "large.log"
+        lines = [f"line {i}" for i in range(2000)]
+        log_file.write_text("\n".join(lines))
+        main_window.project_path = str(tmp_path)
+        main_window.log_view = FakeLogView()
+        main_window.log_path = "large.log"
+        main_window.max_log_lines = 1000
+
+        main_window.refresh_logs()
+
+        result = main_window.log_view.text.splitlines()
+        assert result == lines[-1000:]
+
     def test_yii_template_row_visibility(self, main_window, qtbot):
         main_window.framework_combo.setCurrentText("None")
         qtbot.wait(10)
@@ -642,6 +657,82 @@ class TestMainWindow:
 
         assert saved["window_size"] == [777, 555]
         assert saved["window_position"] == [11, 22]
+
+    def test_git_tab_loads_remote_on_first_show(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        calls = []
+
+        def fake(self):
+            calls.append(True)
+            self.remote_branches_loaded = True
+
+        monkeypatch.setattr(GitTab, "load_remote_branches", fake, raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        assert not win.git_tab.remote_branches_loaded
+
+        win.tabs.setCurrentIndex(win.git_index)
+        qtbot.wait(10)
+
+        assert calls == [True]
+
+        win.tabs.setCurrentIndex(win.settings_index)
+        qtbot.wait(10)
+        win.tabs.setCurrentIndex(win.git_index)
+        qtbot.wait(10)
+
+        assert calls == [True]
+        win.close()
+
+    def test_git_refresh_button_triggers_load(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        calls = []
+
+        def fake(self):
+            calls.append(True)
+            self.remote_branches_loaded = True
+
+        monkeypatch.setattr(GitTab, "load_remote_branches", fake, raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        win.tabs.setCurrentIndex(win.git_index)
+        qtbot.wait(10)
+
+        refresh_btn = None
+        for btn in win.git_tab.findChildren(QPushButton):
+            if btn.text() == "🔄 Refresh":
+                refresh_btn = btn
+                break
+        assert refresh_btn is not None
+
+        qtbot.mouseClick(refresh_btn, Qt.MouseButton.LeftButton)
+        qtbot.wait(10)
+
+        assert calls == [True, True]
+        win.close()
+
+    def test_clear_log_button_truncates_file(self, tmp_path: Path, main_window, qtbot):
+        log_file = tmp_path / "app.log"
+        log_file.write_text("hello")
+        main_window.project_path = str(tmp_path)
+        main_window.log_path = "app.log"
+
+        qtbot.mouseClick(main_window.logs_tab.clear_btn, Qt.MouseButton.LeftButton)
+        qtbot.wait(10)
+
+        assert log_file.read_text() == ""
 
     def test_theme_applied_from_config(self, qtbot, monkeypatch):
         monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
