@@ -1,86 +1,99 @@
 # Fusor
 
-Fusor is a minimal PyQt6 application with a main window titled
-**"Fusor – Laravel/PHP QA Toolbox"**. The UI is organized into several tabs
-that provide helper actions for typical PHP development tasks.
+**Fusor** is a cross-platform desktop app built with PyQt6 that helps you manage PHP-based projects without touching the terminal. It’s designed for QA engineers, testers, junior developers, and anyone who wants to execute common project tasks with a click.
 
 ![Main window with tabs](docs/screenshot.jpg)
 
-An **About** dialog with the project's name, author and version is available
-via the **Help** button in the top-right corner.
+---
 
-The interface now uses a dark theme defined in `fusor/main_window.py` and larger buttons for better visibility.
-A "Theme" selector in the Settings tab lets you switch between Dark and Light modes.
-The Project tab places the **Start** and **Stop** buttons side by side for
-quicker access, and other tabs feature taller buttons as well.
+## Project Goals
 
-The application is split into small modules under the `fusor` package to make
-the codebase easier to maintain. Each tab lives in its own file inside
-`fusor/tabs` and the main window logic resides in `fusor/main_window.py`.
+Fusor aims to **simplify routine PHP project operations** via a user-friendly visual interface. It’s especially useful for:
 
-The available tabs are:
+-   QA and manual testers who want to run tests or inspect logs
+-   Developers switching between projects or frameworks
+-   Teams using Docker, Laravel, Yii, or plain PHP setups
 
--   **Project** – buttons to manage migrations and run PHPUnit tests.
--   **Git** – simple controls for common Git actions and switching between local and remote branches.
--   **Database** – quick actions for opening and dumping a database.
--   **Docker** – helpers for building, pulling and inspecting containers.
--   **Logs** – shows your project's log file. For Laravel the path is
-    configurable in **Settings**, while Yii logs are loaded automatically
-    depending on the selected application template. A refresh button and an
-    optional auto refresh are provided.
--   **Settings** – manage multiple projects using an **Add** button and project
-    selector. The tab also lets you choose the framework, PHP executable, Docker
-    service name and the server port. When **Yii** is selected, a drop-down
-    lets you choose between the **basic** or **advanced** application template.
+---
 
-The Logs tab also provides an **Auto refresh** checkbox to reload logs
-automatically every few seconds. The interval can be customized in the
-Settings tab via the **Auto refresh (seconds)** field.
+## Features
 
-The application stores your list of projects and, for each project, its own
-settings such as PHP binary, Docker compose files, container name and server
-port in `~/.fusor_config.json` under the `project_settings` key. The currently
-selected project is remembered as well, and switching the active project
-refreshes the Settings tab automatically so everything is restored when the
-application starts.
+-   Support for **Laravel**, **Yii**, and plain PHP setups
+-   **Dark mode** with a modern UI
+-   Project switching and per-project settings
+-   Optional **Docker mode** for containerized workflows
+-   Git, database, and migration helpers
+-   Configurable log viewer with auto-refresh
+-   Isolated settings stored in `~/.fusor_config.json`
 
-## Running
+---
 
-Install the dependencies from `requirements.txt` and run the application using
-the provided console script:
+## Tab Overview
+
+| Tab          | Description                                                                       |
+| ------------ | --------------------------------------------------------------------------------- |
+| **Project**  | Start/stop server, run PHPUnit, Composer install/update                           |
+| **Git**      | Switch branches, pull, hard reset, stash changes                                  |
+| **Database** | Dump or restore SQL, run migrations, seed data                                    |
+| **Docker**   | Build, pull, restart services, inspect containers _(visible only in Docker mode)_ |
+| **Logs**     | View logs with optional auto-refresh                                              |
+| **Settings** | Choose framework, set PHP binary, Docker config, and manage project list          |
+
+---
+
+## Quick Start
+
+1. Install the dependencies:
 
 ```bash
 pip install -r requirements.txt
-fusor
-# or
-python3 -m fusor
 ```
 
-### Docker mode
+2. Run the application:
 
-Enable the **Use Docker** option in the Settings tab to run all PHP commands
-inside your project's Docker containers. When enabled, actions such as running
-PHPUnit or starting the development server are executed via `docker compose`.
-Set the **PHP Service** field to the name of the service running PHP so
-`docker compose exec` uses the correct container.
-The Start and Stop buttons will run `docker compose up -d` and `docker compose
-down` respectively. If your project uses a non-default compose file you can
-enter its path in **Compose Files**. Multiple files may be separated with
-semicolons and will be passed as `-f` options to all compose commands.
-The **Docker** tab only appears in this mode and lets you rebuild images,
-pull updates, inspect container status, view logs and restart services with a
-single click.
+```bash
+python -m fusor
+```
+
+---
+
+## 🐳 Docker Mode
+
+Enable the **Use Docker** option in the Settings tab to run commands inside your project's Docker containers.
+
+-   Set **PHP Service** to match the container name in your `docker-compose.yml`
+-   Support for multiple Compose files (separated by `;`)
+-   The **Docker** tab will appear automatically
+
+Start/Stop buttons execute `docker compose up -d` and `docker compose down` accordingly.
+
+---
 
 ## Testing
 
-Install pytest and run the test suite from the repository root. Tests run
-headless automatically thanks to the `QT_QPA_PLATFORM=offscreen` environment
-variable set in the CI workflow:
+To run tests:
 
 ```bash
 pip install pytest
-pytest
+pytest -q
 ```
+
+Headless testing is supported by setting `QT_QPA_PLATFORM=offscreen`, already handled in the GitHub Actions workflow.
+
+---
+
+## Contributing
+
+You're welcome to contribute!
+
+-   Fork the repo
+-   Create a new branch
+-   Add your feature or fix
+-   Submit a pull request
+
+Ideas for UI improvements, framework support, or new tabs are always appreciated.
+
+---
 
 ## License
 
