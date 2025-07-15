@@ -162,3 +162,28 @@ def test_push_button_runs_push(monkeypatch, qtbot):
     qtbot.mouseClick(push_btn, Qt.MouseButton.LeftButton)
 
     assert called["args"] == ("push",)
+
+
+def test_create_branch_button(monkeypatch, qtbot):
+    main = DummyMainWindow()
+    tab = GitTab(main)
+    qtbot.addWidget(tab)
+
+    called = {}
+
+    def fake_run_git_command(*args):
+        called["args"] = args
+
+    monkeypatch.setattr(tab, "run_git_command", fake_run_git_command, raising=True)
+
+    create_btn: QPushButton | None = None
+    for btn in tab.findChildren(QPushButton):
+        if btn.text() == "Create Branch":
+            create_btn = btn
+            break
+    assert create_btn is not None
+
+    tab.branch_name_edit.setText("feature")
+    qtbot.mouseClick(create_btn, Qt.MouseButton.LeftButton)
+
+    assert called["args"] == ("checkout", "-b", "feature")
