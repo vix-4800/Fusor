@@ -8,7 +8,7 @@ from PyQt6.QtCore import QTimer, Qt
 
 import fusor.main_window as mw_module
 from fusor.main_window import MainWindow
-from PyQt6.QtWidgets import QMainWindow, QPushButton
+from PyQt6.QtWidgets import QMainWindow, QPushButton, QMessageBox
 from fusor.tabs.git_tab import GitTab
 
 # ---------------------------------------------------------------------------
@@ -724,16 +724,39 @@ class TestMainWindow:
         assert calls == [True, True]
         win.close()
 
-    def test_clear_log_button_truncates_file(self, tmp_path: Path, main_window, qtbot):
+    def test_clear_log_button_truncates_file(self, tmp_path: Path, main_window, qtbot, monkeypatch):
         log_file = tmp_path / "app.log"
         log_file.write_text("hello")
         main_window.project_path = str(tmp_path)
         main_window.log_path = "app.log"
 
+        monkeypatch.setattr(
+            "PyQt6.QtWidgets.QMessageBox.question",
+            lambda *a, **k: QMessageBox.StandardButton.Yes,
+            raising=True,
+        )
+
         qtbot.mouseClick(main_window.logs_tab.clear_btn, Qt.MouseButton.LeftButton)
         qtbot.wait(10)
 
         assert log_file.read_text() == ""
+
+    def test_clear_log_button_aborts_on_no(self, tmp_path: Path, main_window, qtbot, monkeypatch):
+        log_file = tmp_path / "app.log"
+        log_file.write_text("hello")
+        main_window.project_path = str(tmp_path)
+        main_window.log_path = "app.log"
+
+        monkeypatch.setattr(
+            "PyQt6.QtWidgets.QMessageBox.question",
+            lambda *a, **k: QMessageBox.StandardButton.No,
+            raising=True,
+        )
+
+        qtbot.mouseClick(main_window.logs_tab.clear_btn, Qt.MouseButton.LeftButton)
+        qtbot.wait(10)
+
+        assert log_file.read_text() == "hello"
 
     def test_theme_applied_from_config(self, qtbot, monkeypatch):
         monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
