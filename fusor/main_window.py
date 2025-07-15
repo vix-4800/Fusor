@@ -18,7 +18,6 @@ from PyQt6.QtWidgets import (
     QInputDialog,
 )
 from PyQt6.QtCore import QTimer
-from .icons import get_icon
 
 from .config import load_config, save_config, DEFAULT_PROJECT_SETTINGS
 from .qtextedit_logger import QTextEditLogger
@@ -253,8 +252,7 @@ class MainWindow(QMainWindow):
 
         header_layout = QHBoxLayout()
         header_layout.addStretch()
-        self.help_button = QPushButton("")
-        self.help_button.setIcon(get_icon("help-about"))
+        self.help_button = QPushButton("Help")
         self.help_button.clicked.connect(self.show_about_dialog)
         header_layout.addWidget(self.help_button)
         main_layout.addLayout(header_layout)
@@ -268,7 +266,6 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.output_view)
 
         self.clear_output_button = QPushButton("Clear Output")
-        self.clear_output_button.setIcon(get_icon("edit-clear"))
         self.clear_output_button.clicked.connect(self.clear_output)
         main_layout.addWidget(self.clear_output_button)
 

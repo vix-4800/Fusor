@@ -7,8 +7,6 @@ from PyQt6.QtWidgets import (
     QFileDialog,
 )
 
-from ..icons import get_icon
-
 class DatabaseTab(QWidget):
     def __init__(self, main_window):
         super().__init__()
@@ -22,21 +20,9 @@ class DatabaseTab(QWidget):
         tools_layout = QVBoxLayout()
         tools_layout.setSpacing(10)
 
-        self.dbeaver_btn = self._btn(
-            "Open in DBeaver",
-            self.open_dbeaver,
-            icon="database",
-        )
-        self.dump_btn = self._btn(
-            "Dump to SQL",
-            self.dump_sql,
-            icon="document-save",
-        )
-        self.restore_btn = self._btn(
-            "Restore dump",
-            self.restore_dump,
-            icon="document-open",
-        )
+        self.dbeaver_btn = self._btn("🧩 Open in DBeaver", self.open_dbeaver)
+        self.dump_btn = self._btn("💾 Dump to SQL", self.dump_sql)
+        self.restore_btn = self._btn("📂 Restore dump", self.restore_dump)
 
         tools_layout.addWidget(self.dbeaver_btn)
         tools_layout.addWidget(self.dump_btn)
@@ -51,10 +37,8 @@ class DatabaseTab(QWidget):
         """Database tab has no framework specific controls."""
         pass
 
-    def _btn(self, text, slot, icon: str | None = None):
+    def _btn(self, text, slot):
         btn = QPushButton(text)
-        if icon:
-            btn.setIcon(get_icon(icon))
         btn.setMinimumHeight(36)
         btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         btn.clicked.connect(slot)
