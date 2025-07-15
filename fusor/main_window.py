@@ -140,8 +140,6 @@ class MainWindow(QMainWindow):
         """)
 
         self.tabs = QTabWidget()
-        self.output_view = QTextEdit()
-        self.output_view.setReadOnly(True)
 
         central_widget = QWidget()
         main_layout = QVBoxLayout(central_widget)
