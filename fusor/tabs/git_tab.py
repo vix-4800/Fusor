@@ -11,6 +11,8 @@ from PyQt6.QtWidgets import (
     QLineEdit,
 )
 
+from ..icons import get_icon
+
 import subprocess
 
 class GitTab(QWidget):
@@ -42,7 +44,11 @@ class GitTab(QWidget):
         self.remote_branch_combo = QComboBox()
         self.remote_branch_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.remote_branch_combo.currentTextChanged.connect(self.on_remote_branch_changed)
-        refresh_btn = self._btn("🔄 Refresh", self.load_remote_branches)
+        refresh_btn = self._btn(
+            "Refresh",
+            self.load_remote_branches,
+            icon="view-refresh",
+        )
         remote_layout.addWidget(QLabel("Branch:"))
         remote_layout.addWidget(self.remote_branch_combo)
         remote_layout.addWidget(refresh_btn)
@@ -53,7 +59,11 @@ class GitTab(QWidget):
         create_group = QGroupBox("Create Branch")
         create_layout = QHBoxLayout()
         self.branch_name_edit = QLineEdit()
-        create_btn = self._btn("Create Branch", self.create_branch)
+        create_btn = self._btn(
+            "Create Branch",
+            self.create_branch,
+            icon="list-add",
+        )
         create_layout.addWidget(self.branch_name_edit)
         create_layout.addWidget(create_btn)
         create_group.setLayout(create_layout)
@@ -64,11 +74,31 @@ class GitTab(QWidget):
         actions_layout = QVBoxLayout()
         actions_layout.setSpacing(10)
 
-        pull_btn = self._btn("⬇ Pull", lambda: self.run_git_command("pull"))
-        push_btn = self._btn("⬆ Push", lambda: self.run_git_command("push"))
-        reset_btn = self._btn("↩ Hard Reset", self.hard_reset)
-        stash_btn = self._btn("💾 Stash", self.stash)
-        view_log_btn = self._btn("📜 View Log", self.view_log)
+        pull_btn = self._btn(
+            "Pull",
+            lambda: self.run_git_command("pull"),
+            icon="go-down",
+        )
+        push_btn = self._btn(
+            "Push",
+            lambda: self.run_git_command("push"),
+            icon="go-up",
+        )
+        reset_btn = self._btn(
+            "Hard Reset",
+            self.hard_reset,
+            icon="edit-undo",
+        )
+        stash_btn = self._btn(
+            "Stash",
+            self.stash,
+            icon="document-save",
+        )
+        view_log_btn = self._btn(
+            "View Log",
+            self.view_log,
+            icon="text-x-generic",
+        )
 
         actions_layout.addWidget(pull_btn)
         actions_layout.addWidget(push_btn)
@@ -81,8 +111,10 @@ class GitTab(QWidget):
 
         outer_layout.addStretch(1)
 
-    def _btn(self, label, slot):
+    def _btn(self, label, slot, icon: str | None = None):
         btn = QPushButton(label)
+        if icon:
+            btn.setIcon(get_icon(icon))
         btn.setMinimumHeight(36)
         btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         btn.clicked.connect(slot)
