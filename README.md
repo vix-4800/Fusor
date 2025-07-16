@@ -43,13 +43,15 @@ Fusor aims to **simplify routine PHP project operations** via a user-friendly vi
 
 ## Quick Start
 
-1. Install the dependencies:
+1. Ensure **Python 3.10 or newer** is installed.
+
+2. Install the dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Run the application:
+3. Run the application:
 
 ```bash
 python -m fusor
