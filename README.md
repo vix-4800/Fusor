@@ -73,14 +73,14 @@ Start/Stop buttons execute `docker compose up -d` and `docker compose down` acco
 
 ## Testing
 
-To run tests:
+Install the development dependencies and run the test suite:
 
 ```bash
-pip install pytest
+pip install -r requirements-dev.txt
 pytest -q
 ```
 
-Headless testing is supported by setting `QT_QPA_PLATFORM=offscreen`, already handled in the GitHub Actions workflow.
+PyQt6 and pytest-qt are required for running the tests. Headless testing is supported by setting `QT_QPA_PLATFORM=offscreen`, already handled in the GitHub Actions workflow.
 
 ---
 
