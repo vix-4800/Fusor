@@ -786,3 +786,19 @@ class TestMainWindow:
 
         assert saved["theme"] == "light"
         assert main_window.styleSheet() == mw_module.LIGHT_STYLESHEET
+
+    def test_save_settings_strips_compose_files(self, main_window, monkeypatch):
+        main_window.project_combo.addItem("/tmp")
+        main_window.project_combo.setCurrentText("/tmp")
+        main_window.project_path = "/tmp"
+        main_window.docker_checkbox.setChecked(True)
+        main_window.compose_files_edit.setText(" a.yml ; b.yml ;  ")
+
+        monkeypatch.setattr(os.path, "isdir", lambda p: True, raising=True)
+        saved = {}
+        monkeypatch.setattr(mw_module, "save_config", lambda data: saved.update(data), raising=True)
+
+        main_window.save_settings()
+
+        assert main_window.compose_files == ["a.yml", "b.yml"]
+        assert saved["project_settings"]["/tmp"]["compose_files"] == ["a.yml", "b.yml"]

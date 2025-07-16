@@ -672,7 +672,7 @@ class MainWindow(QMainWindow):
         self.yii_template = yii_template
         self.log_path = log_path
         self.git_remote = git_remote
-        self.compose_files = [f for f in compose_text.split(";") if f]
+        self.compose_files = [p.strip() for p in compose_text.split(";") if p.strip()]
         self.auto_refresh_secs = int(auto_refresh_secs)
         self.theme = theme
         self.max_log_lines = int(getattr(self, "max_log_lines", MAX_LOG_LINES))
