@@ -237,7 +237,7 @@ THEME_STYLES = {"dark": DARK_STYLESHEET, "light": LIGHT_STYLESHEET}
 def apply_theme(widget: QMainWindow, theme: str) -> None:
     widget.setStyleSheet(THEME_STYLES.get(theme, DARK_STYLESHEET))
 
-    # Number of log lines to read from the end of a log file
+# Number of log lines to read from the end of a log file
 MAX_LOG_LINES = 1000
 
 class MainWindow(QMainWindow):
