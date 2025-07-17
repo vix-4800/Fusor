@@ -883,3 +883,24 @@ class TestMainWindow:
 
         assert main_window.compose_files == ["a.yml", "b.yml"]
         assert saved["project_settings"]["/tmp"]["compose_files"] == ["a.yml", "b.yml"]
+
+    def test_save_settings_updates_project_name(self, main_window, monkeypatch):
+        main_window.project_combo.addItem("/tmp", "/tmp")
+        main_window.project_combo.setCurrentIndex(0)
+        main_window.project_path = "/tmp"
+        main_window.project_name_edit.setText("MyProj")
+        main_window.php_path_edit.setText("php")
+        main_window.docker_checkbox.setChecked(False)
+        main_window.server_port_edit.setValue(8000)
+
+        monkeypatch.setattr(os.path, "isdir", lambda p: True, raising=True)
+        monkeypatch.setattr(os.path, "isfile", lambda p: False, raising=True)
+        monkeypatch.setattr(shutil, "which", lambda cmd: "/usr/bin/php" if cmd == "php" else None, raising=True)
+        saved = {}
+        monkeypatch.setattr(mw_module, "save_config", lambda data: saved.update(data), raising=True)
+
+        main_window.save_settings()
+
+        assert main_window.projects == [{"path": "/tmp", "name": "MyProj"}]
+        assert saved["projects"] == [{"path": "/tmp", "name": "MyProj"}]
+        assert main_window.project_combo.itemText(0) == "MyProj"
