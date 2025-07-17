@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import shutil
 from pathlib import Path
@@ -739,6 +740,24 @@ class TestMainWindow:
 
         assert saved["window_size"] == [777, 555]
         assert saved["window_position"] == [11, 22]
+
+    def test_stdout_restored_after_close(self, qtbot, monkeypatch, capsys):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        original = sys.stdout
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+        qtbot.wait(10)
+        win.close()
+
+        assert sys.stdout is original
+        print("restored")
+        out = capsys.readouterr().out
+        assert "restored" in out
 
     def test_git_tab_loads_remote_on_first_show(self, qtbot, monkeypatch):
         monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
