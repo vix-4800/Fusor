@@ -1,7 +1,6 @@
 import os
 import sys
 import subprocess
-import sys
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,

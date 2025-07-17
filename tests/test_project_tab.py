@@ -43,7 +43,6 @@ def test_open_terminal_macos(monkeypatch, qtbot):
     assert captured["cmd"] == ["open", "-a", "Terminal", main.project_path]
     assert captured["cwd"] is None
 
-
 def test_open_terminal_windows(monkeypatch, qtbot):
     tab, main = make_tab(qtbot)
     captured = capture_popen(monkeypatch)
@@ -54,7 +53,6 @@ def test_open_terminal_windows(monkeypatch, qtbot):
 
     assert captured["cmd"] == ["cmd.exe"]
     assert captured["cwd"] == main.project_path
-
 
 def test_open_terminal_linux(monkeypatch, qtbot):
     tab, main = make_tab(qtbot)
@@ -68,16 +66,15 @@ def test_open_terminal_linux(monkeypatch, qtbot):
     assert captured["cwd"] == main.project_path
 
 def test_open_explorer_windows(monkeypatch, qtbot):
-    tab, main = create_tab(qtbot)
+    tab, main = make_tab(qtbot)
     captured = {}
     monkeypatch.setattr(os, "startfile", lambda p: captured.setdefault("path", p), raising=False)
     monkeypatch.setattr(os, "name", "nt", raising=False)
     tab.open_explorer()
     assert captured["path"] == main.project_path
 
-
 def test_open_explorer_macos(monkeypatch, qtbot):
-    tab, main = create_tab(qtbot)
+    tab, main = make_tab(qtbot)
     called = {}
 
     def fake_popen(cmd, *a, **kw):
@@ -91,9 +88,8 @@ def test_open_explorer_macos(monkeypatch, qtbot):
     tab.open_explorer()
     assert called["cmd"] == ["open", main.project_path]
 
-
 def test_open_explorer_linux(monkeypatch, qtbot):
-    tab, main = create_tab(qtbot)
+    tab, main = make_tab(qtbot)
     cmds = []
 
     def fake_popen(cmd, *a, **kw):
@@ -107,9 +103,8 @@ def test_open_explorer_linux(monkeypatch, qtbot):
     tab.open_explorer()
     assert cmds == [["xdg-open", main.project_path]]
 
-
 def test_open_explorer_linux_fallback(monkeypatch, qtbot):
-    tab, main = create_tab(qtbot)
+    tab, main = make_tab(qtbot)
     cmds = []
 
     def fake_popen(cmd, *a, **kw):
