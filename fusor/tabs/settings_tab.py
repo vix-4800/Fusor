@@ -33,9 +33,14 @@ class SettingsTab(QWidget):
         form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
 
         self.project_combo = QComboBox()
-        self.project_combo.addItems(self.main_window.projects)
-        self.project_combo.setCurrentText(self.main_window.project_path)
-        self.project_combo.currentTextChanged.connect(self.main_window.set_current_project)
+        for proj in self.main_window.projects:
+            self.project_combo.addItem(proj["name"], proj["path"])
+        idx = self.project_combo.findData(self.main_window.project_path)
+        if idx >= 0:
+            self.project_combo.setCurrentIndex(idx)
+        self.project_combo.currentIndexChanged.connect(
+            lambda _: self.main_window.set_current_project(self.project_combo.currentData())
+        )
 
         add_btn = QPushButton("Add")
         add_btn.setIcon(get_icon("list-add"))
@@ -183,7 +188,7 @@ class SettingsTab(QWidget):
             self.main_window.symfony_tab.on_framework_changed(current_fw)
 
         # track unsaved changes
-        self.project_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
+        self.project_combo.currentIndexChanged.connect(lambda _: self.main_window.mark_settings_dirty())
         self.php_path_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.php_service_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.server_port_edit.valueChanged.connect(self.main_window.mark_settings_dirty)
@@ -275,10 +280,13 @@ class SettingsTab(QWidget):
             self.main_window.project_path,
         )
         if directory:
-            if directory not in self.main_window.projects:
-                self.main_window.projects.append(directory)
-                self.project_combo.addItem(directory)
-            self.project_combo.setCurrentText(directory)
+            if not any(p.get("path") == directory for p in self.main_window.projects):
+                name = os.path.basename(directory)
+                self.main_window.projects.append({"path": directory, "name": name})
+                self.project_combo.addItem(name, directory)
+            idx = self.project_combo.findData(directory)
+            if idx >= 0:
+                self.project_combo.setCurrentIndex(idx)
             self.main_window.set_current_project(directory)
             framework = self.framework_combo.currentText()
             if os.path.isfile(os.path.join(directory, "artisan")):
@@ -299,15 +307,14 @@ class SettingsTab(QWidget):
         index = self.project_combo.currentIndex()
         if index < 0:
             return
-        project = self.project_combo.currentText()
+        path = self.project_combo.itemData(index)
         self.project_combo.removeItem(index)
-        if project in self.main_window.projects:
-            self.main_window.projects.remove(project)
+        self.main_window.projects = [p for p in self.main_window.projects if p.get("path") != path]
 
-        if self.main_window.project_path == project:
-            new_project = self.project_combo.currentText()
-            if new_project:
-                self.main_window.set_current_project(new_project)
+        if self.main_window.project_path == path:
+            new_path = self.project_combo.currentData()
+            if new_path:
+                self.main_window.set_current_project(new_path)
             else:
                 self.main_window.project_path = ""
 
