@@ -9,9 +9,11 @@ from PyQt6.QtWidgets import (
     QGroupBox,
     QLabel,
     QLineEdit,
+    QDialog,
 )
 
 from ..icons import get_icon
+from ..branch_dialog import BranchDialog
 
 import subprocess
 
@@ -32,9 +34,15 @@ class GitTab(QWidget):
         self.branch_combo = QComboBox()
         self.branch_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.branch_combo.currentTextChanged.connect(self.on_branch_changed)
+        select_btn = self._btn(
+            "Checkout...",
+            self.show_branch_dialog,
+            icon="document-open",
+        )
 
         branch_layout.addWidget(QLabel("Branch:"))
         branch_layout.addWidget(self.branch_combo)
+        branch_layout.addWidget(select_btn)
         branch_group.setLayout(branch_layout)
         outer_layout.addWidget(branch_group)
 
@@ -141,9 +149,9 @@ class GitTab(QWidget):
             print("Command not found: git")
             return None
 
-    def load_branches(self):
+    def fetch_local_branches(self) -> list[str]:
         if not self.main_window.project_path:
-            return
+            return []
         try:
             result = subprocess.run(
                 ["git", "branch", "--format=%(refname:short)"],
@@ -151,11 +159,56 @@ class GitTab(QWidget):
                 text=True,
                 cwd=self.main_window.project_path,
             )
-            branches = [b.strip() for b in result.stdout.splitlines() if b.strip()]
-            self.branch_combo.blockSignals(True)
-            self.branch_combo.clear()
-            self.branch_combo.addItems(branches)
+            return [b.strip() for b in result.stdout.splitlines() if b.strip()]
+        except FileNotFoundError:
+            print("Command not found: git")
+            return []
 
+    def fetch_remote_branches(self) -> list[str]:
+        remote = self.main_window.git_remote
+        if not remote or not self.main_window.project_path:
+            return []
+        try:
+            result = subprocess.run(
+                ["git", "ls-remote", "--heads", remote],
+                capture_output=True,
+                text=True,
+                cwd=self.main_window.project_path,
+            )
+            branches = []
+            for line in result.stdout.splitlines():
+                parts = line.split()
+                if len(parts) >= 2 and parts[1].startswith("refs/heads/"):
+                    branches.append(parts[1].split("/", 2)[2])
+            return branches
+        except FileNotFoundError:
+            print("Command not found: git")
+            return []
+
+    def show_branch_dialog(self):
+        local = self.fetch_local_branches()
+        remote = [f"{self.main_window.git_remote}/{b}" for b in self.fetch_remote_branches()]
+        dialog = BranchDialog(local + remote, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            branch = dialog.get_branch()
+            if not branch:
+                return
+            if "/" in branch:
+                _remote, b = branch.split("/", 1)
+                self.checkout_remote_branch(b)
+            else:
+                self.checkout(branch)
+            self.load_branches()
+
+    def load_branches(self):
+        if not self.main_window.project_path:
+            return
+        branches = self.fetch_local_branches()
+        self.branch_combo.blockSignals(True)
+        self.branch_combo.clear()
+        self.branch_combo.addItems(branches)
+
+        try:
             head = subprocess.run(
                 ["git", "rev-parse", "--abbrev-ref", "HEAD"],
                 capture_output=True,
@@ -163,12 +216,13 @@ class GitTab(QWidget):
                 cwd=self.main_window.project_path,
             )
             current = head.stdout.strip()
-            if current in branches:
-                self.branch_combo.setCurrentText(current)
-            self.current_branch = current
-            self.branch_combo.blockSignals(False)
         except FileNotFoundError:
             print("Command not found: git")
+            current = ""
+        if current in branches:
+            self.branch_combo.setCurrentText(current)
+        self.current_branch = current
+        self.branch_combo.blockSignals(False)
 
     def checkout(self, branch):
         self.main_window.ensure_project_path()
@@ -243,30 +297,12 @@ class GitTab(QWidget):
             return []
 
     def load_remote_branches(self):
-        remote = self.main_window.git_remote
         self.remote_branch_combo.blockSignals(True)
         self.remote_branch_combo.clear()
-        if not remote:
-            self.remote_branch_combo.blockSignals(False)
-            return
-        try:
-            result = subprocess.run(
-                ["git", "ls-remote", "--heads", remote],
-                capture_output=True,
-                text=True,
-                cwd=self.main_window.project_path,
-            )
-            branches = []
-            for line in result.stdout.splitlines():
-                parts = line.split()
-                if len(parts) >= 2 and parts[1].startswith("refs/heads/"):
-                    branches.append(parts[1].split("/", 2)[2])
-            self.remote_branch_combo.addItems(branches)
-        except FileNotFoundError:
-            print("Command not found: git")
-        finally:
-            self.remote_branch_combo.blockSignals(False)
-            self.remote_branches_loaded = True
+        branches = self.fetch_remote_branches()
+        self.remote_branch_combo.addItems(branches)
+        self.remote_branch_combo.blockSignals(False)
+        self.remote_branches_loaded = True
 
     def checkout_remote_branch(self, branch: str):
         remote = self.main_window.git_remote

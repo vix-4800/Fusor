@@ -1,5 +1,5 @@
 import subprocess
-from PyQt6.QtWidgets import QMessageBox, QPushButton
+from PyQt6.QtWidgets import QMessageBox, QPushButton, QDialog
 from PyQt6.QtCore import Qt
 
 from fusor.tabs.git_tab import GitTab
@@ -211,3 +211,39 @@ def test_view_log_button_runs_log(monkeypatch, qtbot):
     qtbot.mouseClick(view_btn, Qt.MouseButton.LeftButton)
 
     assert called["args"] == ("log", "-n", "20", "--oneline")
+
+
+def test_branch_dialog_get_branch(qtbot):
+    from fusor.branch_dialog import BranchDialog
+
+    dialog = BranchDialog(["main", "dev"])
+    qtbot.addWidget(dialog)
+    dialog.list_widget.setCurrentRow(1)
+    assert dialog.get_branch() == "dev"
+
+
+def test_show_branch_dialog_checks_out(monkeypatch, qtbot):
+    main = DummyMainWindow()
+    tab = GitTab(main)
+    qtbot.addWidget(tab)
+
+    monkeypatch.setattr(tab, "fetch_local_branches", lambda: ["main"], raising=True)
+    monkeypatch.setattr(tab, "fetch_remote_branches", lambda: ["feature"], raising=True)
+
+    called = {}
+    monkeypatch.setattr(tab, "checkout_remote_branch", lambda b: called.setdefault("remote", b), raising=True)
+    monkeypatch.setattr(tab, "checkout", lambda b: called.setdefault("local", b), raising=True)
+
+    class DummyDialog:
+        def __init__(self, branches, parent=None):
+            self.branches = branches
+        def exec(self):
+            return QDialog.DialogCode.Accepted
+        def get_branch(self):
+            return "origin/feature"
+
+    monkeypatch.setattr("fusor.tabs.git_tab.BranchDialog", DummyDialog, raising=True)
+
+    tab.show_branch_dialog()
+
+    assert called.get("remote") == "feature"

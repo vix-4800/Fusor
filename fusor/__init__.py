@@ -5,3 +5,10 @@ DESCRIPTION = (
 )
 AUTHOR = "Fusor Dev"
 
+__all__ = [
+    "APP_NAME",
+    "__version__",
+    "DESCRIPTION",
+    "AUTHOR",
+]
+
