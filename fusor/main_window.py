@@ -295,6 +295,7 @@ class MainWindow(QMainWindow):
         self.server_port = 8000
         self.use_docker = False
         self.compose_files: list[str] = []
+        self.compose_profile = ""
         self.yii_template = "basic"
         self.log_path = os.path.join("storage", "logs", "laravel.log")
         self.log_paths: list[str] = [self.log_path]
@@ -423,6 +424,9 @@ class MainWindow(QMainWindow):
         self.compose_files = settings.get(
             "compose_files", data.get("compose_files", self.compose_files)
         )
+        self.compose_profile = settings.get(
+            "compose_profile", data.get("compose_profile", self.compose_profile)
+        )
         self.auto_refresh_secs = settings.get(
             "auto_refresh_secs",
             data.get("auto_refresh_secs", self.auto_refresh_secs),
@@ -442,6 +446,8 @@ class MainWindow(QMainWindow):
         prefix = ["docker", "compose"]
         for f in self.compose_files:
             prefix.extend(["-f", f])
+        if self.compose_profile:
+            prefix.extend(["--profile", self.compose_profile])
         return prefix
 
     def update_settings_tab_title(self):
@@ -483,6 +489,7 @@ class MainWindow(QMainWindow):
         self.log_path = self.log_paths[0]
         self.git_remote = settings["git_remote"]
         self.compose_files = settings["compose_files"]
+        self.compose_profile = settings.get("compose_profile", "")
         self.auto_refresh_secs = settings["auto_refresh_secs"]
         self.max_log_lines = settings.get("max_log_lines", self.max_log_lines)
 
@@ -507,6 +514,8 @@ class MainWindow(QMainWindow):
             self.remote_combo.setCurrentText(self.git_remote)
         if hasattr(self, "compose_files_edit"):
             self.compose_files_edit.setText(";".join(self.compose_files))
+        if hasattr(self, "compose_profile_edit"):
+            self.compose_profile_edit.setText(self.compose_profile)
         if hasattr(self, "refresh_spin"):
             self.refresh_spin.setValue(self.auto_refresh_secs)
         if hasattr(self, "logs_tab"):
@@ -700,6 +709,11 @@ class MainWindow(QMainWindow):
         log_path = paths[0]
         git_remote = self.remote_combo.currentText() if hasattr(self, "remote_combo") else self.git_remote
         compose_text = self.compose_files_edit.text() if hasattr(self, "compose_files_edit") else ";".join(self.compose_files)
+        compose_profile = (
+            self.compose_profile_edit.text()
+            if hasattr(self, "compose_profile_edit")
+            else self.compose_profile
+        )
         auto_refresh_secs = self.refresh_spin.value() if hasattr(self, "refresh_spin") else self.auto_refresh_secs
         theme = self.theme_combo.currentText().lower() if hasattr(self, "theme_combo") else self.theme
 
@@ -755,6 +769,7 @@ class MainWindow(QMainWindow):
         self.log_paths = paths
         self.git_remote = git_remote
         self.compose_files = [p.strip() for p in compose_text.split(";") if p.strip()]
+        self.compose_profile = compose_profile.strip()
         self.auto_refresh_secs = int(auto_refresh_secs)
         self.theme = theme
         self.max_log_lines = int(getattr(self, "max_log_lines", MAX_LOG_LINES))
@@ -772,6 +787,7 @@ class MainWindow(QMainWindow):
             "log_paths": paths,
             "git_remote": git_remote,
             "compose_files": self.compose_files,
+            "compose_profile": self.compose_profile,
             "auto_refresh_secs": self.auto_refresh_secs,
             "max_log_lines": self.max_log_lines,
         }

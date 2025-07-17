@@ -17,6 +17,7 @@ DEFAULT_PROJECT_SETTINGS = {
     "log_paths": [os.path.join("storage", "logs", "laravel.log")],
     "git_remote": "",
     "compose_files": [],
+    "compose_profile": "",
     "auto_refresh_secs": 5,
     "max_log_lines": 1000,
 }

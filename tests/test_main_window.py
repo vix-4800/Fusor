@@ -904,3 +904,33 @@ class TestMainWindow:
         assert main_window.projects == [{"path": "/tmp", "name": "MyProj"}]
         assert saved["projects"] == [{"path": "/tmp", "name": "MyProj"}]
         assert main_window.project_combo.itemText(0) == "MyProj"
+
+    def test_start_project_includes_compose_profile(self, tmp_path: Path, main_window, monkeypatch):
+        main_window.project_path = str(tmp_path)
+        (tmp_path / "public").mkdir()
+
+        main_window.use_docker = True
+        main_window.compose_profile = "dev"
+
+        captured = {}
+
+        def fake_run(cmd, capture_output=True, text=True, cwd=None):
+            captured["cmd"] = cmd
+            class Result:
+                stdout = ""
+                stderr = ""
+            return Result()
+
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
+
+        main_window.start_project()
+
+        assert captured["cmd"] == [
+            "docker",
+            "compose",
+            "--profile",
+            "dev",
+            "up",
+            "-d",
+        ]
