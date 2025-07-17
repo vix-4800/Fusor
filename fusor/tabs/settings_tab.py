@@ -91,8 +91,8 @@ class SettingsTab(QWidget):
         form.addRow("Git Remote:", self.remote_combo)
 
         self.framework_combo = QComboBox()
-        self.framework_combo.addItems(["Laravel", "Yii", "None"])
-        if self.main_window.framework_choice in ["Laravel", "Yii", "None"]:
+        self.framework_combo.addItems(["Laravel", "Yii", "Symfony", "None"])
+        if self.main_window.framework_choice in ["Laravel", "Yii", "Symfony", "None"]:
             self.framework_combo.setCurrentText(self.main_window.framework_choice)
         self.framework_combo.currentTextChanged.connect(self.on_framework_changed)
         self.framework_combo.currentTextChanged.connect(
@@ -101,6 +101,10 @@ class SettingsTab(QWidget):
         if hasattr(self.main_window, "framework_tab"):
             self.framework_combo.currentTextChanged.connect(
                 self.main_window.framework_tab.on_framework_changed
+            )
+        if hasattr(self.main_window, "symfony_tab"):
+            self.framework_combo.currentTextChanged.connect(
+                self.main_window.symfony_tab.on_framework_changed
             )
         form.addRow("Framework:", self.framework_combo)
 
@@ -170,6 +174,8 @@ class SettingsTab(QWidget):
         self.main_window.database_tab.on_framework_changed(current_fw)
         if hasattr(self.main_window, "framework_tab"):
             self.main_window.framework_tab.on_framework_changed(current_fw)
+        if hasattr(self.main_window, "symfony_tab"):
+            self.main_window.symfony_tab.on_framework_changed(current_fw)
 
         # track unsaved changes
         self.project_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
@@ -227,6 +233,8 @@ class SettingsTab(QWidget):
                 for name in ["yii", "yii.bat"]
             ):
                 framework = "Yii"
+            elif os.path.isfile(os.path.join(directory, "bin", "console")):
+                framework = "Symfony"
             self.framework_combo.setCurrentText(framework)
             if hasattr(self.main_window, "framework_combo"):
                 self.main_window.framework_combo.setCurrentText(framework)
@@ -288,8 +296,14 @@ class SettingsTab(QWidget):
             self.main_window.database_tab.on_framework_changed(text)
         if hasattr(self.main_window, "framework_tab"):
             self.main_window.framework_tab.on_framework_changed(text)
+        if hasattr(self.main_window, "symfony_tab"):
+            self.main_window.symfony_tab.on_framework_changed(text)
         if hasattr(self.main_window, "framework_index"):
-            show_fw = text != "None"
+            show_fw = text == "Laravel"
             self.main_window.tabs.setTabVisible(self.main_window.framework_index, show_fw)
             self.main_window.tabs.setTabEnabled(self.main_window.framework_index, show_fw)
+        if hasattr(self.main_window, "symfony_index"):
+            show_sy = text == "Symfony"
+            self.main_window.tabs.setTabVisible(self.main_window.symfony_index, show_sy)
+            self.main_window.tabs.setTabEnabled(self.main_window.symfony_index, show_sy)
 

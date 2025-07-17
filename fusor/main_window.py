@@ -27,6 +27,7 @@ from .tabs.project_tab import ProjectTab
 from .tabs.git_tab import GitTab
 from .tabs.database_tab import DatabaseTab
 from .tabs.framework_tab import FrameworkTab
+from .tabs.symfony_tab import SymfonyTab
 from .tabs.docker_tab import DockerTab
 from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
@@ -314,6 +315,9 @@ class MainWindow(QMainWindow):
         self.framework_tab = FrameworkTab(self)
         self.framework_index = self.tabs.addTab(self.framework_tab, "Framework")
 
+        self.symfony_tab = SymfonyTab(self)
+        self.symfony_index = self.tabs.addTab(self.symfony_tab, "Symfony")
+
         self.docker_tab = DockerTab(self)
         self.docker_index = self.tabs.addTab(self.docker_tab, "Docker")
 
@@ -329,9 +333,13 @@ class MainWindow(QMainWindow):
         self.tabs.setTabEnabled(self.docker_index, self.use_docker)
 
         # framework tab availability
-        show_fw = self.framework_choice != "None"
+        show_fw = self.framework_choice == "Laravel"
         self.tabs.setTabVisible(self.framework_index, show_fw)
         self.tabs.setTabEnabled(self.framework_index, show_fw)
+
+        show_symfony = self.framework_choice == "Symfony"
+        self.tabs.setTabVisible(self.symfony_index, show_symfony)
+        self.tabs.setTabEnabled(self.symfony_index, show_symfony)
 
         # populate settings widgets with loaded values
         if hasattr(self, "project_combo"):
@@ -719,17 +727,28 @@ class MainWindow(QMainWindow):
         artisan_file = os.path.join(self.project_path, "artisan")
         self.run_command([self.php_path, artisan_file, *args])
 
+    def symfony(self, *args):
+        self.ensure_project_path()
+        console = os.path.join(self.project_path, "bin", "console")
+        self.run_command([self.php_path, console, *args])
+
     def migrate(self):
-        if self.current_framework() == "Laravel":
+        fw = self.current_framework()
+        if fw == "Laravel":
             self.artisan("migrate")
+        elif fw == "Symfony":
+            self.symfony("doctrine:migrations:migrate")
         else:
-            print(f"Migrate not implemented for {self.current_framework()}")
+            print(f"Migrate not implemented for {fw}")
 
     def rollback(self):
-        if self.current_framework() == "Laravel":
+        fw = self.current_framework()
+        if fw == "Laravel":
             self.artisan("migrate:rollback")
+        elif fw == "Symfony":
+            self.symfony("doctrine:migrations:migrate", "prev")
         else:
-            print(f"Rollback not implemented for {self.current_framework()}")
+            print(f"Rollback not implemented for {fw}")
 
     def fresh(self):
         if self.current_framework() == "Laravel":

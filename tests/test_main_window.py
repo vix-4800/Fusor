@@ -251,6 +251,20 @@ class TestMainWindow:
         assert main_window.tabs.isTabVisible(main_window.framework_index)
         assert main_window.tabs.isTabEnabled(main_window.framework_index)
 
+    def test_symfony_tab_visibility(self, main_window, qtbot):
+        assert not main_window.tabs.isTabVisible(main_window.symfony_index)
+        assert not main_window.tabs.isTabEnabled(main_window.symfony_index)
+
+        main_window.framework_combo.setCurrentText("Symfony")
+        qtbot.wait(10)
+        assert main_window.tabs.isTabVisible(main_window.symfony_index)
+        assert main_window.tabs.isTabEnabled(main_window.symfony_index)
+
+        main_window.framework_combo.setCurrentText("Laravel")
+        qtbot.wait(10)
+        assert not main_window.tabs.isTabVisible(main_window.symfony_index)
+        assert not main_window.tabs.isTabEnabled(main_window.symfony_index)
+
     def test_composer_install_button_runs_command(self, main_window, qtbot, monkeypatch):
         captured = []
         monkeypatch.setattr(main_window, "run_command", lambda cmd: captured.append(cmd), raising=True)
