@@ -98,9 +98,9 @@ class SettingsTab(QWidget):
         self.framework_combo.currentTextChanged.connect(
             self.main_window.database_tab.on_framework_changed
         )
-        if hasattr(self.main_window, "framework_tab"):
+        if hasattr(self.main_window, "laravel_tab"):
             self.framework_combo.currentTextChanged.connect(
-                self.main_window.framework_tab.on_framework_changed
+                self.main_window.laravel_tab.on_framework_changed
             )
         if hasattr(self.main_window, "symfony_tab"):
             self.framework_combo.currentTextChanged.connect(
@@ -177,8 +177,8 @@ class SettingsTab(QWidget):
         current_fw = self.framework_combo.currentText()
         self.on_framework_changed(current_fw)
         self.main_window.database_tab.on_framework_changed(current_fw)
-        if hasattr(self.main_window, "framework_tab"):
-            self.main_window.framework_tab.on_framework_changed(current_fw)
+        if hasattr(self.main_window, "laravel_tab"):
+            self.main_window.laravel_tab.on_framework_changed(current_fw)
         if hasattr(self.main_window, "symfony_tab"):
             self.main_window.symfony_tab.on_framework_changed(current_fw)
 
@@ -350,14 +350,14 @@ class SettingsTab(QWidget):
         self.add_log_btn.setVisible(log_visible)
         if hasattr(self.main_window, "database_tab"):
             self.main_window.database_tab.on_framework_changed(text)
-        if hasattr(self.main_window, "framework_tab"):
-            self.main_window.framework_tab.on_framework_changed(text)
+        if hasattr(self.main_window, "laravel_tab"):
+            self.main_window.laravel_tab.on_framework_changed(text)
         if hasattr(self.main_window, "symfony_tab"):
             self.main_window.symfony_tab.on_framework_changed(text)
-        if hasattr(self.main_window, "framework_index"):
+        if hasattr(self.main_window, "laravel_index"):
             show_fw = text == "Laravel"
-            self.main_window.tabs.setTabVisible(self.main_window.framework_index, show_fw)
-            self.main_window.tabs.setTabEnabled(self.main_window.framework_index, show_fw)
+            self.main_window.tabs.setTabVisible(self.main_window.laravel_index, show_fw)
+            self.main_window.tabs.setTabEnabled(self.main_window.laravel_index, show_fw)
         if hasattr(self.main_window, "symfony_index"):
             show_sy = text == "Symfony"
             self.main_window.tabs.setTabVisible(self.main_window.symfony_index, show_sy)

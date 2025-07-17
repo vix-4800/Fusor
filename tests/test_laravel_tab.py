@@ -1,6 +1,6 @@
 from PyQt6.QtCore import Qt
 
-from fusor.tabs.framework_tab import FrameworkTab
+from fusor.tabs.laravel_tab import LaravelTab
 
 
 class DummyMainWindow:
@@ -21,7 +21,7 @@ class DummyMainWindow:
 
 def test_artisan_buttons_run_commands(qtbot):
     main = DummyMainWindow()
-    tab = FrameworkTab(main)
+    tab = LaravelTab(main)
     qtbot.addWidget(tab)
 
     qtbot.mouseClick(tab.optimize_btn, Qt.MouseButton.LeftButton)
@@ -32,7 +32,7 @@ def test_artisan_buttons_run_commands(qtbot):
 
 def test_visibility_changes(qtbot):
     main = DummyMainWindow()
-    tab = FrameworkTab(main)
+    tab = LaravelTab(main)
     qtbot.addWidget(tab)
 
     tab.on_framework_changed("None")

@@ -26,7 +26,7 @@ from .qtextedit_logger import QTextEditLogger
 from .tabs.project_tab import ProjectTab
 from .tabs.git_tab import GitTab
 from .tabs.database_tab import DatabaseTab
-from .tabs.framework_tab import FrameworkTab
+from .tabs.laravel_tab import LaravelTab
 from .tabs.symfony_tab import SymfonyTab
 from .tabs.docker_tab import DockerTab
 from .tabs.logs_tab import LogsTab
@@ -313,8 +313,8 @@ class MainWindow(QMainWindow):
         self.database_tab = DatabaseTab(self)
         self.tabs.addTab(self.database_tab, "Database")
 
-        self.framework_tab = FrameworkTab(self)
-        self.framework_index = self.tabs.addTab(self.framework_tab, "Framework")
+        self.laravel_tab = LaravelTab(self)
+        self.laravel_index = self.tabs.addTab(self.laravel_tab, "Laravel")
 
         self.symfony_tab = SymfonyTab(self)
         self.symfony_index = self.tabs.addTab(self.symfony_tab, "Symfony")
@@ -333,10 +333,10 @@ class MainWindow(QMainWindow):
         self.tabs.setTabVisible(self.docker_index, self.use_docker)
         self.tabs.setTabEnabled(self.docker_index, self.use_docker)
 
-        # framework tab availability
+        # laravel tab availability
         show_fw = self.framework_choice == "Laravel"
-        self.tabs.setTabVisible(self.framework_index, show_fw)
-        self.tabs.setTabEnabled(self.framework_index, show_fw)
+        self.tabs.setTabVisible(self.laravel_index, show_fw)
+        self.tabs.setTabEnabled(self.laravel_index, show_fw)
 
         show_symfony = self.framework_choice == "Symfony"
         self.tabs.setTabVisible(self.symfony_index, show_symfony)
