@@ -38,9 +38,7 @@ class SettingsTab(QWidget):
         idx = self.project_combo.findData(self.main_window.project_path)
         if idx >= 0:
             self.project_combo.setCurrentIndex(idx)
-        self.project_combo.currentIndexChanged.connect(
-            lambda _: self.main_window.set_current_project(self.project_combo.currentData())
-        )
+        self.project_combo.currentIndexChanged.connect(self._on_project_changed)
 
         add_btn = QPushButton("Add")
         add_btn.setIcon(get_icon("list-add"))
@@ -56,6 +54,15 @@ class SettingsTab(QWidget):
         project_row.addWidget(add_btn)
         project_row.addWidget(remove_btn)
         form.addRow("Project:", self._wrap(project_row))
+
+        self.project_name_edit = QLineEdit()
+        name = ""
+        for p in self.main_window.projects:
+            if p.get("path") == self.main_window.project_path:
+                name = p.get("name", "")
+                break
+        self.project_name_edit.setText(name)
+        form.addRow("Project Name:", self.project_name_edit)
 
         self.php_path_edit = QLineEdit(self.main_window.php_path)
         self.php_browse_btn = QPushButton("Browse")
@@ -169,6 +176,7 @@ class SettingsTab(QWidget):
         outer_layout.addWidget(save_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.main_window.project_combo = self.project_combo
+        self.main_window.project_name_edit = self.project_name_edit
         self.main_window.framework_combo = self.framework_combo
         self.main_window.php_path_edit = self.php_path_edit
         self.main_window.php_service_edit = self.php_service_edit
@@ -201,7 +209,20 @@ class SettingsTab(QWidget):
         self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
         self.refresh_spin.valueChanged.connect(self.main_window.mark_settings_dirty)
         self.theme_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
+        self.project_name_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.compose_profile_edit.textChanged.connect(self.main_window.mark_settings_dirty)
+
+    def _on_project_changed(self, _index: int) -> None:
+        path = self.project_combo.currentData()
+        self.main_window.set_current_project(path)
+        name = ""
+        for p in self.main_window.projects:
+            if p.get("path") == path:
+                name = p.get("name", os.path.basename(path))
+                break
+        self.project_name_edit.blockSignals(True)
+        self.project_name_edit.setText(name)
+        self.project_name_edit.blockSignals(False)
 
     def _wrap(self, child):
         """Return a QWidget containing the given layout or widget."""
@@ -357,22 +378,25 @@ class SettingsTab(QWidget):
         visible = text == "Yii"
         self.yii_template_row.setVisible(visible)
         self.yii_template_label.setVisible(visible)
+
         log_visible = text == "Laravel"
         self.log_paths_container.setVisible(log_visible)
         self.log_path_label.setVisible(log_visible)
         self.add_log_btn.setVisible(log_visible)
-        if hasattr(self.main_window, "database_tab"):
-            self.main_window.database_tab.on_framework_changed(text)
-        if hasattr(self.main_window, "laravel_tab"):
-            self.main_window.laravel_tab.on_framework_changed(text)
-        if hasattr(self.main_window, "symfony_tab"):
-            self.main_window.symfony_tab.on_framework_changed(text)
-        if hasattr(self.main_window, "laravel_index"):
-            show_fw = text == "Laravel"
-            self.main_window.tabs.setTabVisible(self.main_window.laravel_index, show_fw)
-            self.main_window.tabs.setTabEnabled(self.main_window.laravel_index, show_fw)
-        if hasattr(self.main_window, "symfony_index"):
-            show_sy = text == "Symfony"
-            self.main_window.tabs.setTabVisible(self.main_window.symfony_index, show_sy)
-            self.main_window.tabs.setTabEnabled(self.main_window.symfony_index, show_sy)
+
+        for attr in ["database_tab", "laravel_tab", "symfony_tab"]:
+            tab = getattr(self.main_window, attr, None)
+            if tab is not None:
+                tab.on_framework_changed(text)
+
+        tab_map = {
+            "laravel_index": "Laravel",
+            "symfony_index": "Symfony",
+        }
+        for index_attr, fw in tab_map.items():
+            if hasattr(self.main_window, index_attr):
+                idx = getattr(self.main_window, index_attr)
+                show = text == fw
+                self.main_window.tabs.setTabVisible(idx, show)
+                self.main_window.tabs.setTabEnabled(idx, show)
 

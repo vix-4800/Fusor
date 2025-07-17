@@ -170,36 +170,6 @@ class TestMainWindow:
             "-d",
         ]
 
-    def test_start_project_includes_compose_profile(self, tmp_path: Path, main_window, monkeypatch):
-        main_window.project_path = str(tmp_path)
-        (tmp_path / "public").mkdir()
-
-        main_window.use_docker = True
-        main_window.compose_profile = "dev"
-
-        captured = {}
-
-        def fake_run(cmd, capture_output=True, text=True, cwd=None):
-            captured["cmd"] = cmd
-            class Result:
-                stdout = ""
-                stderr = ""
-            return Result()
-
-        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
-        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
-
-        main_window.start_project()
-
-        assert captured["cmd"] == [
-            "docker",
-            "compose",
-            "--profile",
-            "dev",
-            "up",
-            "-d",
-        ]
-
     def test_stop_project_uses_docker_compose_down(self, main_window, monkeypatch):
         main_window.use_docker = True
 
@@ -244,32 +214,6 @@ class TestMainWindow:
             "a.yml",
             "-f",
             "b.yml",
-            "down",
-        ]
-
-    def test_stop_project_includes_compose_profile(self, main_window, monkeypatch):
-        main_window.use_docker = True
-        main_window.compose_profile = "dev"
-
-        captured = {}
-
-        def fake_run(cmd, capture_output=True, text=True, cwd=None):
-            captured["cmd"] = cmd
-            class Result:
-                stdout = ""
-                stderr = ""
-            return Result()
-
-        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
-        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
-
-        main_window.stop_project()
-
-        assert captured["cmd"] == [
-            "docker",
-            "compose",
-            "--profile",
-            "dev",
             "down",
         ]
 
@@ -376,33 +320,6 @@ class TestMainWindow:
             "a.yml",
             "-f",
             "b.yml",
-            "exec",
-            "-T",
-            main_window.php_service,
-        ]
-
-    def test_run_command_adds_compose_profile(self, main_window, monkeypatch):
-        main_window.use_docker = True
-        main_window.compose_profile = "dev"
-        captured = {}
-
-        def fake_run(cmd, capture_output=True, text=True, cwd=None):
-            captured["cmd"] = cmd
-            class Result:
-                stdout = ""
-                stderr = ""
-            return Result()
-
-        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
-        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
-
-        main_window.run_command(["php", "-v"])
-
-        assert captured["cmd"][:7] == [
-            "docker",
-            "compose",
-            "--profile",
-            "dev",
             "exec",
             "-T",
             main_window.php_service,
@@ -967,18 +884,53 @@ class TestMainWindow:
         assert main_window.compose_files == ["a.yml", "b.yml"]
         assert saved["project_settings"]["/tmp"]["compose_files"] == ["a.yml", "b.yml"]
 
-    def test_save_settings_saves_compose_profile(self, main_window, monkeypatch):
-        main_window.project_combo.addItem("/tmp")
-        main_window.project_combo.setCurrentText("/tmp")
+    def test_save_settings_updates_project_name(self, main_window, monkeypatch):
+        main_window.project_combo.addItem("/tmp", "/tmp")
+        main_window.project_combo.setCurrentIndex(0)
         main_window.project_path = "/tmp"
-        main_window.docker_checkbox.setChecked(True)
-        main_window.compose_profile_edit.setText("dev")
+        main_window.project_name_edit.setText("MyProj")
+        main_window.php_path_edit.setText("php")
+        main_window.docker_checkbox.setChecked(False)
+        main_window.server_port_edit.setValue(8000)
 
         monkeypatch.setattr(os.path, "isdir", lambda p: True, raising=True)
+        monkeypatch.setattr(os.path, "isfile", lambda p: False, raising=True)
+        monkeypatch.setattr(shutil, "which", lambda cmd: "/usr/bin/php" if cmd == "php" else None, raising=True)
         saved = {}
         monkeypatch.setattr(mw_module, "save_config", lambda data: saved.update(data), raising=True)
 
         main_window.save_settings()
 
-        assert main_window.compose_profile == "dev"
-        assert saved["project_settings"]["/tmp"]["compose_profile"] == "dev"
+        assert main_window.projects == [{"path": "/tmp", "name": "MyProj"}]
+        assert saved["projects"] == [{"path": "/tmp", "name": "MyProj"}]
+        assert main_window.project_combo.itemText(0) == "MyProj"
+
+    def test_start_project_includes_compose_profile(self, tmp_path: Path, main_window, monkeypatch):
+        main_window.project_path = str(tmp_path)
+        (tmp_path / "public").mkdir()
+
+        main_window.use_docker = True
+        main_window.compose_profile = "dev"
+
+        captured = {}
+
+        def fake_run(cmd, capture_output=True, text=True, cwd=None):
+            captured["cmd"] = cmd
+            class Result:
+                stdout = ""
+                stderr = ""
+            return Result()
+
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
+
+        main_window.start_project()
+
+        assert captured["cmd"] == [
+            "docker",
+            "compose",
+            "--profile",
+            "dev",
+            "up",
+            "-d",
+        ]
