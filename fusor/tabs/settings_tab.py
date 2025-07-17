@@ -104,17 +104,22 @@ class SettingsTab(QWidget):
             )
         form.addRow("Framework:", self.framework_combo)
 
-        self.log_path_edit = QLineEdit(self.main_window.log_path)
-        log_browse_btn = QPushButton("Browse")
-        log_browse_btn.setIcon(get_icon("document-open"))
-        log_browse_btn.setFixedHeight(30)
-        log_browse_btn.clicked.connect(self.browse_log_path)
-        log_path_row = QHBoxLayout()
-        log_path_row.addWidget(self.log_path_edit)
-        log_path_row.addWidget(log_browse_btn)
-        self.log_path_row = self._wrap(log_path_row)
-        self.log_path_label = QLabel("Log Path:")
-        form.addRow(self.log_path_label, self.log_path_row)
+        self.log_path_edits: list[QLineEdit] = []
+        self.log_paths_layout = QVBoxLayout()
+
+        for path in getattr(self.main_window, "log_paths", [self.main_window.log_path]):
+            self._add_log_path_field(path)
+
+        self.log_paths_container = self._wrap(self.log_paths_layout)
+        self.log_path_label = QLabel("Log Paths:")
+        form.addRow(self.log_path_label, self.log_paths_container)
+
+        add_log_btn = QPushButton("Add Log Path")
+        add_log_btn.setIcon(get_icon("list-add"))
+        add_log_btn.setFixedHeight(30)
+        add_log_btn.clicked.connect(lambda: self._add_log_path_field(""))
+        self.add_log_btn = add_log_btn
+        form.addRow("", self._wrap(add_log_btn))
 
         self.refresh_spin = QSpinBox()
         self.refresh_spin.setRange(1, 3600)
@@ -177,7 +182,6 @@ class SettingsTab(QWidget):
         self.php_service_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.server_port_edit.valueChanged.connect(self.main_window.mark_settings_dirty)
         self.framework_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
-        self.log_path_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.yii_template_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
         self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
         self.refresh_spin.valueChanged.connect(self.main_window.mark_settings_dirty)
@@ -193,6 +197,57 @@ class SettingsTab(QWidget):
             layout.addWidget(child)
             container.setLayout(layout)
         return container
+
+    def _add_log_path_field(self, value: str) -> None:
+        edit = QLineEdit(value)
+        browse = QPushButton("Browse")
+        browse.setIcon(get_icon("document-open"))
+        browse.setFixedHeight(30)
+        browse.clicked.connect(lambda: self.browse_log_path(edit))
+        remove = QPushButton("Remove")
+        remove.setIcon(get_icon("list-remove"))
+        remove.setFixedHeight(30)
+
+        row = QHBoxLayout()
+        row.addWidget(edit)
+        row.addWidget(browse)
+        row.addWidget(remove)
+        container = QWidget()
+        container.setLayout(row)
+        self.log_paths_layout.addWidget(container)
+        self.log_path_edits.append(edit)
+        self._log_path_rows = getattr(self, "_log_path_rows", [])
+        self._log_path_rows.append(container)
+        remove.clicked.connect(lambda: self._remove_log_path_field(container, edit))
+        edit.textChanged.connect(self.main_window.mark_settings_dirty)
+        if len(self.log_path_edits) == 1:
+            self.log_path_edit = edit
+            self.main_window.log_path_edit = edit
+
+    def _remove_log_path_field(self, widget: QWidget, edit: QLineEdit) -> None:
+        self.log_paths_layout.removeWidget(widget)
+        widget.deleteLater()
+        if edit in self.log_path_edits:
+            self.log_path_edits.remove(edit)
+        if hasattr(self, "_log_path_rows") and widget in self._log_path_rows:
+            self._log_path_rows.remove(widget)
+        if not self.log_path_edits:
+            self._add_log_path_field("")
+        self.log_path_edit = self.log_path_edits[0]
+        self.main_window.log_path_edit = self.log_path_edit
+        self.main_window.mark_settings_dirty()
+
+    def set_log_paths(self, paths: list[str]) -> None:
+        for widget in list(getattr(self, "_log_path_rows", [])):
+            self.log_paths_layout.removeWidget(widget)
+            widget.deleteLater()
+        self.log_path_edits.clear()
+        self._log_path_rows = []
+        for p in paths:
+            self._add_log_path_field(p)
+        if self.log_path_edits:
+            self.log_path_edit = self.log_path_edits[0]
+            self.main_window.log_path_edit = self.log_path_edit
 
     def on_docker_toggled(self, checked: bool):
         self.php_path_edit.setEnabled(not checked)
@@ -268,22 +323,23 @@ class SettingsTab(QWidget):
         if files:
             self.compose_files_edit.setText(";".join(files))
 
-    def browse_log_path(self):
+    def browse_log_path(self, edit: QLineEdit):
         file, _ = QFileDialog.getOpenFileName(
             self,
             "Select Log File",
-            self.log_path_edit.text() or self.main_window.log_path,
+            edit.text() or self.main_window.log_path,
         )
         if file:
-            self.log_path_edit.setText(file)
+            edit.setText(file)
 
     def on_framework_changed(self, text: str):
         visible = text == "Yii"
         self.yii_template_row.setVisible(visible)
         self.yii_template_label.setVisible(visible)
         log_visible = text == "Laravel"
-        self.log_path_row.setVisible(log_visible)
+        self.log_paths_container.setVisible(log_visible)
         self.log_path_label.setVisible(log_visible)
+        self.add_log_btn.setVisible(log_visible)
         if hasattr(self.main_window, "database_tab"):
             self.main_window.database_tab.on_framework_changed(text)
         if hasattr(self.main_window, "framework_tab"):

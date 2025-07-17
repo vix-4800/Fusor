@@ -295,6 +295,7 @@ class MainWindow(QMainWindow):
         self.compose_files: list[str] = []
         self.yii_template = "basic"
         self.log_path = os.path.join("storage", "logs", "laravel.log")
+        self.log_paths: list[str] = [self.log_path]
         self.git_remote = ""
         self.max_log_lines = MAX_LOG_LINES
         self.auto_refresh_secs = 5
@@ -390,7 +391,12 @@ class MainWindow(QMainWindow):
         self.yii_template = settings.get(
             "yii_template", data.get("yii_template", self.yii_template)
         )
-        self.log_path = settings.get("log_path", data.get("log_path", self.log_path))
+        self.log_paths = settings.get("log_paths")
+        if not self.log_paths:
+            self.log_paths = [
+                settings.get("log_path", data.get("log_path", self.log_path))
+            ]
+        self.log_path = self.log_paths[0]
         self.git_remote = settings.get(
             "git_remote", data.get("git_remote", self.git_remote)
         )
@@ -453,7 +459,8 @@ class MainWindow(QMainWindow):
         self.server_port = settings["server_port"]
         self.use_docker = settings["use_docker"]
         self.yii_template = settings["yii_template"]
-        self.log_path = settings["log_path"]
+        self.log_paths = settings.get("log_paths") or [settings["log_path"]]
+        self.log_path = self.log_paths[0]
         self.git_remote = settings["git_remote"]
         self.compose_files = settings["compose_files"]
         self.auto_refresh_secs = settings["auto_refresh_secs"]
@@ -471,8 +478,8 @@ class MainWindow(QMainWindow):
             self.docker_checkbox.setChecked(self.use_docker)
         if hasattr(self, "yii_template_combo"):
             self.yii_template_combo.setCurrentText(self.yii_template)
-        if hasattr(self, "log_path_edit"):
-            self.log_path_edit.setText(self.log_path)
+        if hasattr(self, "settings_tab") and hasattr(self.settings_tab, "set_log_paths"):
+            self.settings_tab.set_log_paths(self.log_paths)
         if hasattr(self, "remote_combo"):
             remotes = self.git_tab.get_remotes() if hasattr(self, "git_tab") else []
             if self.git_remote and self.git_remote not in remotes:
@@ -591,13 +598,23 @@ class MainWindow(QMainWindow):
         framework = self.current_framework()
         log_contents = ""
         if framework == "Laravel":
-            log_file = self.log_path
-            if not os.path.isabs(log_file):
-                log_file = os.path.join(self.project_path, log_file)
-            if os.path.exists(log_file):
-                log_contents = self._tail_file(log_file, self.max_log_lines)
-            else:
-                log_contents = f"Log file not found: {log_file}"
+            log_files = self.log_paths or [self.log_path]
+            selector = getattr(self.logs_tab, "log_selector", None)
+            if selector and selector.currentData():
+                log_files = [selector.currentData()]
+
+            parts: list[str] = []
+            for file in log_files:
+                path = file
+                if not os.path.isabs(path):
+                    path = os.path.join(self.project_path, path)
+                if os.path.exists(path):
+                    content = self._tail_file(path, self.max_log_lines)
+                else:
+                    content = f"Log file not found: {path}"
+                heading = f"=== {file} ===" if len(log_files) > 1 else ""
+                parts.append(f"{heading}\n{content}" if heading else content)
+            log_contents = "\n\n".join(parts)
         elif framework == "Yii":
             if self.yii_template == "advanced":
                 log_files = [
@@ -615,7 +632,8 @@ class MainWindow(QMainWindow):
                     content = self._tail_file(file, self.max_log_lines)
                 else:
                     content = f"Log file not found: {file}"
-                parts.append(content)
+                heading = f"=== {file} ===" if len(log_files) > 1 else ""
+                parts.append(f"{heading}\n{content}" if heading else content)
             log_contents = "\n\n".join(parts)
         else:
             log_contents = f"Logs not implemented for {framework}"
@@ -630,7 +648,11 @@ class MainWindow(QMainWindow):
         server_port = self.server_port_edit.value() if hasattr(self, "server_port_edit") else self.server_port
         use_docker = self.docker_checkbox.isChecked()
         yii_template = self.yii_template_combo.currentText() if hasattr(self, "yii_template_combo") else self.yii_template
-        log_path = self.log_path_edit.text() if hasattr(self, "log_path_edit") else self.log_path
+        if hasattr(self, "settings_tab") and hasattr(self.settings_tab, "log_path_edits"):
+            paths = [e.text() for e in self.settings_tab.log_path_edits if e.text()]
+        else:
+            paths = [self.log_path]
+        log_path = paths[0]
         git_remote = self.remote_combo.currentText() if hasattr(self, "remote_combo") else self.git_remote
         compose_text = self.compose_files_edit.text() if hasattr(self, "compose_files_edit") else ";".join(self.compose_files)
         auto_refresh_secs = self.refresh_spin.value() if hasattr(self, "refresh_spin") else self.auto_refresh_secs
@@ -671,6 +693,7 @@ class MainWindow(QMainWindow):
         self.use_docker = use_docker
         self.yii_template = yii_template
         self.log_path = log_path
+        self.log_paths = paths
         self.git_remote = git_remote
         self.compose_files = [p.strip() for p in compose_text.split(";") if p.strip()]
         self.auto_refresh_secs = int(auto_refresh_secs)
@@ -687,6 +710,7 @@ class MainWindow(QMainWindow):
             "use_docker": use_docker,
             "yii_template": yii_template,
             "log_path": log_path,
+            "log_paths": paths,
             "git_remote": git_remote,
             "compose_files": self.compose_files,
             "auto_refresh_secs": self.auto_refresh_secs,
@@ -709,6 +733,8 @@ class MainWindow(QMainWindow):
 
         if hasattr(self, "logs_tab"):
             self.logs_tab.update_timer_interval(self.auto_refresh_secs)
+            if hasattr(self.logs_tab, "set_log_paths"):
+                self.logs_tab.set_log_paths(self.log_paths)
 
         if hasattr(self, "git_tab"):
             self.git_tab.remote_branches_loaded = False
@@ -878,6 +904,10 @@ class MainWindow(QMainWindow):
     def clear_log_file(self):
         """Truncate the configured log file if it exists."""
         log_file = self.log_path
+        if hasattr(self, "logs_tab") and hasattr(self.logs_tab, "log_selector"):
+            sel = self.logs_tab.log_selector.currentData()
+            if sel:
+                log_file = sel
         if not os.path.isabs(log_file):
             log_file = os.path.join(self.project_path, log_file)
 

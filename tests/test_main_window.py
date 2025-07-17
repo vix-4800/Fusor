@@ -349,6 +349,8 @@ class TestMainWindow:
         main_window.project_path = str(tmp_path)
         main_window.log_view = FakeLogView()
         main_window.log_path = "custom.log"
+        main_window.log_paths = ["custom.log"]
+        main_window.logs_tab.set_log_paths(main_window.log_paths)
 
         opened = []
         real_open = mw_module.open
@@ -429,12 +431,42 @@ class TestMainWindow:
         main_window.project_path = str(tmp_path)
         main_window.log_view = FakeLogView()
         main_window.log_path = "large.log"
+        main_window.log_paths = ["large.log"]
+        main_window.logs_tab.set_log_paths(main_window.log_paths)
         main_window.max_log_lines = 1000
 
         main_window.refresh_logs()
 
         result = main_window.log_view.text.splitlines()
         assert result == lines[-1000:]
+
+    def test_refresh_logs_reads_all_configured_files(self, tmp_path: Path, main_window, monkeypatch):
+        paths = []
+        for i in range(3):
+            p = tmp_path / f"log{i}.log"
+            p.write_text(f"msg{i}")
+            paths.append(p)
+
+        main_window.project_path = str(tmp_path)
+        main_window.log_view = FakeLogView()
+        main_window.log_paths = [p.name for p in paths]
+        main_window.log_path = paths[0].name
+        main_window.logs_tab.set_log_paths(main_window.log_paths)
+
+        opened = []
+        real_open = mw_module.open
+
+        def fake_open(path, *args, **kwargs):
+            opened.append(path)
+            return real_open(path, *args, **kwargs)
+
+        monkeypatch.setattr(mw_module, "open", fake_open, raising=True)
+
+        main_window.refresh_logs()
+
+        assert opened == [str(p) for p in paths]
+        for i in range(3):
+            assert f"msg{i}" in main_window.log_view.text
 
     def test_yii_template_row_visibility(self, main_window, qtbot):
         main_window.framework_combo.setCurrentText("None")
@@ -450,12 +482,12 @@ class TestMainWindow:
     def test_log_path_row_visibility(self, main_window, qtbot):
         main_window.framework_combo.setCurrentText("None")
         qtbot.wait(10)
-        assert main_window.settings_tab.log_path_row.isHidden()
+        assert main_window.settings_tab.log_paths_container.isHidden()
         assert main_window.settings_tab.log_path_label.isHidden()
 
         main_window.framework_combo.setCurrentText("Laravel")
         qtbot.wait(10)
-        assert not main_window.settings_tab.log_path_row.isHidden()
+        assert not main_window.settings_tab.log_paths_container.isHidden()
         assert not main_window.settings_tab.log_path_label.isHidden()
 
     def test_settings_unsaved_indicator(self, main_window, qtbot):
