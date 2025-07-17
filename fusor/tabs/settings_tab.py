@@ -351,22 +351,25 @@ class SettingsTab(QWidget):
         visible = text == "Yii"
         self.yii_template_row.setVisible(visible)
         self.yii_template_label.setVisible(visible)
+
         log_visible = text == "Laravel"
         self.log_paths_container.setVisible(log_visible)
         self.log_path_label.setVisible(log_visible)
         self.add_log_btn.setVisible(log_visible)
-        if hasattr(self.main_window, "database_tab"):
-            self.main_window.database_tab.on_framework_changed(text)
-        if hasattr(self.main_window, "laravel_tab"):
-            self.main_window.laravel_tab.on_framework_changed(text)
-        if hasattr(self.main_window, "symfony_tab"):
-            self.main_window.symfony_tab.on_framework_changed(text)
-        if hasattr(self.main_window, "laravel_index"):
-            show_fw = text == "Laravel"
-            self.main_window.tabs.setTabVisible(self.main_window.laravel_index, show_fw)
-            self.main_window.tabs.setTabEnabled(self.main_window.laravel_index, show_fw)
-        if hasattr(self.main_window, "symfony_index"):
-            show_sy = text == "Symfony"
-            self.main_window.tabs.setTabVisible(self.main_window.symfony_index, show_sy)
-            self.main_window.tabs.setTabEnabled(self.main_window.symfony_index, show_sy)
+
+        for attr in ["database_tab", "laravel_tab", "symfony_tab"]:
+            tab = getattr(self.main_window, attr, None)
+            if tab is not None:
+                tab.on_framework_changed(text)
+
+        tab_map = {
+            "laravel_index": "Laravel",
+            "symfony_index": "Symfony",
+        }
+        for index_attr, fw in tab_map.items():
+            if hasattr(self.main_window, index_attr):
+                idx = getattr(self.main_window, index_attr)
+                show = text == fw
+                self.main_window.tabs.setTabVisible(idx, show)
+                self.main_window.tabs.setTabEnabled(idx, show)
 
