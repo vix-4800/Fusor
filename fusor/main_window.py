@@ -20,7 +20,12 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import QTimer
 from .icons import get_icon
 
-from .config import load_config, save_config, DEFAULT_PROJECT_SETTINGS
+from .config import (
+    load_config,
+    save_config,
+    DEFAULT_PROJECT_SETTINGS,
+    DEFAULT_MAX_LOG_LINES,
+)
 from .qtextedit_logger import QTextEditLogger
 
 from .tabs.project_tab import ProjectTab
@@ -238,8 +243,6 @@ THEME_STYLES = {"dark": DARK_STYLESHEET, "light": LIGHT_STYLESHEET}
 def apply_theme(widget: QMainWindow, theme: str) -> None:
     widget.setStyleSheet(THEME_STYLES.get(theme, DARK_STYLESHEET))
 
-# Number of log lines to read from the end of a log file
-MAX_LOG_LINES = 1000
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -300,7 +303,7 @@ class MainWindow(QMainWindow):
         self.log_path = os.path.join("storage", "logs", "laravel.log")
         self.log_paths: list[str] = [self.log_path]
         self.git_remote = ""
-        self.max_log_lines = MAX_LOG_LINES
+        self.max_log_lines = DEFAULT_MAX_LOG_LINES
         self.auto_refresh_secs = 5
         self.load_config()
         apply_theme(self, self.theme)
@@ -772,7 +775,9 @@ class MainWindow(QMainWindow):
         self.compose_profile = compose_profile.strip()
         self.auto_refresh_secs = int(auto_refresh_secs)
         self.theme = theme
-        self.max_log_lines = int(getattr(self, "max_log_lines", MAX_LOG_LINES))
+        self.max_log_lines = int(
+            getattr(self, "max_log_lines", DEFAULT_MAX_LOG_LINES)
+        )
 
         data = load_config()
         settings = data.get("project_settings", {})

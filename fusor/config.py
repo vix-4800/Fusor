@@ -4,6 +4,9 @@ import os
 # Path used to store user settings
 CONFIG_FILE = os.path.expanduser("~/.fusor_config.json")
 
+# Default maximum number of log lines stored per project
+DEFAULT_MAX_LOG_LINES = 1000
+
 # Default per-project settings
 DEFAULT_PROJECT_SETTINGS = {
     "framework": "Laravel",
@@ -19,7 +22,7 @@ DEFAULT_PROJECT_SETTINGS = {
     "compose_files": [],
     "compose_profile": "",
     "auto_refresh_secs": 5,
-    "max_log_lines": 1000,
+    "max_log_lines": DEFAULT_MAX_LOG_LINES,
 }
 
 # Default configuration values
