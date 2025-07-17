@@ -1,3 +1,4 @@
+import os
 from PyQt6.QtWidgets import (
     QWidget,
     QFormLayout,
@@ -218,6 +219,17 @@ class SettingsTab(QWidget):
                 self.project_combo.addItem(directory)
             self.project_combo.setCurrentText(directory)
             self.main_window.set_current_project(directory)
+            framework = self.framework_combo.currentText()
+            if os.path.isfile(os.path.join(directory, "artisan")):
+                framework = "Laravel"
+            elif any(
+                os.path.isfile(os.path.join(directory, name))
+                for name in ["yii", "yii.bat"]
+            ):
+                framework = "Yii"
+            self.framework_combo.setCurrentText(framework)
+            if hasattr(self.main_window, "framework_combo"):
+                self.main_window.framework_combo.setCurrentText(framework)
             self.main_window.save_settings()
 
     def remove_project(self):
