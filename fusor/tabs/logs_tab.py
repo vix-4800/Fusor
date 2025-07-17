@@ -129,6 +129,9 @@ class LogsTab(QWidget):
     def search_logs(self):
         text = self.search_edit.text().strip()
         if not text:
+            self.log_view.setExtraSelections([])
+            self.prev_btn.setEnabled(False)
+            self.next_btn.setEnabled(False)
             return
 
         content = self.log_view.toPlainText()
