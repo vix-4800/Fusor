@@ -555,18 +555,23 @@ class MainWindow(QMainWindow):
         self.project_path = path
         if hasattr(self, "log_view"):
             self.log_view.setPlainText("")
-        if not any(p.get("path") == path for p in self.projects):
-            self.projects.append({"path": path, "name": os.path.basename(path)})
+        proj = next((p for p in self.projects if p.get("path") == path), None)
+        if proj is None:
+            proj = {"path": path, "name": os.path.basename(path)}
+            self.projects.append(proj)
         if hasattr(self, "project_combo"):
             self.project_combo.blockSignals(True)
             if path not in [self.project_combo.itemData(i) for i in range(self.project_combo.count())]:
-                self.project_combo.addItem(os.path.basename(path), path)
+                self.project_combo.addItem(proj["name"], path)
             index = self.project_combo.findData(path)
             if index >= 0:
+                self.project_combo.setItemText(index, proj["name"])
                 self.project_combo.setCurrentIndex(index)
             else:
-                self.project_combo.setCurrentText(os.path.basename(path))
+                self.project_combo.setCurrentText(proj["name"])
             self.project_combo.blockSignals(False)
+        if hasattr(self, "project_name_edit"):
+            self.project_name_edit.setText(proj.get("name", os.path.basename(path)))
         if hasattr(self, "git_tab"):
             self.git_tab.remote_branches_loaded = False
             self.git_tab.load_branches()
@@ -724,8 +729,22 @@ class MainWindow(QMainWindow):
 
 
         self.project_path = project_path
-        if not any(p.get("path") == project_path for p in self.projects):
-            self.projects.append({"path": project_path, "name": os.path.basename(project_path)})
+        project_name = os.path.basename(project_path)
+        if hasattr(self, "project_name_edit"):
+            text = self.project_name_edit.text().strip()
+            if text:
+                project_name = text
+        existing = next((p for p in self.projects if p.get("path") == project_path), None)
+        if existing:
+            existing["name"] = project_name
+        else:
+            self.projects.append({"path": project_path, "name": project_name})
+        if hasattr(self, "project_combo"):
+            idx = self.project_combo.findData(project_path)
+            if idx >= 0:
+                self.project_combo.setItemText(idx, project_name)
+            else:
+                self.project_combo.addItem(project_name, project_path)
         self.framework_choice = framework
         self.php_path = php_path
         self.php_service = php_service or self.php_service

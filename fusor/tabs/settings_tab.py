@@ -38,9 +38,7 @@ class SettingsTab(QWidget):
         idx = self.project_combo.findData(self.main_window.project_path)
         if idx >= 0:
             self.project_combo.setCurrentIndex(idx)
-        self.project_combo.currentIndexChanged.connect(
-            lambda _: self.main_window.set_current_project(self.project_combo.currentData())
-        )
+        self.project_combo.currentIndexChanged.connect(self._on_project_changed)
 
         add_btn = QPushButton("Add")
         add_btn.setIcon(get_icon("list-add"))
@@ -56,6 +54,15 @@ class SettingsTab(QWidget):
         project_row.addWidget(add_btn)
         project_row.addWidget(remove_btn)
         form.addRow("Project:", self._wrap(project_row))
+
+        self.project_name_edit = QLineEdit()
+        name = ""
+        for p in self.main_window.projects:
+            if p.get("path") == self.main_window.project_path:
+                name = p.get("name", "")
+                break
+        self.project_name_edit.setText(name)
+        form.addRow("Project Name:", self.project_name_edit)
 
         self.php_path_edit = QLineEdit(self.main_window.php_path)
         self.php_browse_btn = QPushButton("Browse")
@@ -166,6 +173,7 @@ class SettingsTab(QWidget):
         outer_layout.addWidget(save_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.main_window.project_combo = self.project_combo
+        self.main_window.project_name_edit = self.project_name_edit
         self.main_window.framework_combo = self.framework_combo
         self.main_window.php_path_edit = self.php_path_edit
         self.main_window.php_service_edit = self.php_service_edit
@@ -197,6 +205,19 @@ class SettingsTab(QWidget):
         self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
         self.refresh_spin.valueChanged.connect(self.main_window.mark_settings_dirty)
         self.theme_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
+        self.project_name_edit.textChanged.connect(self.main_window.mark_settings_dirty)
+
+    def _on_project_changed(self, _index: int) -> None:
+        path = self.project_combo.currentData()
+        self.main_window.set_current_project(path)
+        name = ""
+        for p in self.main_window.projects:
+            if p.get("path") == path:
+                name = p.get("name", os.path.basename(path))
+                break
+        self.project_name_edit.blockSignals(True)
+        self.project_name_edit.setText(name)
+        self.project_name_edit.blockSignals(False)
 
     def _wrap(self, child):
         """Return a QWidget containing the given layout or widget."""
