@@ -553,6 +553,8 @@ class MainWindow(QMainWindow):
         if not path:
             return
         self.project_path = path
+        if hasattr(self, "log_view"):
+            self.log_view.setPlainText("")
         if not any(p.get("path") == path for p in self.projects):
             self.projects.append({"path": path, "name": os.path.basename(path)})
         if hasattr(self, "project_combo"):

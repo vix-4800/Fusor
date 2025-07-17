@@ -638,6 +638,35 @@ class TestMainWindow:
         assert win.server_port_edit.value() == 8001
         win.close()
 
+    def test_project_change_clears_log_view(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(
+            mw_module,
+            "load_config",
+            lambda: {
+                "projects": [
+                    {"path": "/one", "name": "one"},
+                    {"path": "/two", "name": "two"},
+                ],
+                "current_project": "/one",
+            },
+            raising=True,
+        )
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        win.log_view = FakeLogView()
+        win.log_view.setPlainText("old")
+
+        win.project_combo.setCurrentText("two")
+        qtbot.wait(10)
+
+        assert win.log_view.text == ""
+        win.close()
+
     def test_open_terminal_launches_with_project_cwd(self, tmp_path: Path, main_window, qtbot, monkeypatch):
         main_window.project_path = str(tmp_path)
 
