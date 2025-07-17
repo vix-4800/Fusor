@@ -13,6 +13,8 @@ DEFAULT_PROJECT_SETTINGS = {
     "use_docker": False,
     "yii_template": "basic",
     "log_path": os.path.join("storage", "logs", "laravel.log"),
+    # list of log files (first item mirrors ``log_path`` for compatibility)
+    "log_paths": [os.path.join("storage", "logs", "laravel.log")],
     "git_remote": "",
     "compose_files": [],
     "auto_refresh_secs": 5,

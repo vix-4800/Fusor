@@ -5,6 +5,7 @@ from fusor.tabs.logs_tab import LogsTab
 class DummyMainWindow:
     def __init__(self):
         self.auto_refresh_secs = 12
+        self.log_paths = ["app.log"]
     def refresh_logs(self):
         pass
     def clear_log_file(self):
@@ -89,6 +90,8 @@ def test_auto_refresh_truncates_large_file(tmp_path, qtbot, monkeypatch):
 
     win.project_path = str(tmp_path)
     win.log_path = "big.log"
+    win.log_paths = ["big.log"]
+    win.logs_tab.set_log_paths(win.log_paths)
     win.max_log_lines = 1000
 
     lines = [f"line {i}" for i in range(2000)]
