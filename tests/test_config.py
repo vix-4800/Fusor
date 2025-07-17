@@ -7,7 +7,10 @@ def test_save_then_load(tmp_path, monkeypatch):
     data = {
         "foo": 123,
         "bar": [1, 2, 3],
-        "projects": ["/one", "/two"],
+        "projects": [
+            {"path": "/one", "name": "one"},
+            {"path": "/two", "name": "two"},
+        ],
         "current_project": "/two",
         "project_settings": {
             "/two": {

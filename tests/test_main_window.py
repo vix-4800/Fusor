@@ -497,7 +497,10 @@ class TestMainWindow:
             mw_module,
             "load_config",
             lambda: {
-                "projects": ["/one", "/two"],
+                "projects": [
+                    {"path": "/one", "name": "one"},
+                    {"path": "/two", "name": "two"},
+                ],
                 "current_project": "/one",
             },
             raising=True,
@@ -516,9 +519,9 @@ class TestMainWindow:
 
         qtbot.mouseClick(win.settings_tab.remove_btn, Qt.MouseButton.LeftButton)
 
-        assert [win.project_combo.itemText(i) for i in range(win.project_combo.count())] == ["/two"]
+        assert [win.project_combo.itemText(i) for i in range(win.project_combo.count())] == ["two"]
         assert win.project_path == "/two"
-        assert saved["projects"] == ["/two"]
+        assert saved["projects"] == [{"path": "/two", "name": "two"}]
         assert saved["current_project"] == "/two"
         win.close()
 
@@ -561,7 +564,10 @@ class TestMainWindow:
             mw_module,
             "load_config",
             lambda: {
-                "projects": ["/one", "/two"],
+                "projects": [
+                    {"path": "/one", "name": "one"},
+                    {"path": "/two", "name": "two"},
+                ],
                 "current_project": "/one",
                 "project_settings": {
                     "/one": {"server_port": 8000},
@@ -579,7 +585,7 @@ class TestMainWindow:
         assert win.server_port == 8000
         assert win.server_port_edit.value() == 8000
 
-        win.project_combo.setCurrentText("/two")
+        win.project_combo.setCurrentText("two")
         qtbot.wait(10)
 
         assert win.server_port == 8001

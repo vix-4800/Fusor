@@ -20,8 +20,11 @@ DEFAULT_PROJECT_SETTINGS = {
 }
 
 # Default configuration values
+# ``projects`` previously stored a list of paths.  To allow storing extra
+# information per project (like a display name) it now stores a list of
+# dictionaries with at least ``path`` and ``name`` keys.
 DEFAULT_CONFIG = {
-    "projects": [],
+    "projects": [],  # list[dict]
     "current_project": "",
     "project_settings": {},
     "theme": "dark",
@@ -40,6 +43,19 @@ def load_config():
         for key, value in DEFAULT_CONFIG.items():
             data.setdefault(key, value)
 
+        # migrate list of project paths into list of dicts
+        projects = []
+        for entry in data.get("projects", []):
+            if isinstance(entry, str):
+                projects.append({"path": entry, "name": os.path.basename(entry)})
+            elif isinstance(entry, dict) and "path" in entry:
+                proj = {"path": entry["path"], "name": entry.get("name", os.path.basename(entry["path"]))}
+                for k, v in entry.items():
+                    if k not in proj:
+                        proj[k] = v
+                projects.append(proj)
+        data["projects"] = projects
+
         # migrate old flat settings into per-project block
         current = data.get("current_project") or data.get("project_path")
         if current:
@@ -49,10 +65,11 @@ def load_config():
                     settings[k] = data[k]
 
         if "project_path" in data and data["project_path"]:
-            if data["project_path"] not in data["projects"]:
-                data["projects"].append(data["project_path"])
+            path = data["project_path"]
+            if not any(p.get("path") == path for p in data["projects"]):
+                data["projects"].append({"path": path, "name": os.path.basename(path)})
             if not data["current_project"]:
-                data["current_project"] = data["project_path"]
+                data["current_project"] = path
 
         return data
     except FileNotFoundError:
