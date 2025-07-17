@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 from PyQt6.QtWidgets import (
     QWidget,
@@ -52,6 +53,13 @@ class ProjectTab(QWidget):
         )
         layout.addWidget(self.terminal_btn)
 
+        self.explorer_btn = self._btn(
+            "Open Folder",
+            self.open_explorer,
+            icon="document-open",
+        )
+        layout.addWidget(self.explorer_btn)
+
         composer_group = QGroupBox("Composer")
         composer_layout = QVBoxLayout()
         self.composer_install_btn = self._btn(
@@ -92,3 +100,23 @@ class ProjectTab(QWidget):
             subprocess.Popen(cmd, cwd=path)
         except FileNotFoundError:
             print(f"Command not found: {cmd[0]}")
+
+    def open_explorer(self):
+        """Open the project directory in the system file explorer."""
+        path = self.main_window.project_path
+        if not path:
+            print("Project path not set")
+            return
+
+        if os.name == "nt":
+            os.startfile(path)  # type: ignore[attr-defined]
+            return
+
+        if sys.platform == "darwin":
+            subprocess.Popen(["open", path])
+            return
+
+        try:
+            subprocess.Popen(["xdg-open", path])
+        except FileNotFoundError:
+            subprocess.Popen(["gio", "open", path])
