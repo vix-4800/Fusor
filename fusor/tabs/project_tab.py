@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -87,8 +88,14 @@ class ProjectTab(QWidget):
             print("Project path not set")
             return
 
-        cmd = ["cmd.exe"] if os.name == "nt" else ["x-terminal-emulator"]
+        if sys.platform == "darwin":
+            cmd = ["open", "-a", "Terminal", path]
+            cwd = None
+        else:
+            cmd = ["cmd.exe"] if os.name == "nt" else ["x-terminal-emulator"]
+            cwd = path
+
         try:
-            subprocess.Popen(cmd, cwd=path)
+            subprocess.Popen(cmd, cwd=cwd)
         except FileNotFoundError:
             print(f"Command not found: {cmd[0]}")
