@@ -87,6 +87,9 @@ class SettingsTab(QWidget):
         self.compose_label = QLabel("Compose Files:")
         form.addRow(self.compose_label, self.compose_row)
 
+        self.compose_profile_edit = QLineEdit(self.main_window.compose_profile)
+        form.addRow("Compose Profile:", self.compose_profile_edit)
+
         self.remote_combo = QComboBox()
         remotes = self.main_window.git_tab.get_remotes()
         if remotes:
@@ -175,6 +178,7 @@ class SettingsTab(QWidget):
         self.main_window.log_path_edit = self.log_path_edit
         self.main_window.remote_combo = self.remote_combo
         self.main_window.compose_files_edit = self.compose_files_edit
+        self.main_window.compose_profile_edit = self.compose_profile_edit
         self.main_window.refresh_spin = self.refresh_spin
         self.main_window.theme_combo = self.theme_combo
 
@@ -197,6 +201,7 @@ class SettingsTab(QWidget):
         self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
         self.refresh_spin.valueChanged.connect(self.main_window.mark_settings_dirty)
         self.theme_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
+        self.compose_profile_edit.textChanged.connect(self.main_window.mark_settings_dirty)
 
     def _wrap(self, child):
         """Return a QWidget containing the given layout or widget."""
@@ -269,6 +274,7 @@ class SettingsTab(QWidget):
         self.compose_browse_btn.setEnabled(checked)
         self.compose_row.setEnabled(checked)
         self.compose_label.setEnabled(checked)
+        self.compose_profile_edit.setEnabled(checked)
         if hasattr(self.main_window, "docker_index"):
             self.main_window.tabs.setTabVisible(self.main_window.docker_index, checked)
             self.main_window.tabs.setTabEnabled(self.main_window.docker_index, checked)

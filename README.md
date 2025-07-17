@@ -65,9 +65,10 @@ Enable the **Use Docker** option in the Settings tab to run commands inside your
 
 -   Set **PHP Service** to match the container name in your `docker-compose.yml`
 -   Support for multiple Compose files (separated by `;`)
+-   Optional Compose profile via **Compose Profile** field
 -   The **Docker** tab will appear automatically
 
-Start/Stop buttons execute `docker compose up -d` and `docker compose down` accordingly.
+Start/Stop buttons execute `docker compose up -d` and `docker compose down` (with `--profile` if specified) accordingly.
 
 ---
 
