@@ -964,6 +964,8 @@ class MainWindow(QMainWindow):
                     self.server_process.kill()
             self.server_process = None
         self.executor.shutdown(wait=False)
+        # Restore original stdout before shutting down
+        sys.stdout = self._stdout_logger.original_stdout
         data = load_config()
         data["window_size"] = [self.width(), self.height()]
         data["window_position"] = [self.x(), self.y()]
