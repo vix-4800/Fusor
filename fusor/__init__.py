@@ -24,5 +24,5 @@ __version__ = _get_latest_tag()
 DESCRIPTION = (
     "A minimal PyQt6 application with helper tools for PHP development."
 )
-AUTHOR = "Fusor Dev"
+AUTHOR = "Anton Vix"
 
