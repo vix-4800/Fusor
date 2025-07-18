@@ -9,6 +9,7 @@ from PyQt6.QtCore import QTimer, Qt
 
 import fusor.main_window as mw_module
 from fusor.main_window import MainWindow
+from fusor import APP_NAME
 from PyQt6.QtWidgets import QMainWindow, QPushButton, QMessageBox
 from fusor.tabs.git_tab import GitTab
 
@@ -536,7 +537,7 @@ class TestMainWindow:
 
         qtbot.mouseClick(main_window.help_button, Qt.MouseButton.LeftButton)
 
-        assert shown == ["About Fusor"]
+        assert shown == [f"About {APP_NAME}"]
 
     def test_remove_project_updates_config(self, qtbot, monkeypatch):
         monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)

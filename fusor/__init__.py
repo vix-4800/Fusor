@@ -1,6 +1,7 @@
+import os
 import subprocess
 
-APP_NAME = "Fusor"
+APP_NAME = os.getenv("APP_NAME", "Fusor")
 
 
 def _get_latest_tag(default: str = "0.1.0") -> str:
