@@ -57,6 +57,12 @@ pip install -r requirements.txt
 python -m fusor
 ```
 
+Set the `APP_NAME` environment variable to customize the window title:
+
+```bash
+APP_NAME="My App" python -m fusor
+```
+
 ---
 
 ## 🐳 Docker Mode

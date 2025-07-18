@@ -19,6 +19,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import QTimer
 from .icons import get_icon
+from . import APP_NAME
 
 from .config import (
     load_config,
@@ -247,7 +248,7 @@ def apply_theme(widget: QMainWindow, theme: str) -> None:
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Fusor – PHP QA Toolbox")
+        self.setWindowTitle(f"{APP_NAME} – PHP QA Toolbox")
         self.resize(1024, 768)
         self.theme = "dark"
 
