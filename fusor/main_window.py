@@ -286,8 +286,12 @@ class MainWindow(QMainWindow):
         self.project_running = False
         self.settings_dirty = False
 
-        # Redirect stdout to the output view
-        self._stdout_logger = QTextEditLogger(self.output_view, sys.stdout)
+        # Redirect stdout to the output view only
+        self._stdout_logger = QTextEditLogger(
+            self.output_view,
+            sys.stdout,
+            echo=False,
+        )
         sys.stdout = self._stdout_logger
 
         # Directory containing project files and PHP executable path
