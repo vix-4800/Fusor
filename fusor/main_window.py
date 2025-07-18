@@ -240,6 +240,7 @@ LIGHT_STYLESHEET = """
 
 THEME_STYLES = {"dark": DARK_STYLESHEET, "light": LIGHT_STYLESHEET}
 
+
 def apply_theme(widget: QMainWindow, theme: str) -> None:
     widget.setStyleSheet(THEME_STYLES.get(theme, DARK_STYLESHEET))
 
@@ -350,7 +351,10 @@ class MainWindow(QMainWindow):
         # populate settings widgets with loaded values
         if hasattr(self, "project_combo"):
             self.project_combo.setCurrentText(self.project_path)
-        if self.framework_choice in [self.framework_combo.itemText(i) for i in range(self.framework_combo.count())]:
+        if self.framework_choice in [
+            self.framework_combo.itemText(i)
+            for i in range(self.framework_combo.count())
+        ]:
             self.framework_combo.setCurrentText(self.framework_choice)
 
         if self.project_path:
@@ -508,7 +512,9 @@ class MainWindow(QMainWindow):
             self.docker_checkbox.setChecked(self.use_docker)
         if hasattr(self, "yii_template_combo"):
             self.yii_template_combo.setCurrentText(self.yii_template)
-        if hasattr(self, "settings_tab") and hasattr(self.settings_tab, "set_log_paths"):
+        if hasattr(self, "settings_tab") and hasattr(
+            self.settings_tab, "set_log_paths"
+        ):
             self.settings_tab.set_log_paths(self.log_paths)
         if hasattr(self, "remote_combo"):
             remotes = self.git_tab.get_remotes() if hasattr(self, "git_tab") else []
@@ -543,7 +549,9 @@ class MainWindow(QMainWindow):
 
         def task():
             try:
-                result = subprocess.run(command, capture_output=True, text=True, cwd=cwd)
+                result = subprocess.run(
+                    command, capture_output=True, text=True, cwd=cwd
+                )
                 if result.stdout:
                     print(result.stdout.strip())
                 if result.stderr:
@@ -573,7 +581,10 @@ class MainWindow(QMainWindow):
             self.projects.append(proj)
         if hasattr(self, "project_combo"):
             self.project_combo.blockSignals(True)
-            if path not in [self.project_combo.itemData(i) for i in range(self.project_combo.count())]:
+            if path not in [
+                self.project_combo.itemData(i)
+                for i in range(self.project_combo.count())
+            ]:
                 self.project_combo.addItem(proj["name"], path)
             index = self.project_combo.findData(path)
             if index >= 0:
@@ -620,7 +631,11 @@ class MainWindow(QMainWindow):
                     break
 
     def current_framework(self):
-        return self.framework_combo.currentText() if hasattr(self, "framework_combo") else "None"
+        return (
+            self.framework_combo.currentText()
+            if hasattr(self, "framework_combo")
+            else "None"
+        )
 
     def _tail_file(self, path: str, lines: int) -> str:
         """Return the last ``lines`` lines from ``path``."""
@@ -701,24 +716,54 @@ class MainWindow(QMainWindow):
             project_path = self.project_path
         framework = self.framework_combo.currentText()
         php_path = self.php_path_edit.text()
-        php_service = self.php_service_edit.text() if hasattr(self, "php_service_edit") else self.php_service
-        server_port = self.server_port_edit.value() if hasattr(self, "server_port_edit") else self.server_port
+        php_service = (
+            self.php_service_edit.text()
+            if hasattr(self, "php_service_edit")
+            else self.php_service
+        )
+        server_port = (
+            self.server_port_edit.value()
+            if hasattr(self, "server_port_edit")
+            else self.server_port
+        )
         use_docker = self.docker_checkbox.isChecked()
-        yii_template = self.yii_template_combo.currentText() if hasattr(self, "yii_template_combo") else self.yii_template
-        if hasattr(self, "settings_tab") and hasattr(self.settings_tab, "log_path_edits"):
+        yii_template = (
+            self.yii_template_combo.currentText()
+            if hasattr(self, "yii_template_combo")
+            else self.yii_template
+        )
+        if hasattr(self, "settings_tab") and hasattr(
+            self.settings_tab, "log_path_edits"
+        ):
             paths = [e.text() for e in self.settings_tab.log_path_edits if e.text()]
         else:
             paths = [self.log_path]
         log_path = paths[0]
-        git_remote = self.remote_combo.currentText() if hasattr(self, "remote_combo") else self.git_remote
-        compose_text = self.compose_files_edit.text() if hasattr(self, "compose_files_edit") else ";".join(self.compose_files)
+        git_remote = (
+            self.remote_combo.currentText()
+            if hasattr(self, "remote_combo")
+            else self.git_remote
+        )
+        compose_text = (
+            self.compose_files_edit.text()
+            if hasattr(self, "compose_files_edit")
+            else ";".join(self.compose_files)
+        )
         compose_profile = (
             self.compose_profile_edit.text()
             if hasattr(self, "compose_profile_edit")
             else self.compose_profile
         )
-        auto_refresh_secs = self.refresh_spin.value() if hasattr(self, "refresh_spin") else self.auto_refresh_secs
-        theme = self.theme_combo.currentText().lower() if hasattr(self, "theme_combo") else self.theme
+        auto_refresh_secs = (
+            self.refresh_spin.value()
+            if hasattr(self, "refresh_spin")
+            else self.auto_refresh_secs
+        )
+        theme = (
+            self.theme_combo.currentText().lower()
+            if hasattr(self, "theme_combo")
+            else self.theme
+        )
 
         if (
             not project_path
@@ -726,12 +771,18 @@ class MainWindow(QMainWindow):
             or (use_docker and not php_service)
             or server_port <= 0
         ):
-            QMessageBox.warning(self, "Invalid settings", "All settings fields must be filled out.")
+            QMessageBox.warning(
+                self, "Invalid settings", "All settings fields must be filled out."
+            )
             print("Failed to save settings: one or more fields were empty")
             return
 
         if not os.path.isdir(project_path):
-            QMessageBox.warning(self, "Invalid project path", "The specified project path does not exist.")
+            QMessageBox.warning(
+                self,
+                "Invalid project path",
+                "The specified project path does not exist.",
+            )
             print(f"Failed to save settings: directory does not exist - {project_path}")
             return
 
@@ -740,10 +791,13 @@ class MainWindow(QMainWindow):
             if not valid_path:
                 valid_path = shutil.which(php_path) is not None
             if not valid_path:
-                QMessageBox.warning(self, "Invalid PHP path", "The specified PHP executable was not found.")
+                QMessageBox.warning(
+                    self,
+                    "Invalid PHP path",
+                    "The specified PHP executable was not found.",
+                )
                 print(f"Failed to save settings: php not found - {php_path}")
                 return
-
 
         self.project_path = project_path
         project_name = os.path.basename(project_path)
@@ -751,7 +805,9 @@ class MainWindow(QMainWindow):
             text = self.project_name_edit.text().strip()
             if text:
                 project_name = text
-        existing = next((p for p in self.projects if p.get("path") == project_path), None)
+        existing = next(
+            (p for p in self.projects if p.get("path") == project_path), None
+        )
         if existing:
             existing["name"] = project_name
         else:
@@ -775,9 +831,7 @@ class MainWindow(QMainWindow):
         self.compose_profile = compose_profile.strip()
         self.auto_refresh_secs = int(auto_refresh_secs)
         self.theme = theme
-        self.max_log_lines = int(
-            getattr(self, "max_log_lines", DEFAULT_MAX_LOG_LINES)
-        )
+        self.max_log_lines = int(getattr(self, "max_log_lines", DEFAULT_MAX_LOG_LINES))
 
         data = load_config()
         settings = data.get("project_settings", {})
@@ -796,12 +850,14 @@ class MainWindow(QMainWindow):
             "auto_refresh_secs": self.auto_refresh_secs,
             "max_log_lines": self.max_log_lines,
         }
-        data.update({
-            "projects": self.projects,
-            "current_project": project_path,
-            "project_settings": settings,
-            "theme": self.theme,
-        })
+        data.update(
+            {
+                "projects": self.projects,
+                "current_project": project_path,
+                "project_settings": settings,
+                "theme": self.theme,
+            }
+        )
         try:
             save_config(data)
         except OSError as e:
@@ -893,7 +949,7 @@ class MainWindow(QMainWindow):
                 "-S",
                 f"localhost:{self.server_port}",
                 "-t",
-                self.project_path, # os.path.join(self.project_path, "public")
+                self.project_path,  # os.path.join(self.project_path, "public")
             ]
 
         print(f"$ {' '.join(command)}")

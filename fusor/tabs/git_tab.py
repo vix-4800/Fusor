@@ -15,6 +15,7 @@ from ..icons import get_icon
 
 import subprocess
 
+
 class GitTab(QWidget):
     def __init__(self, main_window):
         super().__init__()
@@ -30,7 +31,9 @@ class GitTab(QWidget):
         branch_group = QGroupBox("Active Branch")
         branch_layout = QHBoxLayout()
         self.branch_combo = QComboBox()
-        self.branch_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.branch_combo.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
         self.branch_combo.currentTextChanged.connect(self.on_branch_changed)
 
         branch_layout.addWidget(QLabel("Branch:"))
@@ -42,8 +45,12 @@ class GitTab(QWidget):
         remote_group = QGroupBox("Remote Branch")
         remote_layout = QHBoxLayout()
         self.remote_branch_combo = QComboBox()
-        self.remote_branch_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.remote_branch_combo.currentTextChanged.connect(self.on_remote_branch_changed)
+        self.remote_branch_combo.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        self.remote_branch_combo.currentTextChanged.connect(
+            self.on_remote_branch_changed
+        )
         refresh_btn = self._btn(
             "Refresh",
             self.load_remote_branches,

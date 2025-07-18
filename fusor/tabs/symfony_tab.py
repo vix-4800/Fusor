@@ -65,4 +65,3 @@ class SymfonyTab(QWidget):
     def on_framework_changed(self, text: str):
         visible = text == "Symfony"
         self.console_group.setVisible(visible)
-
