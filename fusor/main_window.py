@@ -898,8 +898,9 @@ class MainWindow(QMainWindow):
     def yii(self, *args):
         self.ensure_project_path()
         script = os.path.join(self.project_path, "yii")
-        if os.name == "nt" and os.path.isfile(os.path.join(self.project_path, "yii.bat")):
-            script = os.path.join(self.project_path, "yii.bat")
+        yii_bat = os.path.join(self.project_path, "yii.bat")
+        if os.name == "nt" and os.path.isfile(yii_bat):
+            script = yii_bat
         elif not os.path.isfile(script) and os.path.isfile(script + ".bat"):
             script = script + ".bat"
         self.run_command([self.php_path, script, *args])

@@ -59,4 +59,3 @@ class YiiTab(QWidget):
     def on_framework_changed(self, text: str):
         visible = text == "Yii"
         self.console_group.setVisible(visible)
-
