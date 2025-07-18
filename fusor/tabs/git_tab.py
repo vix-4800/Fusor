@@ -101,6 +101,16 @@ class GitTab(QWidget):
             self.stash,
             icon="document-save",
         )
+        status_btn = self._btn(
+            "Status",
+            self.show_status,
+            icon="dialog-information",
+        )
+        diff_btn = self._btn(
+            "Diff",
+            self.show_diff,
+            icon="document-diff",
+        )
         view_log_btn = self._btn(
             "View Log",
             self.view_log,
@@ -111,6 +121,8 @@ class GitTab(QWidget):
         actions_layout.addWidget(push_btn)
         actions_layout.addWidget(reset_btn)
         actions_layout.addWidget(stash_btn)
+        actions_layout.addWidget(status_btn)
+        actions_layout.addWidget(diff_btn)
         actions_layout.addWidget(view_log_btn)
 
         actions_group.setLayout(actions_layout)
@@ -226,6 +238,14 @@ class GitTab(QWidget):
     def view_log(self):
         """Show recent git log entries."""
         self.run_git_command("log", "-n", "20", "--oneline")
+
+    def show_status(self):
+        """Display git status."""
+        self.run_git_command("status")
+
+    def show_diff(self):
+        """Display git diff."""
+        self.run_git_command("diff")
 
     def create_branch(self):
         branch = self.branch_name_edit.text().strip()
