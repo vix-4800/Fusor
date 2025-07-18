@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
 
 from ..icons import get_icon
 
+
 class LaravelTab(QWidget):
     def __init__(self, main_window):
         super().__init__()
@@ -71,4 +72,3 @@ class LaravelTab(QWidget):
         visible = text == "Laravel"
         self.migrate_group.setVisible(visible)
         self.artisan_group.setVisible(visible)
-

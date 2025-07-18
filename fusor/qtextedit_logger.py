@@ -1,5 +1,6 @@
 from PyQt6.QtCore import QMetaObject, Qt, Q_ARG
 
+
 class QTextEditLogger:
     def __init__(self, text_edit, original_stdout):
         self.text_edit = text_edit
