@@ -133,6 +133,10 @@ class SettingsTab(QWidget):
             self.framework_combo.currentTextChanged.connect(
                 self.main_window.symfony_tab.on_framework_changed
             )
+        if hasattr(self.main_window, "yii_tab"):
+            self.framework_combo.currentTextChanged.connect(
+                self.main_window.yii_tab.on_framework_changed
+            )
         form.addRow("Framework:", self.framework_combo)
 
         self.log_path_edits: list[QLineEdit] = []
@@ -408,7 +412,7 @@ class SettingsTab(QWidget):
         self.log_path_label.setVisible(log_visible)
         self.add_log_btn.setVisible(log_visible)
 
-        for attr in ["database_tab", "laravel_tab", "symfony_tab"]:
+        for attr in ["database_tab", "laravel_tab", "symfony_tab", "yii_tab"]:
             tab = getattr(self.main_window, attr, None)
             if tab is not None:
                 tab.on_framework_changed(text)
@@ -416,6 +420,7 @@ class SettingsTab(QWidget):
         tab_map = {
             "laravel_index": "Laravel",
             "symfony_index": "Symfony",
+            "yii_index": "Yii",
         }
         for index_attr, fw in tab_map.items():
             if hasattr(self.main_window, index_attr):
