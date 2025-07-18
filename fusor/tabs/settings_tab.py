@@ -19,6 +19,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from ..icons import get_icon
 
+
 class SettingsTab(QWidget):
     def __init__(self, main_window):
         super().__init__()
@@ -200,17 +201,27 @@ class SettingsTab(QWidget):
             self.main_window.symfony_tab.on_framework_changed(current_fw)
 
         # track unsaved changes
-        self.project_combo.currentIndexChanged.connect(lambda _: self.main_window.mark_settings_dirty())
+        self.project_combo.currentIndexChanged.connect(
+            lambda _: self.main_window.mark_settings_dirty()
+        )
         self.php_path_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.php_service_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.server_port_edit.valueChanged.connect(self.main_window.mark_settings_dirty)
-        self.framework_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
-        self.yii_template_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
+        self.framework_combo.currentTextChanged.connect(
+            self.main_window.mark_settings_dirty
+        )
+        self.yii_template_combo.currentTextChanged.connect(
+            self.main_window.mark_settings_dirty
+        )
         self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
         self.refresh_spin.valueChanged.connect(self.main_window.mark_settings_dirty)
-        self.theme_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
+        self.theme_combo.currentTextChanged.connect(
+            self.main_window.mark_settings_dirty
+        )
         self.project_name_edit.textChanged.connect(self.main_window.mark_settings_dirty)
-        self.compose_profile_edit.textChanged.connect(self.main_window.mark_settings_dirty)
+        self.compose_profile_edit.textChanged.connect(
+            self.main_window.mark_settings_dirty
+        )
 
     def _on_project_changed(self, _index: int) -> None:
         path = self.project_combo.currentData()
@@ -336,7 +347,9 @@ class SettingsTab(QWidget):
             return
         path = self.project_combo.itemData(index)
         self.project_combo.removeItem(index)
-        self.main_window.projects = [p for p in self.main_window.projects if p.get("path") != path]
+        self.main_window.projects = [
+            p for p in self.main_window.projects if p.get("path") != path
+        ]
 
         if self.main_window.project_path == path:
             new_path = self.project_combo.currentData()
@@ -399,4 +412,3 @@ class SettingsTab(QWidget):
                 show = text == fw
                 self.main_window.tabs.setTabVisible(idx, show)
                 self.main_window.tabs.setTabEnabled(idx, show)
-

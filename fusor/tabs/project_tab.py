@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
 )
 from ..icons import get_icon
 
+
 class ProjectTab(QWidget):
     def __init__(self, main_window):
         super().__init__()

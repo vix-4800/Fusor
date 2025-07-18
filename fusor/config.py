@@ -39,6 +39,7 @@ DEFAULT_CONFIG = {
     "window_position": [100, 100],
 }
 
+
 def load_config():
     """Return configuration values from disk if available."""
     try:
@@ -55,7 +56,10 @@ def load_config():
             if isinstance(entry, str):
                 projects.append({"path": entry, "name": os.path.basename(entry)})
             elif isinstance(entry, dict) and "path" in entry:
-                proj = {"path": entry["path"], "name": entry.get("name", os.path.basename(entry["path"]))}
+                proj = {
+                    "path": entry["path"],
+                    "name": entry.get("name", os.path.basename(entry["path"])),
+                }
                 for k, v in entry.items():
                     if k not in proj:
                         proj[k] = v
@@ -83,6 +87,7 @@ def load_config():
     except json.JSONDecodeError:
         print("Failed to load config: invalid JSON")
         return DEFAULT_CONFIG.copy()
+
 
 def save_config(data):
     """Persist configuration dictionary to disk."""

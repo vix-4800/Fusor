@@ -3,6 +3,7 @@ from PyQt6.QtCore import Qt
 
 from . import APP_NAME, __version__, DESCRIPTION, AUTHOR
 
+
 class AboutDialog(QDialog):
     """Simple dialog showing project information."""
 
@@ -22,4 +23,3 @@ class AboutDialog(QDialog):
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
         buttons.accepted.connect(self.accept)
         layout.addWidget(buttons, alignment=Qt.AlignmentFlag.AlignCenter)
-
