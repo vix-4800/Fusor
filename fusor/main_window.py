@@ -34,6 +34,7 @@ from .tabs.git_tab import GitTab
 from .tabs.database_tab import DatabaseTab
 from .tabs.laravel_tab import LaravelTab
 from .tabs.symfony_tab import SymfonyTab
+from .tabs.yii_tab import YiiTab
 from .tabs.docker_tab import DockerTab
 from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
@@ -326,6 +327,9 @@ class MainWindow(QMainWindow):
         self.symfony_tab = SymfonyTab(self)
         self.symfony_index = self.tabs.addTab(self.symfony_tab, "Symfony")
 
+        self.yii_tab = YiiTab(self)
+        self.yii_index = self.tabs.addTab(self.yii_tab, "Yii")
+
         self.docker_tab = DockerTab(self)
         self.docker_index = self.tabs.addTab(self.docker_tab, "Docker")
 
@@ -348,6 +352,10 @@ class MainWindow(QMainWindow):
         show_symfony = self.framework_choice == "Symfony"
         self.tabs.setTabVisible(self.symfony_index, show_symfony)
         self.tabs.setTabEnabled(self.symfony_index, show_symfony)
+
+        show_yii = self.framework_choice == "Yii"
+        self.tabs.setTabVisible(self.yii_index, show_yii)
+        self.tabs.setTabEnabled(self.yii_index, show_yii)
 
         # populate settings widgets with loaded values
         if hasattr(self, "project_combo"):
@@ -887,12 +895,23 @@ class MainWindow(QMainWindow):
         console = os.path.join(self.project_path, "bin", "console")
         self.run_command([self.php_path, console, *args])
 
+    def yii(self, *args):
+        self.ensure_project_path()
+        script = os.path.join(self.project_path, "yii")
+        if os.name == "nt" and os.path.isfile(os.path.join(self.project_path, "yii.bat")):
+            script = os.path.join(self.project_path, "yii.bat")
+        elif not os.path.isfile(script) and os.path.isfile(script + ".bat"):
+            script = script + ".bat"
+        self.run_command([self.php_path, script, *args])
+
     def migrate(self):
         fw = self.current_framework()
         if fw == "Laravel":
             self.artisan("migrate")
         elif fw == "Symfony":
             self.symfony("doctrine:migrations:migrate")
+        elif fw == "Yii":
+            self.yii("migrate")
         else:
             print(f"Migrate not implemented for {fw}")
 
@@ -902,6 +921,8 @@ class MainWindow(QMainWindow):
             self.artisan("migrate:rollback")
         elif fw == "Symfony":
             self.symfony("doctrine:migrations:migrate", "prev")
+        elif fw == "Yii":
+            self.yii("migrate/down", "1")
         else:
             print(f"Rollback not implemented for {fw}")
 
