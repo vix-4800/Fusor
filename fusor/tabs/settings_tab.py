@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
     QLayout,
     QLabel,
     QSpinBox,
+    QScrollArea,
 )
 
 from PyQt6.QtCore import Qt
@@ -25,7 +26,17 @@ class SettingsTab(QWidget):
         super().__init__()
         self.main_window = main_window
 
-        outer_layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        main_layout.addWidget(scroll)
+
+        container = QWidget()
+        scroll.setWidget(container)
+
+        outer_layout = QVBoxLayout(container)
         outer_layout.setContentsMargins(20, 20, 20, 20)
         outer_layout.setSpacing(20)
 
