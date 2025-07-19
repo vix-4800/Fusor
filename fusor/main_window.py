@@ -390,7 +390,7 @@ class MainWindow(QMainWindow):
         self.logs_index = self.tabs.addTab(self.logs_tab, "Logs")
 
         self.env_tab = EnvTab(self)
-        self.env_index = self.tabs.addTab(self.env_tab, ".env")
+        self.env_index = self.tabs.addTab(self.env_tab, "Env")
 
         self.terminal_tab = TerminalTab(self)
         self.terminal_index = self.tabs.addTab(self.terminal_tab, "Terminal")
