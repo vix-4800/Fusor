@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QGroupBox,
+    QScrollArea,
 )
 from ..icons import get_icon
 
@@ -17,7 +18,17 @@ class ProjectTab(QWidget):
         super().__init__()
         self.main_window = main_window
 
-        layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        main_layout.addWidget(scroll)
+
+        container = QWidget()
+        scroll.setWidget(container)
+
+        layout = QVBoxLayout(container)
         layout.setSpacing(16)
         layout.setContentsMargins(20, 20, 20, 20)
 

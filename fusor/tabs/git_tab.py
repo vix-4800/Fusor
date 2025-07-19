@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
     QGroupBox,
     QLabel,
     QLineEdit,
+    QScrollArea,
 )
 
 from ..icons import get_icon
@@ -23,7 +24,17 @@ class GitTab(QWidget):
         self.current_branch = ""
         self.remote_branches_loaded = False
 
-        outer_layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        main_layout.addWidget(scroll)
+
+        container = QWidget()
+        scroll.setWidget(container)
+
+        outer_layout = QVBoxLayout(container)
         outer_layout.setContentsMargins(20, 20, 20, 20)
         outer_layout.setSpacing(16)
 

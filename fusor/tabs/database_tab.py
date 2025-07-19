@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
     QGroupBox,
     QFileDialog,
+    QScrollArea,
 )
 
 from ..icons import get_icon
@@ -14,7 +15,17 @@ class DatabaseTab(QWidget):
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
-        outer_layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        main_layout.addWidget(scroll)
+
+        container = QWidget()
+        scroll.setWidget(container)
+
+        outer_layout = QVBoxLayout(container)
         outer_layout.setContentsMargins(20, 20, 20, 20)
         outer_layout.setSpacing(20)
 
