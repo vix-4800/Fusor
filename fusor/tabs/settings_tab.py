@@ -163,26 +163,26 @@ class SettingsTab(QWidget):
         framework_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
         framework_form.addRow("Framework:", self.framework_combo)
 
-        self.log_path_edits: list[QLineEdit] = []
-        self.log_paths_layout = QVBoxLayout()
+        self.log_dir_edits: list[QLineEdit] = []
+        self.log_dirs_layout = QVBoxLayout()
 
-        paths = getattr(self.main_window, "log_paths", [])
+        paths = getattr(self.main_window, "log_dirs", [])
         if not paths:
             paths = [""]
         for path in paths:
-            self._add_log_path_field(path)
+            self._add_log_dir_field(path)
 
-        self.log_paths_container = self._wrap(self.log_paths_layout)
-        self.log_path_label = QLabel("Log Paths:")
+        self.log_dirs_container = self._wrap(self.log_dirs_layout)
+        self.log_dir_label = QLabel("Log Directories:")
         logs_group = QGroupBox("Logs")
         logs_form = QFormLayout()
         logs_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
-        logs_form.addRow(self.log_path_label, self.log_paths_container)
+        logs_form.addRow(self.log_dir_label, self.log_dirs_container)
 
-        add_log_btn = QPushButton("Add Log Path")
+        add_log_btn = QPushButton("Add Log Directory")
         add_log_btn.setIcon(get_icon("list-add"))
         add_log_btn.setFixedHeight(30)
-        add_log_btn.clicked.connect(lambda: self._add_log_path_field(""))
+        add_log_btn.clicked.connect(lambda: self._add_log_dir_field(""))
         self.add_log_btn = add_log_btn
         logs_form.addRow("", self._wrap(add_log_btn))
 
@@ -254,7 +254,7 @@ class SettingsTab(QWidget):
         self.main_window.server_port_edit = self.server_port_edit
         self.main_window.docker_checkbox = self.docker_checkbox
         self.main_window.yii_template_combo = self.yii_template_combo
-        self.main_window.log_path_edit = self.log_path_edit
+        self.main_window.log_dir_edit = self.log_dir_edit
         self.main_window.remote_combo = self.remote_combo
         self.main_window.compose_files_edit = self.compose_files_edit
         self.main_window.compose_profile_edit = self.compose_profile_edit
@@ -385,12 +385,12 @@ class SettingsTab(QWidget):
             self.compose_files_edit = self.compose_file_edits[0]
             self.main_window.compose_files_edit = self.compose_files_edit
 
-    def _add_log_path_field(self, value: str) -> None:
+    def _add_log_dir_field(self, value: str) -> None:
         edit = QLineEdit(value)
         browse = QPushButton("Browse")
         browse.setIcon(get_icon("document-open"))
         browse.setFixedHeight(30)
-        browse.clicked.connect(lambda: self.browse_log_path(edit))
+        browse.clicked.connect(lambda: self.browse_log_dir(edit))
         remove = QPushButton("Remove")
         remove.setIcon(get_icon("list-remove"))
         remove.setFixedHeight(30)
@@ -401,42 +401,42 @@ class SettingsTab(QWidget):
         row.addWidget(remove)
         container = QWidget()
         container.setLayout(row)
-        self.log_paths_layout.addWidget(container)
-        self.log_path_edits.append(edit)
-        self._log_path_rows = getattr(self, "_log_path_rows", [])
-        self._log_path_rows.append(container)
-        remove.clicked.connect(lambda: self._remove_log_path_field(container, edit))
+        self.log_dirs_layout.addWidget(container)
+        self.log_dir_edits.append(edit)
+        self._log_dir_rows = getattr(self, "_log_dir_rows", [])
+        self._log_dir_rows.append(container)
+        remove.clicked.connect(lambda: self._remove_log_dir_field(container, edit))
         edit.textChanged.connect(self.main_window.mark_settings_dirty)
-        if len(self.log_path_edits) == 1:
-            self.log_path_edit = edit
-            self.main_window.log_path_edit = edit
+        if len(self.log_dir_edits) == 1:
+            self.log_dir_edit = edit
+            self.main_window.log_dir_edit = edit
 
-    def _remove_log_path_field(self, widget: QWidget, edit: QLineEdit) -> None:
-        self.log_paths_layout.removeWidget(widget)
+    def _remove_log_dir_field(self, widget: QWidget, edit: QLineEdit) -> None:
+        self.log_dirs_layout.removeWidget(widget)
         widget.deleteLater()
-        if edit in self.log_path_edits:
-            self.log_path_edits.remove(edit)
-        if hasattr(self, "_log_path_rows") and widget in self._log_path_rows:
-            self._log_path_rows.remove(widget)
-        if not self.log_path_edits:
-            self._add_log_path_field("")
-        self.log_path_edit = self.log_path_edits[0]
-        self.main_window.log_path_edit = self.log_path_edit
+        if edit in self.log_dir_edits:
+            self.log_dir_edits.remove(edit)
+        if hasattr(self, "_log_dir_rows") and widget in self._log_dir_rows:
+            self._log_dir_rows.remove(widget)
+        if not self.log_dir_edits:
+            self._add_log_dir_field("")
+        self.log_dir_edit = self.log_dir_edits[0]
+        self.main_window.log_dir_edit = self.log_dir_edit
         self.main_window.mark_settings_dirty()
 
-    def set_log_paths(self, paths: list[str]) -> None:
-        for widget in list(getattr(self, "_log_path_rows", [])):
-            self.log_paths_layout.removeWidget(widget)
+    def set_log_dirs(self, paths: list[str]) -> None:
+        for widget in list(getattr(self, "_log_dir_rows", [])):
+            self.log_dirs_layout.removeWidget(widget)
             widget.deleteLater()
-        self.log_path_edits.clear()
-        self._log_path_rows = []
+        self.log_dir_edits.clear()
+        self._log_dir_rows = []
         if not paths:
             paths = [""]
         for p in paths:
-            self._add_log_path_field(p)
-        if self.log_path_edits:
-            self.log_path_edit = self.log_path_edits[0]
-            self.main_window.log_path_edit = self.log_path_edit
+            self._add_log_dir_field(p)
+        if self.log_dir_edits:
+            self.log_dir_edit = self.log_dir_edits[0]
+            self.main_window.log_dir_edit = self.log_dir_edit
 
     def on_docker_toggled(self, checked: bool) -> None:
         self.php_path_edit.setEnabled(not checked)
@@ -559,17 +559,15 @@ class SettingsTab(QWidget):
         if file:
             edit.setText(file)
 
-    def browse_log_path(self, edit: QLineEdit) -> None:
-        default = edit.text()
-        if not default and getattr(self.main_window, "log_paths", []):
-            default = self.main_window.log_paths[0]
-        file, _ = QFileDialog.getOpenFileName(
+    def browse_log_dir(self, edit: QLineEdit) -> None:
+        default = edit.text() or self.main_window.project_path
+        directory = QFileDialog.getExistingDirectory(
             self,
-            "Select Log File",
+            "Select Log Directory",
             default,
         )
-        if file:
-            edit.setText(file)
+        if directory:
+            edit.setText(directory)
 
     def on_framework_changed(self, text: str) -> None:
         visible = text == "Yii"
@@ -577,16 +575,16 @@ class SettingsTab(QWidget):
         self.yii_template_label.setVisible(visible)
 
         log_visible = text in ["Laravel", "Yii", "Symfony"]
-        self.log_paths_container.setVisible(log_visible)
-        self.log_path_label.setVisible(log_visible)
+        self.log_dirs_container.setVisible(log_visible)
+        self.log_dir_label.setVisible(log_visible)
         self.add_log_btn.setVisible(log_visible)
         if log_visible:
             template = self.yii_template_combo.currentText()
-            paths = self.main_window.default_log_paths(text, template)
-            self.set_log_paths(paths or [""])
-            self.main_window.log_paths = paths
+            paths = self.main_window.default_log_dirs(text, template)
+            self.set_log_dirs(paths or [""])
+            self.main_window.log_dirs = paths
             if hasattr(self.main_window, "logs_tab"):
-                self.main_window.logs_tab.set_log_paths(paths)
+                self.main_window.logs_tab.set_log_dirs(paths)
 
         for attr in ["database_tab", "laravel_tab", "symfony_tab", "yii_tab"]:
             tab = getattr(self.main_window, attr, None)
@@ -608,8 +606,8 @@ class SettingsTab(QWidget):
     def on_yii_template_changed(self, text: str) -> None:
         if self.framework_combo.currentText() != "Yii":
             return
-        paths = self.main_window.default_log_paths("Yii", text)
-        self.set_log_paths(paths or [""])
-        self.main_window.log_paths = paths
+        paths = self.main_window.default_log_dirs("Yii", text)
+        self.set_log_dirs(paths or [""])
+        self.main_window.log_dirs = paths
         if hasattr(self.main_window, "logs_tab"):
-            self.main_window.logs_tab.set_log_paths(paths)
+            self.main_window.logs_tab.set_log_dirs(paths)
