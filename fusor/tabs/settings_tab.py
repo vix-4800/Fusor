@@ -197,6 +197,11 @@ class SettingsTab(QWidget):
             self.theme_combo.setCurrentText("Light")
         misc_form.addRow("Theme:", self.theme_combo)
 
+        self.open_browser_checkbox = QCheckBox("Open in browser")
+        if hasattr(self.main_window, "open_browser"):
+            self.open_browser_checkbox.setChecked(self.main_window.open_browser)
+        misc_form.addRow("", self.open_browser_checkbox)
+
         self.yii_template_combo = QComboBox()
         self.yii_template_combo.addItems(["basic", "advanced"])
         if hasattr(self.main_window, "yii_template"):
@@ -246,6 +251,7 @@ class SettingsTab(QWidget):
         self.main_window.compose_profile_edit = self.compose_profile_edit
         self.main_window.refresh_spin = self.refresh_spin
         self.main_window.theme_combo = self.theme_combo
+        self.main_window.open_browser_checkbox = self.open_browser_checkbox
 
         self.on_docker_toggled(self.docker_checkbox.isChecked())
         current_fw = self.framework_combo.currentText()
@@ -275,6 +281,9 @@ class SettingsTab(QWidget):
         self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
         self.refresh_spin.valueChanged.connect(self.main_window.mark_settings_dirty)
         self.theme_combo.currentTextChanged.connect(
+            self.main_window.mark_settings_dirty
+        )
+        self.open_browser_checkbox.toggled.connect(
             self.main_window.mark_settings_dirty
         )
         self.project_name_edit.textChanged.connect(self.main_window.mark_settings_dirty)
