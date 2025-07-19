@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from copy import deepcopy
+from typing import Any
 
 # Path used to store user settings
 CONFIG_FILE = Path.home() / ".fusor_config.json"
@@ -60,17 +61,20 @@ def load_config():
             if isinstance(entry, str):
                 projects.append({"path": entry, "name": Path(entry).name})
             elif isinstance(entry, dict) and "path" in entry:
-                proj = {"path": entry["path"], "name": entry.get("name", Path(entry["path"]).name)}
+                proj_dict = {"path": entry["path"], "name": entry.get("name", Path(entry["path"]).name)}
                 for k, v in entry.items():
-                    if k not in proj:
-                        proj[k] = v
-                projects.append(proj)
+                    if k not in proj_dict:
+                        proj_dict[k] = v
+                projects.append(proj_dict)
         data["projects"] = projects
 
         # migrate old flat settings into current project entry
         current = data.get("current_project") or data.get("project_path")
         if current:
-            proj = next((p for p in data["projects"] if p.get("path") == current), None)
+            proj: dict[str, Any] | None = next(
+                (p for p in data["projects"] if p.get("path") == current),
+                None,
+            )
             if proj is None:
                 proj = {"path": current, "name": Path(current).name}
                 data["projects"].append(proj)
