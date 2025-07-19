@@ -525,6 +525,9 @@ class SettingsTab(QWidget):
                 self.main_window.set_current_project(new_path)
             else:
                 self.main_window.project_path = ""
+                if hasattr(self.main_window, "env_index"):
+                    self.main_window.tabs.setTabVisible(self.main_window.env_index, False)
+                    self.main_window.tabs.setTabEnabled(self.main_window.env_index, False)
 
         data.update(
             {
@@ -538,6 +541,9 @@ class SettingsTab(QWidget):
         self.main_window.mark_settings_saved()
         if not self.main_window.projects:
             self.main_window.show_welcome_dialog()
+            if hasattr(self.main_window, "env_index"):
+                self.main_window.tabs.setTabVisible(self.main_window.env_index, False)
+                self.main_window.tabs.setTabEnabled(self.main_window.env_index, False)
 
     def browse_php_path(self) -> None:
         file, _ = QFileDialog.getOpenFileName(
