@@ -114,7 +114,6 @@ def test_auto_refresh_truncates_large_file(tmp_path, qtbot, monkeypatch):
     win.show()
 
     win.project_path = str(tmp_path)
-    win.log_path = "big.log"
     win.log_paths = ["big.log"]
     win.logs_tab.set_log_paths(win.log_paths)
     win.max_log_lines = 1000

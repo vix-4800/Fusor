@@ -18,7 +18,6 @@ def test_save_then_load(tmp_path, monkeypatch):
                 "php_service": "php",
                 "server_port": 9000,
                 "yii_template": "advanced",
-                "log_path": "/tmp/app.log",
                 "log_paths": ["/tmp/app.log", "/tmp/extra.log"],
                 "git_remote": "origin",
                 "compose_files": ["dc.yml"],
