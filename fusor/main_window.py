@@ -574,9 +574,7 @@ class MainWindow(QMainWindow):
             settings.get("open_browser", data.get("open_browser", self.open_browser))
         )
         self.show_console_output = bool(
-            settings.get(
-                "show_console_output", data.get("show_console_output", self.show_console_output)
-            )
+            data.get("show_console_output", self.show_console_output)
         )
 
         self.theme = data.get("theme", self.theme)
@@ -689,12 +687,8 @@ class MainWindow(QMainWindow):
         self.max_log_lines = int(
             cast(Any, settings.get("max_log_lines", self.max_log_lines))
         )
-        self.enable_terminal = bool(
-            settings.get("enable_terminal", self.enable_terminal)
-        )
-        self.show_console_output = bool(
-            settings.get("show_console_output", self.show_console_output)
-        )
+        self.enable_terminal = bool(settings.get("enable_terminal", self.enable_terminal))
+        self.show_console_output = bool(data.get("show_console_output", self.show_console_output))
 
         if self.framework_combo is not None:
             self.framework_combo.setCurrentText(self.framework_choice)
@@ -1179,12 +1173,13 @@ class MainWindow(QMainWindow):
                     "open_browser": self.open_browser,
                     "max_log_lines": self.max_log_lines,
                     "enable_terminal": self.enable_terminal,
-                    "show_console_output": self.show_console_output,
                 }
                 updated_projects.append(proj)
                 found = True
             else:
-                updated_projects.append(p.copy())
+                temp = p.copy()
+                temp.pop("show_console_output", None)
+                updated_projects.append(temp)
         if not found:
             updated_projects.append(
                 {
@@ -1206,7 +1201,6 @@ class MainWindow(QMainWindow):
                     "open_browser": self.open_browser,
                     "max_log_lines": self.max_log_lines,
                     "enable_terminal": self.enable_terminal,
-                    "show_console_output": self.show_console_output,
                 }
             )
         self.projects = updated_projects
@@ -1215,6 +1209,7 @@ class MainWindow(QMainWindow):
                 "projects": self.projects,
                 "current_project": project_path,
                 "theme": self.theme,
+                "show_console_output": self.show_console_output,
             }
         )
         try:
