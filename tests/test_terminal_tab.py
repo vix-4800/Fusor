@@ -10,6 +10,9 @@ def test_start_and_stop_shell(monkeypatch, qtbot):
     tab = TerminalTab(main)
     qtbot.addWidget(tab)
 
+    assert not tab.input_edit.isEnabled()
+    assert not tab.send_btn.isEnabled()
+
     started = []
     killed = []
 
@@ -39,8 +42,12 @@ def test_start_and_stop_shell(monkeypatch, qtbot):
     assert started
     assert not tab.start_btn.isEnabled()
     assert tab.stop_btn.isEnabled()
+    assert tab.input_edit.isEnabled()
+    assert tab.send_btn.isEnabled()
 
     tab.stop_shell()
     assert killed
     assert tab.start_btn.isEnabled()
     assert not tab.stop_btn.isEnabled()
+    assert not tab.input_edit.isEnabled()
+    assert not tab.send_btn.isEnabled()

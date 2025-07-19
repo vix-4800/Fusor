@@ -30,11 +30,13 @@ class TerminalTab(QWidget):
 
         input_layout = QHBoxLayout()
         self.input_edit = QLineEdit()
+        self.input_edit.setEnabled(False)
         self.input_edit.returnPressed.connect(self.send_input)
         input_layout.addWidget(self.input_edit)
-        send_btn = QPushButton("Send")
-        send_btn.clicked.connect(self.send_input)
-        input_layout.addWidget(send_btn)
+        self.send_btn = QPushButton("Send")
+        self.send_btn.setEnabled(False)
+        self.send_btn.clicked.connect(self.send_input)
+        input_layout.addWidget(self.send_btn)
         layout.addLayout(input_layout)
 
         btn_layout = QHBoxLayout()
@@ -42,6 +44,9 @@ class TerminalTab(QWidget):
         self.start_btn.clicked.connect(self.start_shell)
         btn_layout.addWidget(self.start_btn)
         self.stop_btn = QPushButton("Stop")
+        self.stop_btn.setStyleSheet(
+            "QPushButton:enabled { background-color: #dc3545; }"
+        )
         self.stop_btn.setEnabled(False)
         self.stop_btn.clicked.connect(self.stop_shell)
         btn_layout.addWidget(self.stop_btn)
@@ -87,10 +92,14 @@ class TerminalTab(QWidget):
         self.process.start(program)
         self.start_btn.setEnabled(False)
         self.stop_btn.setEnabled(True)
+        self.input_edit.setEnabled(True)
+        self.send_btn.setEnabled(True)
 
     def _on_finished(self):
         self.start_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
+        self.input_edit.setEnabled(False)
+        self.send_btn.setEnabled(False)
         self.process = None
 
     def stop_shell(self) -> None:
@@ -99,6 +108,8 @@ class TerminalTab(QWidget):
             self.process = None
             self.start_btn.setEnabled(True)
             self.stop_btn.setEnabled(False)
+            self.input_edit.setEnabled(False)
+            self.send_btn.setEnabled(False)
 
     def send_input(self) -> None:
         if not self.process or self.process.state() != QProcess.ProcessState.Running:
