@@ -52,6 +52,7 @@ from .tabs.yii_tab import YiiTab
 from .tabs.docker_tab import DockerTab
 from .tabs.logs_tab import LogsTab
 from .tabs.terminal_tab import TerminalTab
+from .tabs.env_tab import EnvTab
 from .tabs.settings_tab import SettingsTab
 
 # allow tests to monkeypatch file operations easily
@@ -378,6 +379,9 @@ class MainWindow(QMainWindow):
         self.logs_tab = LogsTab(self)
         self.logs_index = self.tabs.addTab(self.logs_tab, "Logs")
 
+        self.env_tab = EnvTab(self)
+        self.env_index = self.tabs.addTab(self.env_tab, ".env")
+
         self.terminal_tab = TerminalTab(self)
         self.terminal_index = self.tabs.addTab(self.terminal_tab, "Terminal")
 
@@ -405,6 +409,11 @@ class MainWindow(QMainWindow):
         log_visible = self.framework_choice in ["Laravel", "Symfony", "Yii"]
         self.tabs.setTabVisible(self.logs_index, log_visible)
         self.tabs.setTabEnabled(self.logs_index, log_visible)
+
+        # env tab visibility based on project selection
+        show_env = bool(self.project_path)
+        self.tabs.setTabVisible(self.env_index, show_env)
+        self.tabs.setTabEnabled(self.env_index, show_env)
 
         # terminal tab availability
         self.tabs.setTabVisible(self.terminal_index, self.enable_terminal)
@@ -682,6 +691,12 @@ class MainWindow(QMainWindow):
         if hasattr(self, "terminal_index"):
             self.tabs.setTabVisible(self.terminal_index, self.enable_terminal)
             self.tabs.setTabEnabled(self.terminal_index, self.enable_terminal)
+        if hasattr(self, "env_index"):
+            show_env = bool(self.project_path)
+            self.tabs.setTabVisible(self.env_index, show_env)
+            self.tabs.setTabEnabled(self.env_index, show_env)
+            if show_env and hasattr(self, "env_tab"):
+                self.env_tab.load_env()
 
         self.mark_settings_saved()
 
@@ -760,6 +775,11 @@ class MainWindow(QMainWindow):
         if hasattr(self, "terminal_index"):
             self.tabs.setTabVisible(self.terminal_index, self.enable_terminal)
             self.tabs.setTabEnabled(self.terminal_index, self.enable_terminal)
+        if hasattr(self, "env_index"):
+            self.tabs.setTabVisible(self.env_index, True)
+            self.tabs.setTabEnabled(self.env_index, True)
+            if hasattr(self, "env_tab"):
+                self.env_tab.load_env()
 
         self.apply_project_settings()
 
