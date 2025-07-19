@@ -603,6 +603,56 @@ class TestMainWindow:
         assert saved["current_project"] == "/two"
         win.close()
 
+    def test_remove_last_project(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(
+            "fusor.tabs.settings_tab.load_config",
+            lambda: {
+                "projects": [{"path": "/one", "name": "one"}],
+                "current_project": "/one",
+                "project_settings": {"/one": {"server_port": 8000}},
+            },
+            raising=True,
+        )
+        saved = {}
+        monkeypatch.setattr("fusor.tabs.settings_tab.save_config", lambda data: saved.update(data), raising=True)
+        monkeypatch.setattr(os.path, "isdir", lambda p: True, raising=True)
+        monkeypatch.setattr(os.path, "isfile", lambda p: True, raising=True)
+        monkeypatch.setattr("PyQt6.QtWidgets.QMessageBox.warning", lambda *a, **k: None, raising=True)
+        shown = []
+        monkeypatch.setattr(MainWindow, "show_welcome_dialog", lambda self: shown.append(True), raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        qtbot.mouseClick(win.settings_tab.remove_btn, Qt.MouseButton.LeftButton)
+
+        assert win.project_combo.count() == 0
+        assert win.project_path == ""
+        assert saved["projects"] == []
+        assert saved["current_project"] == ""
+        assert "/one" not in saved.get("project_settings", {})
+        assert shown
+        win.close()
+
+    def test_exit_when_welcome_dialog_closed_without_project(self, main_window, monkeypatch):
+        closed = []
+        monkeypatch.setattr(main_window, "close", lambda: closed.append(True), raising=True)
+
+        class DummyDlg:
+            def exec(self):
+                return 0
+
+        monkeypatch.setattr(mw_module, "WelcomeDialog", lambda *a, **k: DummyDlg(), raising=True)
+
+        main_window.projects = []
+        main_window.project_path = ""
+
+        main_window.show_welcome_dialog()
+
+        assert closed == [True]
+
     def test_clear_output_button_clears_text(self, main_window, qtbot):
         main_window.output_view.setPlainText("hello")
 
