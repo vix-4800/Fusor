@@ -3,3 +3,4 @@ pytest-qt
 pytest-cov>=5
 ruff
 mypy>=1.10
+flake8

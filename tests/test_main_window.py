@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import shutil
 from pathlib import Path
@@ -8,6 +9,7 @@ from PyQt6.QtCore import QTimer, Qt
 
 import fusor.main_window as mw_module
 from fusor.main_window import MainWindow
+from fusor import APP_NAME
 from PyQt6.QtWidgets import QMainWindow, QPushButton, QMessageBox
 from fusor.tabs.git_tab import GitTab
 
@@ -48,6 +50,14 @@ class TestMainWindow:
         closed = []
         monkeypatch.setattr(main_window, "close", lambda: closed.append(True), raising=True)
 
+        shown = []
+
+        class DummyDlg:
+            def exec(self):
+                shown.append(True)
+
+        monkeypatch.setattr(mw_module, "WelcomeDialog", lambda *a, **k: DummyDlg(), raising=True)
+
         def forbid(*_a, **_kw):
             raise AssertionError("unexpected FS access")
 
@@ -56,7 +66,8 @@ class TestMainWindow:
 
         main_window.refresh_logs()
 
-        assert closed == [True]
+        assert closed == []
+        assert shown == [True]
         assert main_window.log_view.text is None
 
     def test_start_project_uses_configured_php(self, tmp_path: Path, main_window, monkeypatch):
@@ -362,7 +373,6 @@ class TestMainWindow:
         log_file.write_text("log text")
         main_window.project_path = str(tmp_path)
         main_window.log_view = FakeLogView()
-        main_window.log_path = "custom.log"
         main_window.log_paths = ["custom.log"]
         main_window.logs_tab.set_log_paths(main_window.log_paths)
 
@@ -444,7 +454,6 @@ class TestMainWindow:
         log_file.write_text("\n".join(lines))
         main_window.project_path = str(tmp_path)
         main_window.log_view = FakeLogView()
-        main_window.log_path = "large.log"
         main_window.log_paths = ["large.log"]
         main_window.logs_tab.set_log_paths(main_window.log_paths)
         main_window.max_log_lines = 1000
@@ -464,7 +473,6 @@ class TestMainWindow:
         main_window.project_path = str(tmp_path)
         main_window.log_view = FakeLogView()
         main_window.log_paths = [p.name for p in paths]
-        main_window.log_path = paths[0].name
         main_window.logs_tab.set_log_paths(main_window.log_paths)
 
         opened = []
@@ -535,7 +543,7 @@ class TestMainWindow:
 
         qtbot.mouseClick(main_window.help_button, Qt.MouseButton.LeftButton)
 
-        assert shown == ["About Fusor"]
+        assert shown == [f"About {APP_NAME}"]
 
     def test_remove_project_updates_config(self, qtbot, monkeypatch):
         monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
@@ -740,6 +748,24 @@ class TestMainWindow:
         assert saved["window_size"] == [777, 555]
         assert saved["window_position"] == [11, 22]
 
+    def test_stdout_restored_after_close(self, qtbot, monkeypatch, capsys):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        original = sys.stdout
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+        qtbot.wait(10)
+        win.close()
+
+        assert sys.stdout is original
+        print("restored")
+        out = capsys.readouterr().out
+        assert "restored" in out
+
     def test_git_tab_loads_branches_on_first_show(self, qtbot, monkeypatch):
         monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
         monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
@@ -756,6 +782,8 @@ class TestMainWindow:
         qtbot.addWidget(win)
         win.show()
 
+        assert not win.git_tab.remote_branches_loaded
+
         win.tabs.setCurrentIndex(win.git_index)
         qtbot.wait(10)
 
@@ -766,14 +794,16 @@ class TestMainWindow:
         win.tabs.setCurrentIndex(win.git_index)
         qtbot.wait(10)
 
-        assert calls == [True, True]
+        assert calls == [True]
         win.close()
+
 
     def test_clear_log_button_truncates_file(self, tmp_path: Path, main_window, qtbot, monkeypatch):
         log_file = tmp_path / "app.log"
         log_file.write_text("hello")
         main_window.project_path = str(tmp_path)
-        main_window.log_path = "app.log"
+        main_window.log_paths = ["app.log"]
+        main_window.logs_tab.set_log_paths(main_window.log_paths)
 
         monkeypatch.setattr(
             "PyQt6.QtWidgets.QMessageBox.question",
@@ -790,7 +820,8 @@ class TestMainWindow:
         log_file = tmp_path / "app.log"
         log_file.write_text("hello")
         main_window.project_path = str(tmp_path)
-        main_window.log_path = "app.log"
+        main_window.log_paths = ["app.log"]
+        main_window.logs_tab.set_log_paths(main_window.log_paths)
 
         monkeypatch.setattr(
             "PyQt6.QtWidgets.QMessageBox.question",
@@ -847,3 +878,54 @@ class TestMainWindow:
 
         assert main_window.compose_files == ["a.yml", "b.yml"]
         assert saved["project_settings"]["/tmp"]["compose_files"] == ["a.yml", "b.yml"]
+
+    def test_save_settings_updates_project_name(self, main_window, monkeypatch):
+        main_window.project_combo.addItem("/tmp", "/tmp")
+        main_window.project_combo.setCurrentIndex(0)
+        main_window.project_path = "/tmp"
+        main_window.project_name_edit.setText("MyProj")
+        main_window.php_path_edit.setText("php")
+        main_window.docker_checkbox.setChecked(False)
+        main_window.server_port_edit.setValue(8000)
+
+        monkeypatch.setattr(os.path, "isdir", lambda p: True, raising=True)
+        monkeypatch.setattr(os.path, "isfile", lambda p: False, raising=True)
+        monkeypatch.setattr(shutil, "which", lambda cmd: "/usr/bin/php" if cmd == "php" else None, raising=True)
+        saved = {}
+        monkeypatch.setattr(mw_module, "save_config", lambda data: saved.update(data), raising=True)
+
+        main_window.save_settings()
+
+        assert main_window.projects == [{"path": "/tmp", "name": "MyProj"}]
+        assert saved["projects"] == [{"path": "/tmp", "name": "MyProj"}]
+        assert main_window.project_combo.itemText(0) == "MyProj"
+
+    def test_start_project_includes_compose_profile(self, tmp_path: Path, main_window, monkeypatch):
+        main_window.project_path = str(tmp_path)
+        (tmp_path / "public").mkdir()
+
+        main_window.use_docker = True
+        main_window.compose_profile = "dev"
+
+        captured = {}
+
+        def fake_run(cmd, capture_output=True, text=True, cwd=None):
+            captured["cmd"] = cmd
+            class Result:
+                stdout = ""
+                stderr = ""
+            return Result()
+
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+        monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
+
+        main_window.start_project()
+
+        assert captured["cmd"] == [
+            "docker",
+            "compose",
+            "--profile",
+            "dev",
+            "up",
+            "-d",
+        ]

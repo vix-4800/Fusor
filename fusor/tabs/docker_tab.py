@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy
 from ..icons import get_icon
 
+
 class DockerTab(QWidget):
     """Additional Docker helper commands."""
 
@@ -12,21 +13,11 @@ class DockerTab(QWidget):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(12)
 
-        self.build_btn = self._btn(
-            "Rebuild Images", self.build, icon="system-run"
-        )
-        self.pull_btn = self._btn(
-            "Pull Images", self.pull, icon="go-down"
-        )
-        self.status_btn = self._btn(
-            "Status", self.status, icon="dialog-information"
-        )
-        self.logs_btn = self._btn(
-            "Logs", self.logs, icon="text-x-generic"
-        )
-        self.restart_btn = self._btn(
-            "Restart", self.restart, icon="view-refresh"
-        )
+        self.build_btn = self._btn("Rebuild Images", self.build, icon="system-run")
+        self.pull_btn = self._btn("Pull Images", self.pull, icon="go-down")
+        self.status_btn = self._btn("Status", self.status, icon="dialog-information")
+        self.logs_btn = self._btn("Logs", self.logs, icon="text-x-generic")
+        self.restart_btn = self._btn("Restart", self.restart, icon="view-refresh")
 
         layout.addWidget(self.build_btn)
         layout.addWidget(self.pull_btn)

@@ -75,6 +75,31 @@ def test_search_cycle_multiple_matches(qtbot):
     qtbot.wait(10)
     assert current_start() == 16
 
+
+def test_search_empty_clears_highlighting(qtbot):
+    main = DummyMainWindow()
+    tab = LogsTab(main)
+    qtbot.addWidget(tab)
+
+    text = "foo bar foo"
+    tab.log_view.setPlainText(text)
+
+    tab.search_edit.setText("foo")
+    qtbot.mouseClick(tab.search_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(10)
+
+    assert tab.log_view.extraSelections()
+    assert tab.next_btn.isEnabled()
+    assert tab.prev_btn.isEnabled()
+
+    tab.search_edit.setText("")
+    qtbot.mouseClick(tab.search_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(10)
+
+    assert tab.log_view.extraSelections() == []
+    assert not tab.next_btn.isEnabled()
+    assert not tab.prev_btn.isEnabled()
+
 def test_auto_refresh_truncates_large_file(tmp_path, qtbot, monkeypatch):
     from PyQt6.QtCore import QTimer
     from fusor import main_window as mw_module
@@ -89,7 +114,6 @@ def test_auto_refresh_truncates_large_file(tmp_path, qtbot, monkeypatch):
     win.show()
 
     win.project_path = str(tmp_path)
-    win.log_path = "big.log"
     win.log_paths = ["big.log"]
     win.logs_tab.set_log_paths(win.log_paths)
     win.max_log_lines = 1000

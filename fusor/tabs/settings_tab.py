@@ -14,17 +14,29 @@ from PyQt6.QtWidgets import (
     QLayout,
     QLabel,
     QSpinBox,
+    QScrollArea,
 )
 
 from PyQt6.QtCore import Qt
 from ..icons import get_icon
+
 
 class SettingsTab(QWidget):
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
 
-        outer_layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        main_layout.addWidget(scroll)
+
+        container = QWidget()
+        scroll.setWidget(container)
+
+        outer_layout = QVBoxLayout(container)
         outer_layout.setContentsMargins(20, 20, 20, 20)
         outer_layout.setSpacing(20)
 
@@ -38,9 +50,7 @@ class SettingsTab(QWidget):
         idx = self.project_combo.findData(self.main_window.project_path)
         if idx >= 0:
             self.project_combo.setCurrentIndex(idx)
-        self.project_combo.currentIndexChanged.connect(
-            lambda _: self.main_window.set_current_project(self.project_combo.currentData())
-        )
+        self.project_combo.currentIndexChanged.connect(self._on_project_changed)
 
         add_btn = QPushButton("Add")
         add_btn.setIcon(get_icon("list-add"))
@@ -56,6 +66,15 @@ class SettingsTab(QWidget):
         project_row.addWidget(add_btn)
         project_row.addWidget(remove_btn)
         form.addRow("Project:", self._wrap(project_row))
+
+        self.project_name_edit = QLineEdit()
+        name = ""
+        for p in self.main_window.projects:
+            if p.get("path") == self.main_window.project_path:
+                name = p.get("name", "")
+                break
+        self.project_name_edit.setText(name)
+        form.addRow("Project Name:", self.project_name_edit)
 
         self.php_path_edit = QLineEdit(self.main_window.php_path)
         self.php_browse_btn = QPushButton("Browse")
@@ -87,6 +106,9 @@ class SettingsTab(QWidget):
         self.compose_label = QLabel("Compose Files:")
         form.addRow(self.compose_label, self.compose_row)
 
+        self.compose_profile_edit = QLineEdit(self.main_window.compose_profile)
+        form.addRow("Compose Profile:", self.compose_profile_edit)
+
         self.remote_combo = QComboBox()
         remotes = self.main_window.git_tab.get_remotes()
         if remotes:
@@ -111,12 +133,19 @@ class SettingsTab(QWidget):
             self.framework_combo.currentTextChanged.connect(
                 self.main_window.symfony_tab.on_framework_changed
             )
+        if hasattr(self.main_window, "yii_tab"):
+            self.framework_combo.currentTextChanged.connect(
+                self.main_window.yii_tab.on_framework_changed
+            )
         form.addRow("Framework:", self.framework_combo)
 
         self.log_path_edits: list[QLineEdit] = []
         self.log_paths_layout = QVBoxLayout()
 
-        for path in getattr(self.main_window, "log_paths", [self.main_window.log_path]):
+        paths = getattr(self.main_window, "log_paths", [])
+        if not paths:
+            paths = [""]
+        for path in paths:
             self._add_log_path_field(path)
 
         self.log_paths_container = self._wrap(self.log_paths_layout)
@@ -166,6 +195,7 @@ class SettingsTab(QWidget):
         outer_layout.addWidget(save_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.main_window.project_combo = self.project_combo
+        self.main_window.project_name_edit = self.project_name_edit
         self.main_window.framework_combo = self.framework_combo
         self.main_window.php_path_edit = self.php_path_edit
         self.main_window.php_service_edit = self.php_service_edit
@@ -175,6 +205,7 @@ class SettingsTab(QWidget):
         self.main_window.log_path_edit = self.log_path_edit
         self.main_window.remote_combo = self.remote_combo
         self.main_window.compose_files_edit = self.compose_files_edit
+        self.main_window.compose_profile_edit = self.compose_profile_edit
         self.main_window.refresh_spin = self.refresh_spin
         self.main_window.theme_combo = self.theme_combo
 
@@ -188,15 +219,39 @@ class SettingsTab(QWidget):
             self.main_window.symfony_tab.on_framework_changed(current_fw)
 
         # track unsaved changes
-        self.project_combo.currentIndexChanged.connect(lambda _: self.main_window.mark_settings_dirty())
+        self.project_combo.currentIndexChanged.connect(
+            lambda _: self.main_window.mark_settings_dirty()
+        )
         self.php_path_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.php_service_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.server_port_edit.valueChanged.connect(self.main_window.mark_settings_dirty)
-        self.framework_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
-        self.yii_template_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
+        self.framework_combo.currentTextChanged.connect(
+            self.main_window.mark_settings_dirty
+        )
+        self.yii_template_combo.currentTextChanged.connect(
+            self.main_window.mark_settings_dirty
+        )
         self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
         self.refresh_spin.valueChanged.connect(self.main_window.mark_settings_dirty)
-        self.theme_combo.currentTextChanged.connect(self.main_window.mark_settings_dirty)
+        self.theme_combo.currentTextChanged.connect(
+            self.main_window.mark_settings_dirty
+        )
+        self.project_name_edit.textChanged.connect(self.main_window.mark_settings_dirty)
+        self.compose_profile_edit.textChanged.connect(
+            self.main_window.mark_settings_dirty
+        )
+
+    def _on_project_changed(self, _index: int) -> None:
+        path = self.project_combo.currentData()
+        self.main_window.set_current_project(path)
+        name = ""
+        for p in self.main_window.projects:
+            if p.get("path") == path:
+                name = p.get("name", os.path.basename(path))
+                break
+        self.project_name_edit.blockSignals(True)
+        self.project_name_edit.setText(name)
+        self.project_name_edit.blockSignals(False)
 
     def _wrap(self, child):
         """Return a QWidget containing the given layout or widget."""
@@ -254,6 +309,8 @@ class SettingsTab(QWidget):
             widget.deleteLater()
         self.log_path_edits.clear()
         self._log_path_rows = []
+        if not paths:
+            paths = [""]
         for p in paths:
             self._add_log_path_field(p)
         if self.log_path_edits:
@@ -269,6 +326,7 @@ class SettingsTab(QWidget):
         self.compose_browse_btn.setEnabled(checked)
         self.compose_row.setEnabled(checked)
         self.compose_label.setEnabled(checked)
+        self.compose_profile_edit.setEnabled(checked)
         if hasattr(self.main_window, "docker_index"):
             self.main_window.tabs.setTabVisible(self.main_window.docker_index, checked)
             self.main_window.tabs.setTabEnabled(self.main_window.docker_index, checked)
@@ -309,7 +367,9 @@ class SettingsTab(QWidget):
             return
         path = self.project_combo.itemData(index)
         self.project_combo.removeItem(index)
-        self.main_window.projects = [p for p in self.main_window.projects if p.get("path") != path]
+        self.main_window.projects = [
+            p for p in self.main_window.projects if p.get("path") != path
+        ]
 
         if self.main_window.project_path == path:
             new_path = self.project_combo.currentData()
@@ -339,10 +399,13 @@ class SettingsTab(QWidget):
             self.compose_files_edit.setText(";".join(files))
 
     def browse_log_path(self, edit: QLineEdit):
+        default = edit.text()
+        if not default and getattr(self.main_window, "log_paths", []):
+            default = self.main_window.log_paths[0]
         file, _ = QFileDialog.getOpenFileName(
             self,
             "Select Log File",
-            edit.text() or self.main_window.log_path,
+            default,
         )
         if file:
             edit.setText(file)
@@ -351,22 +414,25 @@ class SettingsTab(QWidget):
         visible = text == "Yii"
         self.yii_template_row.setVisible(visible)
         self.yii_template_label.setVisible(visible)
+
         log_visible = text == "Laravel"
         self.log_paths_container.setVisible(log_visible)
         self.log_path_label.setVisible(log_visible)
         self.add_log_btn.setVisible(log_visible)
-        if hasattr(self.main_window, "database_tab"):
-            self.main_window.database_tab.on_framework_changed(text)
-        if hasattr(self.main_window, "laravel_tab"):
-            self.main_window.laravel_tab.on_framework_changed(text)
-        if hasattr(self.main_window, "symfony_tab"):
-            self.main_window.symfony_tab.on_framework_changed(text)
-        if hasattr(self.main_window, "laravel_index"):
-            show_fw = text == "Laravel"
-            self.main_window.tabs.setTabVisible(self.main_window.laravel_index, show_fw)
-            self.main_window.tabs.setTabEnabled(self.main_window.laravel_index, show_fw)
-        if hasattr(self.main_window, "symfony_index"):
-            show_sy = text == "Symfony"
-            self.main_window.tabs.setTabVisible(self.main_window.symfony_index, show_sy)
-            self.main_window.tabs.setTabEnabled(self.main_window.symfony_index, show_sy)
 
+        for attr in ["database_tab", "laravel_tab", "symfony_tab", "yii_tab"]:
+            tab = getattr(self.main_window, attr, None)
+            if tab is not None:
+                tab.on_framework_changed(text)
+
+        tab_map = {
+            "laravel_index": "Laravel",
+            "symfony_index": "Symfony",
+            "yii_index": "Yii",
+        }
+        for index_attr, fw in tab_map.items():
+            if hasattr(self.main_window, index_attr):
+                idx = getattr(self.main_window, index_attr)
+                show = text == fw
+                self.main_window.tabs.setTabVisible(idx, show)
+                self.main_window.tabs.setTabEnabled(idx, show)

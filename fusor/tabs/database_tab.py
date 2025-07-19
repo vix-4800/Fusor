@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
 
 from ..icons import get_icon
 
+
 class DatabaseTab(QWidget):
     def __init__(self, main_window):
         super().__init__()
@@ -64,12 +65,15 @@ class DatabaseTab(QWidget):
         self.main_window.run_command(["dbeaver"])
 
     def dump_sql(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Save SQL Dump", filter="SQL Files (*.sql)")
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save SQL Dump", filter="SQL Files (*.sql)"
+        )
         if path:
             self.main_window.run_command(["mysqldump", "--result-file", path])
 
     def restore_dump(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Select SQL Dump", filter="SQL Files (*.sql)")
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Select SQL Dump", filter="SQL Files (*.sql)"
+        )
         if path:
             self.main_window.run_command(["mysql", path])
-

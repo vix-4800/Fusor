@@ -33,9 +33,10 @@ Fusor aims to **simplify routine PHP project operations** via a user-friendly vi
 | Tab          | Description                                                                       |
 | ------------ | --------------------------------------------------------------------------------- |
 | **Project**  | Start/stop server, run PHPUnit, Composer install/update                           |
-| **Git**      | Switch branches, pull, hard reset, stash changes                                  |
+| **Git**      | Switch branches, view status or diff, pull, hard reset, stash changes             |
 | **Database** | Dump or restore SQL, run migrations, seed data                                    |
 | **Docker**   | Build, pull, restart services, inspect containers _(visible only in Docker mode)_ |
+| **Yii**      | Common Yii console commands _(visible when framework is Yii)_ |
 | **Logs**     | View logs with optional auto-refresh                                              |
 | **Settings** | Choose framework, set PHP binary, Docker config, and manage project list          |
 
@@ -57,6 +58,12 @@ pip install -r requirements.txt
 python -m fusor
 ```
 
+Set the `APP_NAME` environment variable to customize the window title:
+
+```bash
+APP_NAME="My App" python -m fusor
+```
+
 ---
 
 ## 🐳 Docker Mode
@@ -65,9 +72,10 @@ Enable the **Use Docker** option in the Settings tab to run commands inside your
 
 -   Set **PHP Service** to match the container name in your `docker-compose.yml`
 -   Support for multiple Compose files (separated by `;`)
+-   Optional Compose profile via **Compose Profile** field
 -   The **Docker** tab will appear automatically
 
-Start/Stop buttons execute `docker compose up -d` and `docker compose down` accordingly.
+Start/Stop buttons execute `docker compose up -d` and `docker compose down` (with `--profile` if specified) accordingly.
 
 ---
 

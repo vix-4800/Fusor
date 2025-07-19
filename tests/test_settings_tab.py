@@ -11,9 +11,10 @@ class DummyMainWindow:
         self.php_service = "php"
         self.server_port = 8000
         self.compose_files = []
+        self.compose_profile = ""
         self.use_docker = False
         self.yii_template = "basic"
-        self.log_path = ""
+        self.log_paths = []
         self.auto_refresh_secs = 5
         self.theme = "dark"
         self.git_remote = ""

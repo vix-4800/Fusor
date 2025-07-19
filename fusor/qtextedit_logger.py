@@ -1,9 +1,11 @@
 from PyQt6.QtCore import QMetaObject, Qt, Q_ARG
 
+
 class QTextEditLogger:
-    def __init__(self, text_edit, original_stdout):
+    def __init__(self, text_edit, original_stdout, echo=True):
         self.text_edit = text_edit
         self.original_stdout = original_stdout
+        self.echo = echo
 
     def write(self, msg):
         if msg.rstrip():
@@ -13,7 +15,9 @@ class QTextEditLogger:
                 Qt.ConnectionType.QueuedConnection,
                 Q_ARG(str, msg.rstrip()),
             )
-        self.original_stdout.write(msg)
+        if self.echo:
+            self.original_stdout.write(msg)
 
     def flush(self):
-        self.original_stdout.flush()
+        if self.echo:
+            self.original_stdout.flush()

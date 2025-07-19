@@ -1,5 +1,6 @@
 import sys
 import os
+from pathlib import Path
 import subprocess
 import signal
 import concurrent.futures
@@ -19,15 +20,23 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import QTimer
 from .icons import get_icon
+from . import APP_NAME
 
-from .config import load_config, save_config, DEFAULT_PROJECT_SETTINGS
+from .config import (
+    load_config,
+    save_config,
+    DEFAULT_PROJECT_SETTINGS,
+    DEFAULT_MAX_LOG_LINES,
+)
 from .qtextedit_logger import QTextEditLogger
+from .welcome_dialog import WelcomeDialog
 
 from .tabs.project_tab import ProjectTab
 from .tabs.git_tab import GitTab
 from .tabs.database_tab import DatabaseTab
 from .tabs.laravel_tab import LaravelTab
 from .tabs.symfony_tab import SymfonyTab
+from .tabs.yii_tab import YiiTab
 from .tabs.docker_tab import DockerTab
 from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
@@ -235,16 +244,15 @@ LIGHT_STYLESHEET = """
 
 THEME_STYLES = {"dark": DARK_STYLESHEET, "light": LIGHT_STYLESHEET}
 
+
 def apply_theme(widget: QMainWindow, theme: str) -> None:
     widget.setStyleSheet(THEME_STYLES.get(theme, DARK_STYLESHEET))
 
-# Number of log lines to read from the end of a log file
-MAX_LOG_LINES = 1000
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Fusor – PHP QA Toolbox")
+        self.setWindowTitle(f"{APP_NAME} – PHP QA Toolbox")
         self.resize(1024, 768)
         self.theme = "dark"
 
@@ -281,8 +289,12 @@ class MainWindow(QMainWindow):
         self.project_running = False
         self.settings_dirty = False
 
-        # Redirect stdout to the output view
-        self._stdout_logger = QTextEditLogger(self.output_view, sys.stdout)
+        # Redirect stdout to the output view only
+        self._stdout_logger = QTextEditLogger(
+            self.output_view,
+            sys.stdout,
+            echo=False,
+        )
         sys.stdout = self._stdout_logger
 
         # Directory containing project files and PHP executable path
@@ -295,11 +307,11 @@ class MainWindow(QMainWindow):
         self.server_port = 8000
         self.use_docker = False
         self.compose_files: list[str] = []
+        self.compose_profile = ""
         self.yii_template = "basic"
-        self.log_path = os.path.join("storage", "logs", "laravel.log")
-        self.log_paths: list[str] = [self.log_path]
+        self.log_paths: list[str] = []
         self.git_remote = ""
-        self.max_log_lines = MAX_LOG_LINES
+        self.max_log_lines = DEFAULT_MAX_LOG_LINES
         self.auto_refresh_secs = 5
         self.load_config()
         apply_theme(self, self.theme)
@@ -319,6 +331,9 @@ class MainWindow(QMainWindow):
 
         self.symfony_tab = SymfonyTab(self)
         self.symfony_index = self.tabs.addTab(self.symfony_tab, "Symfony")
+
+        self.yii_tab = YiiTab(self)
+        self.yii_index = self.tabs.addTab(self.yii_tab, "Yii")
 
         self.docker_tab = DockerTab(self)
         self.docker_index = self.tabs.addTab(self.docker_tab, "Docker")
@@ -343,16 +358,26 @@ class MainWindow(QMainWindow):
         self.tabs.setTabVisible(self.symfony_index, show_symfony)
         self.tabs.setTabEnabled(self.symfony_index, show_symfony)
 
+        show_yii = self.framework_choice == "Yii"
+        self.tabs.setTabVisible(self.yii_index, show_yii)
+        self.tabs.setTabEnabled(self.yii_index, show_yii)
+
         # populate settings widgets with loaded values
         if hasattr(self, "project_combo"):
             self.project_combo.setCurrentText(self.project_path)
-        if self.framework_choice in [self.framework_combo.itemText(i) for i in range(self.framework_combo.count())]:
+        if self.framework_choice in [
+            self.framework_combo.itemText(i)
+            for i in range(self.framework_combo.count())
+        ]:
             self.framework_combo.setCurrentText(self.framework_choice)
 
         if self.project_path:
             self.git_tab.load_branches()
         else:
-            QTimer.singleShot(0, self.choose_project)
+            if not self.projects:
+                QTimer.singleShot(0, self.show_welcome_dialog)
+            else:
+                QTimer.singleShot(0, self.choose_project)
 
         if (
             hasattr(self, "_geom_size")
@@ -378,18 +403,18 @@ class MainWindow(QMainWindow):
         self.projects = []
         for entry in data.get("projects", []):
             if isinstance(entry, dict) and "path" in entry:
-                name = entry.get("name", os.path.basename(entry["path"]))
+                name = entry.get("name", Path(entry["path"]).name)
                 proj = {"path": entry["path"], "name": name}
                 for k, v in entry.items():
                     if k not in proj:
                         proj[k] = v
                 self.projects.append(proj)
             elif isinstance(entry, str):
-                self.projects.append({"path": entry, "name": os.path.basename(entry)})
+                self.projects.append({"path": entry, "name": Path(entry).name})
         self.project_path = data.get("current_project", self.project_path)
         if not self.projects and data.get("project_path"):
             path = data["project_path"]
-            self.projects = [{"path": path, "name": os.path.basename(path)}]
+            self.projects = [{"path": path, "name": Path(path).name}]
         if not self.project_path and self.projects:
             self.project_path = self.projects[0]["path"]
 
@@ -413,15 +438,21 @@ class MainWindow(QMainWindow):
         )
         self.log_paths = settings.get("log_paths")
         if not self.log_paths:
-            self.log_paths = [
-                settings.get("log_path", data.get("log_path", self.log_path))
-            ]
-        self.log_path = self.log_paths[0]
+            legacy = settings.get("log_path", data.get("log_path"))
+            if legacy:
+                self.log_paths = [legacy]
+            elif self.framework_choice == "Laravel":
+                self.log_paths = [str(Path("storage") / "logs" / "laravel.log")]
+            else:
+                self.log_paths = []
         self.git_remote = settings.get(
             "git_remote", data.get("git_remote", self.git_remote)
         )
         self.compose_files = settings.get(
             "compose_files", data.get("compose_files", self.compose_files)
+        )
+        self.compose_profile = settings.get(
+            "compose_profile", data.get("compose_profile", self.compose_profile)
         )
         self.auto_refresh_secs = settings.get(
             "auto_refresh_secs",
@@ -442,6 +473,8 @@ class MainWindow(QMainWindow):
         prefix = ["docker", "compose"]
         for f in self.compose_files:
             prefix.extend(["-f", f])
+        if self.compose_profile:
+            prefix.extend(["--profile", self.compose_profile])
         return prefix
 
     def update_settings_tab_title(self):
@@ -479,10 +512,18 @@ class MainWindow(QMainWindow):
         self.server_port = settings["server_port"]
         self.use_docker = settings["use_docker"]
         self.yii_template = settings["yii_template"]
-        self.log_paths = settings.get("log_paths") or [settings["log_path"]]
-        self.log_path = self.log_paths[0]
+        self.log_paths = settings.get("log_paths")
+        if not self.log_paths:
+            legacy = settings.get("log_path")
+            if legacy:
+                self.log_paths = [legacy]
+            elif self.framework_choice == "Laravel":
+                self.log_paths = [str(Path("storage") / "logs" / "laravel.log")]
+            else:
+                self.log_paths = []
         self.git_remote = settings["git_remote"]
         self.compose_files = settings["compose_files"]
+        self.compose_profile = settings.get("compose_profile", "")
         self.auto_refresh_secs = settings["auto_refresh_secs"]
         self.max_log_lines = settings.get("max_log_lines", self.max_log_lines)
 
@@ -498,7 +539,9 @@ class MainWindow(QMainWindow):
             self.docker_checkbox.setChecked(self.use_docker)
         if hasattr(self, "yii_template_combo"):
             self.yii_template_combo.setCurrentText(self.yii_template)
-        if hasattr(self, "settings_tab") and hasattr(self.settings_tab, "set_log_paths"):
+        if hasattr(self, "settings_tab") and hasattr(
+            self.settings_tab, "set_log_paths"
+        ):
             self.settings_tab.set_log_paths(self.log_paths)
         if hasattr(self, "remote_combo"):
             remotes = self.git_tab.get_remotes() if hasattr(self, "git_tab") else []
@@ -507,6 +550,8 @@ class MainWindow(QMainWindow):
             self.remote_combo.setCurrentText(self.git_remote)
         if hasattr(self, "compose_files_edit"):
             self.compose_files_edit.setText(";".join(self.compose_files))
+        if hasattr(self, "compose_profile_edit"):
+            self.compose_profile_edit.setText(self.compose_profile)
         if hasattr(self, "refresh_spin"):
             self.refresh_spin.setValue(self.auto_refresh_secs)
         if hasattr(self, "logs_tab"):
@@ -531,7 +576,9 @@ class MainWindow(QMainWindow):
 
         def task():
             try:
-                result = subprocess.run(command, capture_output=True, text=True, cwd=cwd)
+                result = subprocess.run(
+                    command, capture_output=True, text=True, cwd=cwd
+                )
                 if result.stdout:
                     print(result.stdout.strip())
                 if result.stderr:
@@ -545,7 +592,7 @@ class MainWindow(QMainWindow):
     def ensure_project_path(self):
         if not self.project_path:
             print("Project path not set")
-            self.close()
+            self.show_welcome_dialog()
             return False
         return True
 
@@ -555,18 +602,26 @@ class MainWindow(QMainWindow):
         self.project_path = path
         if hasattr(self, "log_view"):
             self.log_view.setPlainText("")
-        if not any(p.get("path") == path for p in self.projects):
-            self.projects.append({"path": path, "name": os.path.basename(path)})
+        proj = next((p for p in self.projects if p.get("path") == path), None)
+        if proj is None:
+            proj = {"path": path, "name": Path(path).name}
+            self.projects.append(proj)
         if hasattr(self, "project_combo"):
             self.project_combo.blockSignals(True)
-            if path not in [self.project_combo.itemData(i) for i in range(self.project_combo.count())]:
-                self.project_combo.addItem(os.path.basename(path), path)
+            if path not in [
+                self.project_combo.itemData(i)
+                for i in range(self.project_combo.count())
+            ]:
+                self.project_combo.addItem(proj["name"], path)
             index = self.project_combo.findData(path)
             if index >= 0:
+                self.project_combo.setItemText(index, proj["name"])
                 self.project_combo.setCurrentIndex(index)
             else:
-                self.project_combo.setCurrentText(os.path.basename(path))
+                self.project_combo.setCurrentText(proj["name"])
             self.project_combo.blockSignals(False)
+        if hasattr(self, "project_name_edit"):
+            self.project_name_edit.setText(proj.get("name", Path(path).name))
         if hasattr(self, "git_tab"):
             self.git_tab.load_branches()
 
@@ -580,7 +635,7 @@ class MainWindow(QMainWindow):
 
     def choose_project(self):
         if not self.projects:
-            self.add_project()
+            self.show_welcome_dialog()
             return
         names = [p["name"] for p in self.projects]
         current_index = next(
@@ -601,13 +656,21 @@ class MainWindow(QMainWindow):
                     self.set_current_project(p["path"])
                     break
 
-    def current_framework(self):
-        return self.framework_combo.currentText() if hasattr(self, "framework_combo") else "None"
+    def show_welcome_dialog(self):
+        dlg = WelcomeDialog(self)
+        dlg.exec()
 
-    def _tail_file(self, path: str, lines: int) -> str:
+    def current_framework(self):
+        return (
+            self.framework_combo.currentText()
+            if hasattr(self, "framework_combo")
+            else "None"
+        )
+
+    def _tail_file(self, path: Path, lines: int) -> str:
         """Return the last ``lines`` lines from ``path``."""
         try:
-            with open(path, "rb") as f:
+            with open(str(path), "rb") as f:
                 f.seek(0, os.SEEK_END)
                 remaining = f.tell()
                 block_size = 4096
@@ -632,17 +695,17 @@ class MainWindow(QMainWindow):
         framework = self.current_framework()
         log_contents = ""
         if framework == "Laravel":
-            log_files = self.log_paths or [self.log_path]
+            log_files = self.log_paths
             selector = getattr(self.logs_tab, "log_selector", None)
             if selector and selector.currentData():
                 log_files = [selector.currentData()]
 
             parts: list[str] = []
             for file in log_files:
-                path = file
-                if not os.path.isabs(path):
-                    path = os.path.join(self.project_path, path)
-                if os.path.exists(path):
+                path = Path(file)
+                if not path.is_absolute():
+                    path = Path(self.project_path) / path
+                if path.exists():
                     content = self._tail_file(path, self.max_log_lines)
                 else:
                     content = f"Log file not found: {path}"
@@ -652,20 +715,19 @@ class MainWindow(QMainWindow):
         elif framework == "Yii":
             if self.yii_template == "advanced":
                 log_files = [
-                    os.path.join(self.project_path, part, "runtime", "logs", "app.log")
+                    Path(self.project_path) / part / "runtime" / "logs" / "app.log"
                     for part in ["frontend", "backend", "console"]
                 ]
             else:
-                log_files = [
-                    os.path.join(self.project_path, "runtime", "log", "app.log")
-                ]
+                log_files = [Path(self.project_path) / "runtime" / "log" / "app.log"]
 
             parts: list[str] = []
             for file in log_files:
-                if os.path.exists(file):
-                    content = self._tail_file(file, self.max_log_lines)
+                path = Path(file)
+                if path.exists():
+                    content = self._tail_file(path, self.max_log_lines)
                 else:
-                    content = f"Log file not found: {file}"
+                    content = f"Log file not found: {path}"
                 heading = f"=== {file} ===" if len(log_files) > 1 else ""
                 parts.append(f"{heading}\n{content}" if heading else content)
             log_contents = "\n\n".join(parts)
@@ -683,19 +745,53 @@ class MainWindow(QMainWindow):
             project_path = self.project_path
         framework = self.framework_combo.currentText()
         php_path = self.php_path_edit.text()
-        php_service = self.php_service_edit.text() if hasattr(self, "php_service_edit") else self.php_service
-        server_port = self.server_port_edit.value() if hasattr(self, "server_port_edit") else self.server_port
+        php_service = (
+            self.php_service_edit.text()
+            if hasattr(self, "php_service_edit")
+            else self.php_service
+        )
+        server_port = (
+            self.server_port_edit.value()
+            if hasattr(self, "server_port_edit")
+            else self.server_port
+        )
         use_docker = self.docker_checkbox.isChecked()
-        yii_template = self.yii_template_combo.currentText() if hasattr(self, "yii_template_combo") else self.yii_template
-        if hasattr(self, "settings_tab") and hasattr(self.settings_tab, "log_path_edits"):
+        yii_template = (
+            self.yii_template_combo.currentText()
+            if hasattr(self, "yii_template_combo")
+            else self.yii_template
+        )
+        if hasattr(self, "settings_tab") and hasattr(
+            self.settings_tab, "log_path_edits"
+        ):
             paths = [e.text() for e in self.settings_tab.log_path_edits if e.text()]
         else:
-            paths = [self.log_path]
-        log_path = paths[0]
-        git_remote = self.remote_combo.currentText() if hasattr(self, "remote_combo") else self.git_remote
-        compose_text = self.compose_files_edit.text() if hasattr(self, "compose_files_edit") else ";".join(self.compose_files)
-        auto_refresh_secs = self.refresh_spin.value() if hasattr(self, "refresh_spin") else self.auto_refresh_secs
-        theme = self.theme_combo.currentText().lower() if hasattr(self, "theme_combo") else self.theme
+            paths = list(self.log_paths)
+        git_remote = (
+            self.remote_combo.currentText()
+            if hasattr(self, "remote_combo")
+            else self.git_remote
+        )
+        compose_text = (
+            self.compose_files_edit.text()
+            if hasattr(self, "compose_files_edit")
+            else ";".join(self.compose_files)
+        )
+        compose_profile = (
+            self.compose_profile_edit.text()
+            if hasattr(self, "compose_profile_edit")
+            else self.compose_profile
+        )
+        auto_refresh_secs = (
+            self.refresh_spin.value()
+            if hasattr(self, "refresh_spin")
+            else self.auto_refresh_secs
+        )
+        theme = (
+            self.theme_combo.currentText().lower()
+            if hasattr(self, "theme_combo")
+            else self.theme
+        )
 
         if (
             not project_path
@@ -703,12 +799,18 @@ class MainWindow(QMainWindow):
             or (use_docker and not php_service)
             or server_port <= 0
         ):
-            QMessageBox.warning(self, "Invalid settings", "All settings fields must be filled out.")
+            QMessageBox.warning(
+                self, "Invalid settings", "All settings fields must be filled out."
+            )
             print("Failed to save settings: one or more fields were empty")
             return
 
         if not os.path.isdir(project_path):
-            QMessageBox.warning(self, "Invalid project path", "The specified project path does not exist.")
+            QMessageBox.warning(
+                self,
+                "Invalid project path",
+                "The specified project path does not exist.",
+            )
             print(f"Failed to save settings: directory does not exist - {project_path}")
             return
 
@@ -717,27 +819,46 @@ class MainWindow(QMainWindow):
             if not valid_path:
                 valid_path = shutil.which(php_path) is not None
             if not valid_path:
-                QMessageBox.warning(self, "Invalid PHP path", "The specified PHP executable was not found.")
+                QMessageBox.warning(
+                    self,
+                    "Invalid PHP path",
+                    "The specified PHP executable was not found.",
+                )
                 print(f"Failed to save settings: php not found - {php_path}")
                 return
 
-
         self.project_path = project_path
-        if not any(p.get("path") == project_path for p in self.projects):
-            self.projects.append({"path": project_path, "name": os.path.basename(project_path)})
+        project_name = Path(project_path).name
+        if hasattr(self, "project_name_edit"):
+            text = self.project_name_edit.text().strip()
+            if text:
+                project_name = text
+        existing = next(
+            (p for p in self.projects if p.get("path") == project_path), None
+        )
+        if existing:
+            existing["name"] = project_name
+        else:
+            self.projects.append({"path": project_path, "name": project_name})
+        if hasattr(self, "project_combo"):
+            idx = self.project_combo.findData(project_path)
+            if idx >= 0:
+                self.project_combo.setItemText(idx, project_name)
+            else:
+                self.project_combo.addItem(project_name, project_path)
         self.framework_choice = framework
         self.php_path = php_path
         self.php_service = php_service or self.php_service
         self.server_port = server_port
         self.use_docker = use_docker
         self.yii_template = yii_template
-        self.log_path = log_path
         self.log_paths = paths
         self.git_remote = git_remote
         self.compose_files = [p.strip() for p in compose_text.split(";") if p.strip()]
+        self.compose_profile = compose_profile.strip()
         self.auto_refresh_secs = int(auto_refresh_secs)
         self.theme = theme
-        self.max_log_lines = int(getattr(self, "max_log_lines", MAX_LOG_LINES))
+        self.max_log_lines = int(getattr(self, "max_log_lines", DEFAULT_MAX_LOG_LINES))
 
         data = load_config()
         settings = data.get("project_settings", {})
@@ -748,19 +869,21 @@ class MainWindow(QMainWindow):
             "server_port": server_port,
             "use_docker": use_docker,
             "yii_template": yii_template,
-            "log_path": log_path,
             "log_paths": paths,
             "git_remote": git_remote,
             "compose_files": self.compose_files,
+            "compose_profile": self.compose_profile,
             "auto_refresh_secs": self.auto_refresh_secs,
             "max_log_lines": self.max_log_lines,
         }
-        data.update({
-            "projects": self.projects,
-            "current_project": project_path,
-            "project_settings": settings,
-            "theme": self.theme,
-        })
+        data.update(
+            {
+                "projects": self.projects,
+                "current_project": project_path,
+                "project_settings": settings,
+                "theme": self.theme,
+            }
+        )
         try:
             save_config(data)
         except OSError as e:
@@ -780,13 +903,23 @@ class MainWindow(QMainWindow):
 
     def artisan(self, *args):
         self.ensure_project_path()
-        artisan_file = os.path.join(self.project_path, "artisan")
-        self.run_command([self.php_path, artisan_file, *args])
+        artisan_file = Path(self.project_path) / "artisan"
+        self.run_command([self.php_path, str(artisan_file), *args])
 
     def symfony(self, *args):
         self.ensure_project_path()
-        console = os.path.join(self.project_path, "bin", "console")
-        self.run_command([self.php_path, console, *args])
+        console = Path(self.project_path) / "bin" / "console"
+        self.run_command([self.php_path, str(console), *args])
+
+    def yii(self, *args):
+        self.ensure_project_path()
+        script = os.path.join(self.project_path, "yii")
+        yii_bat = os.path.join(self.project_path, "yii.bat")
+        if os.name == "nt" and os.path.isfile(yii_bat):
+            script = yii_bat
+        elif not os.path.isfile(script) and os.path.isfile(script + ".bat"):
+            script = script + ".bat"
+        self.run_command([self.php_path, script, *args])
 
     def migrate(self):
         fw = self.current_framework()
@@ -794,6 +927,8 @@ class MainWindow(QMainWindow):
             self.artisan("migrate")
         elif fw == "Symfony":
             self.symfony("doctrine:migrations:migrate")
+        elif fw == "Yii":
+            self.yii("migrate")
         else:
             print(f"Migrate not implemented for {fw}")
 
@@ -803,6 +938,8 @@ class MainWindow(QMainWindow):
             self.artisan("migrate:rollback")
         elif fw == "Symfony":
             self.symfony("doctrine:migrations:migrate", "prev")
+        elif fw == "Yii":
+            self.yii("migrate/down", "1")
         else:
             print(f"Rollback not implemented for {fw}")
 
@@ -820,8 +957,8 @@ class MainWindow(QMainWindow):
 
     def phpunit(self):
         self.ensure_project_path()
-        phpunit_file = os.path.join(self.project_path, "vendor", "bin", "phpunit")
-        self.run_command([self.php_path, phpunit_file])
+        phpunit_file = Path(self.project_path) / "vendor" / "bin" / "phpunit"
+        self.run_command([self.php_path, str(phpunit_file)])
 
     def start_project(self):
         if self.project_running:
@@ -842,8 +979,8 @@ class MainWindow(QMainWindow):
             return
 
         if self.current_framework() == "Laravel":
-            artisan_file = os.path.join(self.project_path, "artisan")
-            command = [self.php_path, artisan_file, "serve"]
+            artisan_file = Path(self.project_path) / "artisan"
+            command = [self.php_path, str(artisan_file), "serve"]
         else:
             # fallback generic PHP server
             command = [
@@ -851,7 +988,7 @@ class MainWindow(QMainWindow):
                 "-S",
                 f"localhost:{self.server_port}",
                 "-t",
-                self.project_path, # os.path.join(self.project_path, "public")
+                self.project_path,  # os.path.join(self.project_path, "public")
             ]
 
         print(f"$ {' '.join(command)}")
@@ -927,6 +1064,8 @@ class MainWindow(QMainWindow):
                     self.server_process.kill()
             self.server_process = None
         self.executor.shutdown(wait=False)
+        # Restore original stdout before shutting down
+        sys.stdout = self._stdout_logger.original_stdout
         data = load_config()
         data["window_size"] = [self.width(), self.height()]
         data["window_position"] = [self.x(), self.y()]
@@ -951,15 +1090,19 @@ class MainWindow(QMainWindow):
 
     def clear_log_file(self):
         """Truncate the configured log file if it exists."""
-        log_file = self.log_path
+        log_file = self.log_paths[0] if self.log_paths else ""
         if hasattr(self, "logs_tab") and hasattr(self.logs_tab, "log_selector"):
             sel = self.logs_tab.log_selector.currentData()
             if sel:
                 log_file = sel
-        if not os.path.isabs(log_file):
-            log_file = os.path.join(self.project_path, log_file)
+        if not log_file:
+            self.refresh_logs()
+            return
+        log_path = Path(log_file)
+        if not log_path.is_absolute():
+            log_path = Path(self.project_path) / log_path
 
-        if not os.path.exists(log_file):
+        if not log_path.exists():
             self.refresh_logs()
             return
 
@@ -972,7 +1115,7 @@ class MainWindow(QMainWindow):
 
         if reply == QMessageBox.StandardButton.Yes:
             try:
-                with open(log_file, "w", encoding="utf-8"):
+                with open(str(log_path), "w", encoding="utf-8"):
                     pass
             except OSError as e:
                 print(f"Failed to clear log file: {e}")

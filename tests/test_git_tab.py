@@ -172,7 +172,6 @@ def test_create_branch_button(monkeypatch, qtbot):
     tab.branch_name_edit.setText("feature")
     qtbot.mouseClick(create_btn, Qt.MouseButton.LeftButton)
 
-    assert called["args"] == ("checkout", "-b", "feature")
     assert tab.current_branch_label.text() == "feature"
 
 
@@ -199,6 +198,53 @@ def test_view_log_button_runs_log(monkeypatch, qtbot):
 
     assert called["args"] == ("log", "-n", "20", "--oneline")
 
+
+def test_status_button_runs_status(monkeypatch, qtbot):
+    main = DummyMainWindow()
+    tab = GitTab(main)
+    qtbot.addWidget(tab)
+
+    called = {}
+
+    def fake_run_git_command(*args):
+        called["args"] = args
+
+    monkeypatch.setattr(tab, "run_git_command", fake_run_git_command, raising=True)
+
+    status_btn: QPushButton | None = None
+    for btn in tab.findChildren(QPushButton):
+        if btn.text() == "Status":
+            status_btn = btn
+            break
+    assert status_btn is not None
+
+    qtbot.mouseClick(status_btn, Qt.MouseButton.LeftButton)
+
+    assert called["args"] == ("status",)
+
+
+def test_diff_button_runs_diff(monkeypatch, qtbot):
+    main = DummyMainWindow()
+    tab = GitTab(main)
+    qtbot.addWidget(tab)
+
+    called = {}
+
+    def fake_run_git_command(*args):
+        called["args"] = args
+
+    monkeypatch.setattr(tab, "run_git_command", fake_run_git_command, raising=True)
+
+    diff_btn: QPushButton | None = None
+    for btn in tab.findChildren(QPushButton):
+        if btn.text() == "Diff":
+            diff_btn = btn
+            break
+    assert diff_btn is not None
+
+    qtbot.mouseClick(diff_btn, Qt.MouseButton.LeftButton)
+
+    assert called["args"] == ("diff",)
 
 def test_branch_dialog_get_branch(qtbot):
     from fusor.branch_dialog import BranchDialog

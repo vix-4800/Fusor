@@ -1,8 +1,11 @@
 import json
-import os
+from pathlib import Path
 
 # Path used to store user settings
-CONFIG_FILE = os.path.expanduser("~/.fusor_config.json")
+CONFIG_FILE = Path.home() / ".fusor_config.json"
+
+# Default maximum number of log lines stored per project
+DEFAULT_MAX_LOG_LINES = 1000
 
 # Default per-project settings
 DEFAULT_PROJECT_SETTINGS = {
@@ -12,13 +15,13 @@ DEFAULT_PROJECT_SETTINGS = {
     "server_port": 8000,
     "use_docker": False,
     "yii_template": "basic",
-    "log_path": os.path.join("storage", "logs", "laravel.log"),
-    # list of log files (first item mirrors ``log_path`` for compatibility)
-    "log_paths": [os.path.join("storage", "logs", "laravel.log")],
+    # list of log files for the project
+    "log_paths": [],
     "git_remote": "",
     "compose_files": [],
+    "compose_profile": "",
     "auto_refresh_secs": 5,
-    "max_log_lines": 1000,
+    "max_log_lines": DEFAULT_MAX_LOG_LINES,
 }
 
 # Default configuration values
@@ -35,10 +38,12 @@ DEFAULT_CONFIG = {
     "window_position": [100, 100],
 }
 
+
 def load_config():
     """Return configuration values from disk if available."""
     try:
-        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+        config_path = Path(CONFIG_FILE)
+        with config_path.open("r", encoding="utf-8") as f:
             data = json.load(f)
         if not isinstance(data, dict):
             return DEFAULT_CONFIG.copy()
@@ -49,9 +54,12 @@ def load_config():
         projects = []
         for entry in data.get("projects", []):
             if isinstance(entry, str):
-                projects.append({"path": entry, "name": os.path.basename(entry)})
+                projects.append({"path": entry, "name": Path(entry).name})
             elif isinstance(entry, dict) and "path" in entry:
-                proj = {"path": entry["path"], "name": entry.get("name", os.path.basename(entry["path"]))}
+                proj = {
+                    "path": entry["path"],
+                    "name": entry.get("name", Path(entry["path"]).name),
+                }
                 for k, v in entry.items():
                     if k not in proj:
                         proj[k] = v
@@ -65,11 +73,13 @@ def load_config():
             for k in DEFAULT_PROJECT_SETTINGS:
                 if k in data and k not in settings:
                     settings[k] = data[k]
+            if "log_path" in data and "log_paths" not in settings:
+                settings["log_paths"] = [data["log_path"]]
 
         if "project_path" in data and data["project_path"]:
             path = data["project_path"]
             if not any(p.get("path") == path for p in data["projects"]):
-                data["projects"].append({"path": path, "name": os.path.basename(path)})
+                data["projects"].append({"path": path, "name": Path(path).name})
             if not data["current_project"]:
                 data["current_project"] = path
 
@@ -80,7 +90,9 @@ def load_config():
         print("Failed to load config: invalid JSON")
         return DEFAULT_CONFIG.copy()
 
+
 def save_config(data):
     """Persist configuration dictionary to disk."""
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+    config_path = Path(CONFIG_FILE)
+    with config_path.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
