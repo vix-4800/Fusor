@@ -82,14 +82,21 @@ class WelcomeDialog(QDialog):
 
         try:
             res = subprocess.run(
-                cmd, capture_output=True, text=True, cwd=dest if cmd[1] == "init" else None
+                cmd,
+                capture_output=True,
+                text=True,
+                cwd=dest if cmd[1] == "init" else None,
             )
         except FileNotFoundError:
             QMessageBox.warning(self, "Create Project", "composer executable not found")
             return
 
         if res.returncode != 0:
-            QMessageBox.warning(self, "Create Project", res.stderr or "Failed to create project")
+            QMessageBox.warning(
+                self,
+                "Create Project",
+                res.stderr or "Failed to create project",
+            )
             return
 
         self.main_window.set_current_project(str(dest))
