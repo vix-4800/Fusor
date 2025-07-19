@@ -1032,3 +1032,35 @@ class TestMainWindow:
         main_window.start_project()
 
         assert opened == [f"http://localhost:{main_window.server_port}"]
+
+    def test_output_hidden_on_small_window(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        win.resize(400, 300)
+        qtbot.wait(10)
+
+        assert not win.output_view.isVisible()
+        assert not win.clear_output_button.isVisible()
+
+        win.resize(900, 700)
+        qtbot.wait(10)
+
+        assert win.output_view.isVisible()
+        assert win.clear_output_button.isVisible()
+
+    def test_minimum_window_size(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+
+        assert win.minimumWidth() == 400
+        assert win.minimumHeight() == 300

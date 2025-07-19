@@ -24,6 +24,7 @@ class GitTab(QWidget):
         super().__init__()
         self.main_window = main_window
         self.current_branch = ""
+        self._truncate_width = 15
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -228,13 +229,15 @@ class GitTab(QWidget):
             print("Command not found: git")
             current = ""
         self.current_branch = current
-        self.current_branch_label.setText(current)
+        width = self.main_window.width() if hasattr(self.main_window, "width") else 800
+        self.update_responsive_layout(width)
 
     def checkout(self, branch: str) -> None:
         self.main_window.ensure_project_path()
         self.run_git_command("checkout", branch)
         self.current_branch = branch
-        self.current_branch_label.setText(branch)
+        width = self.main_window.width() if hasattr(self.main_window, "width") else 800
+        self.update_responsive_layout(width)
 
     def hard_reset(self) -> None:
         if not self.main_window.ensure_project_path():
@@ -278,7 +281,9 @@ class GitTab(QWidget):
             return
         self.run_git_command("checkout", "-b", branch)
         self.load_branches()
-        self.current_branch_label.setText(branch)
+        self.current_branch = branch
+        width = self.main_window.width() if hasattr(self.main_window, "width") else 800
+        self.update_responsive_layout(width)
 
     def get_remotes(self) -> list[str]:
         if not self.main_window.project_path:
@@ -301,4 +306,18 @@ class GitTab(QWidget):
         self.run_git_command("fetch", remote)
         self.run_git_command("checkout", "-t", f"{remote}/{branch}")
         self.current_branch = branch
-        self.current_branch_label.setText(branch)
+        width = self.main_window.width() if hasattr(self.main_window, "width") else 800
+        self.update_responsive_layout(width)
+
+    def _truncate_branch(self, branch: str) -> str:
+        if len(branch) <= self._truncate_width:
+            return branch
+        return branch[: self._truncate_width - 1] + "\u2026"
+
+    def update_responsive_layout(self, width: int) -> None:
+        if width < 650:
+            self.current_branch_label.setText(
+                self._truncate_branch(self.current_branch)
+            )
+        else:
+            self.current_branch_label.setText(self.current_branch)

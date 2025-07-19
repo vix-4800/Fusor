@@ -87,6 +87,7 @@ class LogsTab(QWidget):
 
         # --- Controls Group ---
         control_box = QGroupBox("Controls")
+        self.control_box = control_box
         control_layout = QHBoxLayout()
         control_layout.setSpacing(12)
 
@@ -218,3 +219,15 @@ class LogsTab(QWidget):
             self._search_positions
         )
         self._move_to_current_match(length)
+
+    def update_responsive_layout(self, width: int) -> None:
+        """Adjust layout visibility based on parent window width."""
+        show_log = width >= 700
+        self.log_view.setVisible(show_log)
+
+        show_nav = width >= 600
+        self.prev_btn.setVisible(show_nav)
+        self.next_btn.setVisible(show_nav)
+
+        if hasattr(self, "control_box"):
+            self.control_box.setVisible(width >= 500)
