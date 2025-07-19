@@ -94,10 +94,12 @@ class SettingsTab(QWidget):
         php_form.addRow("PHP Executable:", self._wrap(php_path_row))
 
         self.php_service_edit = QLineEdit(self.main_window.php_service)
+        self.db_service_edit = QLineEdit(self.main_window.db_service)
         docker_group = QGroupBox("Docker")
         docker_form = QFormLayout()
         docker_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
         docker_form.addRow("PHP Service:", self.php_service_edit)
+        docker_form.addRow("DB Service:", self.db_service_edit)
 
         self.server_port_edit = QSpinBox()
         self.server_port_edit.setRange(1, 65535)
@@ -252,6 +254,7 @@ class SettingsTab(QWidget):
         self.main_window.framework_combo = self.framework_combo
         self.main_window.php_path_edit = self.php_path_edit
         self.main_window.php_service_edit = self.php_service_edit
+        self.main_window.db_service_edit = self.db_service_edit
         self.main_window.server_port_edit = self.server_port_edit
         self.main_window.docker_checkbox = self.docker_checkbox
         self.main_window.yii_template_combo = self.yii_template_combo
@@ -281,6 +284,7 @@ class SettingsTab(QWidget):
         )
         self.php_path_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.php_service_edit.textChanged.connect(self.main_window.mark_settings_dirty)
+        self.db_service_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.server_port_edit.valueChanged.connect(self.main_window.mark_settings_dirty)
         self.framework_combo.currentTextChanged.connect(
             self.main_window.mark_settings_dirty
@@ -443,6 +447,7 @@ class SettingsTab(QWidget):
         self.php_path_edit.setEnabled(not checked)
         self.php_browse_btn.setEnabled(not checked)
         self.php_service_edit.setEnabled(checked)
+        self.db_service_edit.setEnabled(checked)
         self.server_port_edit.setEnabled(not checked)
         self.compose_files_container.setEnabled(checked)
         self.compose_label.setEnabled(checked)

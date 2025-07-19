@@ -279,6 +279,7 @@ class MainWindow(QMainWindow):
         self.framework_combo: QComboBox | None = None
         self.php_path_edit: QLineEdit | None = None
         self.php_service_edit: QLineEdit | None = None
+        self.db_service_edit: QLineEdit | None = None
         self.server_port_edit: QSpinBox | None = None
         self.docker_project_path_edit: QLineEdit | None = None
         self.docker_checkbox: QCheckBox | None = None
@@ -342,6 +343,7 @@ class MainWindow(QMainWindow):
         self.framework_choice = "Laravel"
         self.php_path = "php"
         self.php_service = "php"
+        self.db_service = "db"
         self.docker_project_path = "/app"
         self.server_port = 8000
         self.use_docker = False
@@ -511,6 +513,10 @@ class MainWindow(QMainWindow):
             str,
             settings.get("php_service", data.get("php_service", self.php_service)),
         )
+        self.db_service = cast(
+            str,
+            settings.get("db_service", data.get("db_service", self.db_service)),
+        )
         self.docker_project_path = cast(
             str,
             settings.get(
@@ -652,6 +658,7 @@ class MainWindow(QMainWindow):
         self.framework_choice = cast(str, settings["framework"])
         self.php_path = cast(str, settings["php_path"])
         self.php_service = cast(str, settings["php_service"])
+        self.db_service = cast(str, settings.get("db_service", "db"))
         self.docker_project_path = cast(str, settings.get("docker_project_path", "/app"))
         self.server_port = int(cast(Any, settings["server_port"]))
         self.use_docker = bool(settings["use_docker"])
@@ -685,6 +692,8 @@ class MainWindow(QMainWindow):
             self.php_path_edit.setText(self.php_path)
         if self.php_service_edit is not None:
             self.php_service_edit.setText(self.php_service)
+        if self.db_service_edit is not None:
+            self.db_service_edit.setText(self.db_service)
         if self.server_port_edit is not None:
             self.server_port_edit.setValue(self.server_port)
         if self.docker_checkbox is not None:
@@ -741,7 +750,7 @@ class MainWindow(QMainWindow):
         ):
             self.project_tab.update_php_tools()
 
-    def run_command(self, command: list[str]) -> None:
+    def run_command(self, command: list[str], service: str | None = None) -> None:
         if self.use_docker:
             if len(command) >= 2 and command[0] == "docker" and command[1] == "compose":
                 command = self._compose_prefix() + command[2:]
@@ -749,7 +758,7 @@ class MainWindow(QMainWindow):
                 command = self._compose_prefix() + [
                     "exec",
                     "-T",
-                    self.php_service,
+                    service or self.php_service,
                     *command,
                 ]
             cwd = self.project_path
@@ -983,6 +992,11 @@ class MainWindow(QMainWindow):
             if self.php_service_edit is not None
             else self.php_service
         )
+        db_service = (
+            self.db_service_edit.text()
+            if self.db_service_edit is not None
+            else self.db_service
+        )
         server_port = (
             self.server_port_edit.value()
             if self.server_port_edit is not None
@@ -1108,6 +1122,7 @@ class MainWindow(QMainWindow):
         self.framework_choice = framework
         self.php_path = php_path
         self.php_service = php_service or self.php_service
+        self.db_service = db_service or self.db_service
         self.server_port = server_port
         self.use_docker = use_docker
         self.yii_template = yii_template
@@ -1133,6 +1148,7 @@ class MainWindow(QMainWindow):
                     "framework": framework,
                     "php_path": php_path,
                     "php_service": php_service,
+                    "db_service": db_service,
                     "server_port": server_port,
                     "use_docker": use_docker,
                     "yii_template": yii_template,
@@ -1158,6 +1174,7 @@ class MainWindow(QMainWindow):
                     "framework": framework,
                     "php_path": php_path,
                     "php_service": php_service,
+                    "db_service": db_service,
                     "server_port": server_port,
                     "use_docker": use_docker,
                     "yii_template": yii_template,

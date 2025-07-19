@@ -76,18 +76,22 @@ class DatabaseTab(QWidget):
         return btn
 
     def open_dbeaver(self) -> None:
-        self.main_window.run_command(["dbeaver"])
+        self.main_window.run_command(["dbeaver"], service=self.main_window.db_service)
 
     def dump_sql(self) -> None:
         path, _ = QFileDialog.getSaveFileName(
             self, "Save SQL Dump", filter="SQL Files (*.sql)"
         )
         if path:
-            self.main_window.run_command(["mysqldump", "--result-file", path])
+            self.main_window.run_command([
+                "mysqldump",
+                "--result-file",
+                path,
+            ], service=self.main_window.db_service)
 
     def restore_dump(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
             self, "Select SQL Dump", filter="SQL Files (*.sql)"
         )
         if path:
-            self.main_window.run_command(["mysql", path])
+            self.main_window.run_command(["mysql", path], service=self.main_window.db_service)
