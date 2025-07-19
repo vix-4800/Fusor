@@ -71,6 +71,20 @@ class GitTab(QWidget):
         create_group.setLayout(create_layout)
         outer_layout.addWidget(create_group)
 
+        # --- Commit Changes ---
+        commit_group = QGroupBox("Commit Changes")
+        commit_layout = QHBoxLayout()
+        self.commit_message_edit = QLineEdit()
+        commit_btn = self._btn(
+            "Commit",
+            self.commit_changes,
+            icon="document-save",
+        )
+        commit_layout.addWidget(self.commit_message_edit)
+        commit_layout.addWidget(commit_btn)
+        commit_group.setLayout(commit_layout)
+        outer_layout.addWidget(commit_group)
+
         # --- Git actions ---
         actions_group = QGroupBox("Git Commands")
         actions_layout = QVBoxLayout()
@@ -284,6 +298,12 @@ class GitTab(QWidget):
         self.current_branch = branch
         width = self.main_window.width() if hasattr(self.main_window, "width") else 800
         self.update_responsive_layout(width)
+
+    def commit_changes(self) -> None:
+        message = self.commit_message_edit.text().strip()
+        if not message:
+            return
+        self.run_git_command("commit", "-m", message)
 
     def get_remotes(self) -> list[str]:
         if not self.main_window.project_path:
