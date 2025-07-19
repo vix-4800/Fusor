@@ -19,6 +19,7 @@ from PyQt6.QtWidgets import (
 
 from PyQt6.QtCore import Qt
 from ..icons import get_icon
+from ..config import load_config, save_config
 
 
 class SettingsTab(QWidget):
@@ -363,13 +364,27 @@ class SettingsTab(QWidget):
 
     def remove_project(self):
         index = self.project_combo.currentIndex()
+        data = load_config()
+        path = ""
+
         if index < 0:
-            return
-        path = self.project_combo.itemData(index)
-        self.project_combo.removeItem(index)
-        self.main_window.projects = [
-            p for p in self.main_window.projects if p.get("path") != path
-        ]
+            # When there are no items in the combo, fall back to config data
+            path = self.main_window.project_path or data.get("current_project", "")
+            if not path and data.get("projects"):
+                path = data["projects"][0].get("path", "")
+            if not path:
+                return
+            self.main_window.projects = [
+                p
+                for p in data.get("projects", [])
+                if p.get("path") != path
+            ]
+        else:
+            path = self.project_combo.itemData(index)
+            self.project_combo.removeItem(index)
+            self.main_window.projects = [
+                p for p in self.main_window.projects if p.get("path") != path
+            ]
 
         if self.main_window.project_path == path:
             new_path = self.project_combo.currentData()
@@ -378,7 +393,17 @@ class SettingsTab(QWidget):
             else:
                 self.main_window.project_path = ""
 
-        self.main_window.save_settings()
+        settings = data.get("project_settings", {})
+        settings.pop(path, None)
+        data.update(
+            {
+                "projects": self.main_window.projects,
+                "current_project": self.main_window.project_path,
+                "project_settings": settings,
+            }
+        )
+        save_config(data)
+        self.main_window.mark_settings_saved()
 
     def browse_php_path(self):
         file, _ = QFileDialog.getOpenFileName(

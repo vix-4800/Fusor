@@ -803,7 +803,6 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(
                 self, "Invalid settings", "All settings fields must be filled out."
             )
-            print("Failed to save settings: one or more fields were empty")
             return
 
         if not os.path.isdir(project_path):
