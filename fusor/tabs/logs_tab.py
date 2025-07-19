@@ -129,7 +129,7 @@ class LogsTab(QWidget):
         self._timer.timeout.connect(self.main_window.refresh_logs)
         self.auto_checkbox.toggled.connect(self.on_auto_refresh_toggled)
 
-    def update_timer_interval(self, seconds: int):
+    def update_timer_interval(self, seconds: int) -> None:
         self._timer.setInterval(int(seconds) * 1000)
         self.auto_checkbox.setText(f"Auto refresh ({int(seconds)}s)")
 
@@ -139,14 +139,14 @@ class LogsTab(QWidget):
         for p in paths:
             self.log_selector.addItem(p, p)
 
-    def on_auto_refresh_toggled(self, checked: bool):
+    def on_auto_refresh_toggled(self, checked: bool) -> None:
         if checked:
             self._timer.start()
             self.main_window.refresh_logs()
         else:
             self._timer.stop()
 
-    def search_logs(self):
+    def search_logs(self) -> None:
         text = self.search_edit.text().strip()
         if not text:
             self.log_view.setExtraSelections([])
@@ -194,7 +194,7 @@ class LogsTab(QWidget):
         self.next_btn.setEnabled(len(self._search_positions) > 1)
         self._move_to_current_match(len(text))
 
-    def _move_to_current_match(self, length: int):
+    def _move_to_current_match(self, length: int) -> None:
         if not self._search_positions:
             return
         pos = self._search_positions[self._current_search_index]
@@ -208,7 +208,7 @@ class LogsTab(QWidget):
         self.log_view.setTextCursor(cursor)
         self.log_view.ensureCursorVisible()
 
-    def cycle_match(self, delta: int):
+    def cycle_match(self, delta: int) -> None:
         if not self._search_positions:
             return
         length = len(self.search_edit.text().strip())

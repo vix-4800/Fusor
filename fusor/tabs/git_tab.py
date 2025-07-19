@@ -16,6 +16,7 @@ from ..icons import get_icon
 from ..branch_dialog import BranchDialog
 
 import subprocess
+from typing import Callable
 
 
 class GitTab(QWidget):
@@ -123,7 +124,9 @@ class GitTab(QWidget):
 
         outer_layout.addStretch(1)
 
-    def _btn(self, label, slot, icon: str | None = None):
+    def _btn(
+        self, label: str, slot: Callable[..., object], icon: str | None = None
+    ) -> QPushButton:
         btn = QPushButton(label)
         if icon:
             btn.setIcon(get_icon(icon))
@@ -132,9 +135,9 @@ class GitTab(QWidget):
         btn.clicked.connect(slot)
         return btn
 
-    def run_git_command(self, *args):
+    def run_git_command(self, *args: str) -> subprocess.CompletedProcess[str] | None:
         if not self.main_window.ensure_project_path():
-            return
+            return None
         command = ["git", *args]
         print(f"$ {' '.join(command)}")
         try:
@@ -152,6 +155,7 @@ class GitTab(QWidget):
         except FileNotFoundError:
             print("Command not found: git")
             return None
+        return None
 
     def fetch_local_branches(self) -> list[str]:
         if not self.main_window.project_path:
@@ -189,7 +193,7 @@ class GitTab(QWidget):
             print("Command not found: git")
             return []
 
-    def show_branch_dialog(self):
+    def show_branch_dialog(self) -> None:
         local = self.fetch_local_branches()
         remote = [
             f"{self.main_window.git_remote}/{b}"
@@ -207,7 +211,7 @@ class GitTab(QWidget):
                 self.checkout(branch)
             self.load_branches()
 
-    def load_branches(self):
+    def load_branches(self) -> None:
         if not self.main_window.project_path:
             return
         _ = self.fetch_local_branches()
@@ -226,13 +230,13 @@ class GitTab(QWidget):
         self.current_branch = current
         self.current_branch_label.setText(current)
 
-    def checkout(self, branch):
+    def checkout(self, branch: str) -> None:
         self.main_window.ensure_project_path()
         self.run_git_command("checkout", branch)
         self.current_branch = branch
         self.current_branch_label.setText(branch)
 
-    def hard_reset(self):
+    def hard_reset(self) -> None:
         if not self.main_window.ensure_project_path():
             return
         reply = QMessageBox.question(
@@ -247,7 +251,7 @@ class GitTab(QWidget):
             else:
                 print("Hard reset failed")
 
-    def stash(self):
+    def stash(self) -> None:
         if not self.main_window.ensure_project_path():
             return
         result = self.run_git_command("stash")
@@ -256,19 +260,19 @@ class GitTab(QWidget):
         else:
             print("Stash failed")
 
-    def view_log(self):
+    def view_log(self) -> None:
         """Show recent git log entries."""
         self.run_git_command("log", "-n", "20", "--oneline")
 
-    def show_status(self):
+    def show_status(self) -> None:
         """Display git status."""
         self.run_git_command("status")
 
-    def show_diff(self):
+    def show_diff(self) -> None:
         """Display git diff."""
         self.run_git_command("diff")
 
-    def create_branch(self):
+    def create_branch(self) -> None:
         branch = self.branch_name_edit.text().strip()
         if not branch:
             return
@@ -290,7 +294,7 @@ class GitTab(QWidget):
         except FileNotFoundError:
             return []
 
-    def checkout_remote_branch(self, branch: str):
+    def checkout_remote_branch(self, branch: str) -> None:
         remote = self.main_window.git_remote
         if not remote:
             return

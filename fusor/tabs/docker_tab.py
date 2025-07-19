@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy, QScrollArea
 from ..icons import get_icon
+from typing import Callable
 
 
 class DockerTab(QWidget):
@@ -37,7 +38,7 @@ class DockerTab(QWidget):
 
         layout.addStretch(1)
 
-    def _btn(self, text, slot, icon: str | None = None):
+    def _btn(self, text: str, slot: Callable[[], None], icon: str | None = None) -> QPushButton:
         btn = QPushButton(text)
         if icon:
             btn.setIcon(get_icon(icon))
@@ -46,17 +47,17 @@ class DockerTab(QWidget):
         btn.clicked.connect(slot)
         return btn
 
-    def build(self):
+    def build(self) -> None:
         self.main_window.run_command(["docker", "compose", "build"])
 
-    def pull(self):
+    def pull(self) -> None:
         self.main_window.run_command(["docker", "compose", "pull"])
 
-    def status(self):
+    def status(self) -> None:
         self.main_window.run_command(["docker", "compose", "ps"])
 
-    def logs(self):
+    def logs(self) -> None:
         self.main_window.run_command(["docker", "compose", "logs", "--tail", "50"])
 
-    def restart(self):
+    def restart(self) -> None:
         self.main_window.run_command(["docker", "compose", "restart"])

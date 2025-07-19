@@ -19,6 +19,16 @@ from PyQt6.QtWidgets import (
     QInputDialog,
 )
 from PyQt6.QtCore import QTimer
+from typing import TYPE_CHECKING, Any, cast
+
+if TYPE_CHECKING:
+    from PyQt6.QtWidgets import (
+        QComboBox,
+        QLineEdit,
+        QSpinBox,
+        QCheckBox,
+    )
+    from PyQt6.QtGui import QCloseEvent
 from .icons import get_icon
 from . import APP_NAME
 
@@ -256,6 +266,23 @@ class MainWindow(QMainWindow):
         self.resize(1024, 768)
         self.theme = "dark"
 
+        # Widgets populated by SettingsTab and LogsTab
+        self.project_combo: QComboBox | None = None
+        self.project_name_edit: QLineEdit | None = None
+        self.framework_combo: QComboBox | None = None
+        self.php_path_edit: QLineEdit | None = None
+        self.php_service_edit: QLineEdit | None = None
+        self.server_port_edit: QSpinBox | None = None
+        self.docker_checkbox: QCheckBox | None = None
+        self.yii_template_combo: QComboBox | None = None
+        self.log_path_edit: QLineEdit | None = None
+        self.remote_combo: QComboBox | None = None
+        self.compose_files_edit: QLineEdit | None = None
+        self.compose_profile_edit: QLineEdit | None = None
+        self.refresh_spin: QSpinBox | None = None
+        self.theme_combo: QComboBox | None = None
+        self.log_view: QTextEdit | None = None
+
         self.tabs = QTabWidget()
         central_widget = QWidget()
         main_layout = QVBoxLayout(central_widget)
@@ -363,12 +390,13 @@ class MainWindow(QMainWindow):
         self.tabs.setTabEnabled(self.yii_index, show_yii)
 
         # populate settings widgets with loaded values
-        if hasattr(self, "project_combo"):
+        if self.project_combo is not None:
             self.project_combo.setCurrentText(self.project_path)
-        if self.framework_choice in [
-            self.framework_combo.itemText(i)
-            for i in range(self.framework_combo.count())
-        ]:
+        if (
+            self.framework_combo is not None
+            and self.framework_choice
+            in [self.framework_combo.itemText(i) for i in range(self.framework_combo.count())]
+        ):
             self.framework_combo.setCurrentText(self.framework_choice)
 
         if self.project_path:
@@ -490,56 +518,58 @@ class MainWindow(QMainWindow):
             self.settings_dirty = False
             self.update_settings_tab_title()
 
-    def update_run_buttons(self):
-        """Enable/disable start and stop buttons based on running state."""
+    def update_run_buttons(self) -> None:
+        """Enable or disable start and stop buttons based on running state."""
         if hasattr(self, "project_tab"):
             if hasattr(self.project_tab, "start_btn"):
                 self.project_tab.start_btn.setEnabled(not self.project_running)
             if hasattr(self.project_tab, "stop_btn"):
                 self.project_tab.stop_btn.setEnabled(self.project_running)
 
-    def apply_project_settings(self):
+    def apply_project_settings(self) -> None:
         """Load settings for the current project and update widgets."""
         data = load_config()
         settings = DEFAULT_PROJECT_SETTINGS.copy()
         settings.update(data.get("project_settings", {}).get(self.project_path, {}))
 
-        self.framework_choice = settings["framework"]
-        self.php_path = settings["php_path"]
-        self.php_service = settings["php_service"]
-        self.server_port = settings["server_port"]
-        self.use_docker = settings["use_docker"]
-        self.yii_template = settings["yii_template"]
-        self.log_paths = settings.get("log_paths")
+        self.framework_choice = cast(str, settings["framework"])
+        self.php_path = cast(str, settings["php_path"])
+        self.php_service = cast(str, settings["php_service"])
+        self.server_port = int(cast(Any, settings["server_port"]))
+        self.use_docker = bool(settings["use_docker"])
+        self.yii_template = cast(str, settings["yii_template"])
+        value = settings.get("log_paths")
+        self.log_paths = list(cast(list[str], value)) if isinstance(value, list) else []
         if not self.log_paths:
             legacy = settings.get("log_path")
             if legacy:
-                self.log_paths = [legacy]
+                self.log_paths = [cast(str, legacy)]
             else:
                 self.log_paths = self.default_log_paths(self.framework_choice)
-        self.git_remote = settings["git_remote"]
-        self.compose_files = settings["compose_files"]
-        self.compose_profile = settings.get("compose_profile", "")
-        self.auto_refresh_secs = settings["auto_refresh_secs"]
-        self.max_log_lines = settings.get("max_log_lines", self.max_log_lines)
+        self.git_remote = cast(str, settings["git_remote"])
+        comps = settings.get("compose_files")
+        self.compose_files = list(cast(list[str], comps)) if isinstance(comps, list) else []
+        self.compose_profile = cast(str, settings.get("compose_profile", ""))
+        self.auto_refresh_secs = int(cast(Any, settings["auto_refresh_secs"]))
+        self.max_log_lines = int(cast(Any, settings.get("max_log_lines", self.max_log_lines)))
 
-        if hasattr(self, "framework_combo"):
+        if self.framework_combo is not None:
             self.framework_combo.setCurrentText(self.framework_choice)
-        if hasattr(self, "php_path_edit"):
+        if self.php_path_edit is not None:
             self.php_path_edit.setText(self.php_path)
-        if hasattr(self, "php_service_edit"):
+        if self.php_service_edit is not None:
             self.php_service_edit.setText(self.php_service)
-        if hasattr(self, "server_port_edit"):
+        if self.server_port_edit is not None:
             self.server_port_edit.setValue(self.server_port)
-        if hasattr(self, "docker_checkbox"):
+        if self.docker_checkbox is not None:
             self.docker_checkbox.setChecked(self.use_docker)
-        if hasattr(self, "yii_template_combo"):
+        if self.yii_template_combo is not None:
             self.yii_template_combo.setCurrentText(self.yii_template)
-        if hasattr(self, "settings_tab") and hasattr(
+        if self.settings_tab is not None and hasattr(
             self.settings_tab, "set_log_paths"
         ):
             self.settings_tab.set_log_paths(self.log_paths)
-        if hasattr(self, "remote_combo"):
+        if self.remote_combo is not None:
             remotes = self.git_tab.get_remotes() if hasattr(self, "git_tab") else []
             if self.git_remote and self.git_remote not in remotes:
                 self.remote_combo.addItem(self.git_remote)
@@ -549,11 +579,11 @@ class MainWindow(QMainWindow):
             and hasattr(self.settings_tab, "set_compose_files")
         ):
             self.settings_tab.set_compose_files(self.compose_files)
-        elif hasattr(self, "compose_files_edit"):
+        elif self.compose_files_edit is not None:
             self.compose_files_edit.setText(";".join(self.compose_files))
-        if hasattr(self, "compose_profile_edit"):
+        if self.compose_profile_edit is not None:
             self.compose_profile_edit.setText(self.compose_profile)
-        if hasattr(self, "refresh_spin"):
+        if self.refresh_spin is not None:
             self.refresh_spin.setValue(self.auto_refresh_secs)
         if hasattr(self, "logs_tab"):
             self.logs_tab.update_timer_interval(self.auto_refresh_secs)
@@ -566,7 +596,7 @@ class MainWindow(QMainWindow):
         ):
             self.project_tab.update_php_tools()
 
-    def run_command(self, command):
+    def run_command(self, command: list[str]) -> None:
         if self.use_docker:
             if len(command) >= 2 and command[0] == "docker" and command[1] == "compose":
                 command = self._compose_prefix() + command[2:]
@@ -596,24 +626,24 @@ class MainWindow(QMainWindow):
         print(f"$ {' '.join(command)}")
         self.executor.submit(task)
 
-    def ensure_project_path(self):
+    def ensure_project_path(self) -> bool:
         if not self.project_path:
             print("Project path not set")
             self.show_welcome_dialog(exit_if_none=False)
             return False
         return True
 
-    def set_current_project(self, path: str):
+    def set_current_project(self, path: str) -> None:
         if not path:
             return
         self.project_path = path
-        if hasattr(self, "log_view"):
+        if self.log_view is not None:
             self.log_view.setPlainText("")
         proj = next((p for p in self.projects if p.get("path") == path), None)
         if proj is None:
             proj = {"path": path, "name": Path(path).name}
             self.projects.append(proj)
-        if hasattr(self, "project_combo"):
+        if self.project_combo is not None:
             self.project_combo.blockSignals(True)
             if path not in [
                 self.project_combo.itemData(i)
@@ -627,20 +657,20 @@ class MainWindow(QMainWindow):
             else:
                 self.project_combo.setCurrentText(proj["name"])
             self.project_combo.blockSignals(False)
-        if hasattr(self, "project_name_edit"):
+        if self.project_name_edit is not None:
             self.project_name_edit.setText(proj.get("name", Path(path).name))
         if hasattr(self, "git_tab"):
             self.git_tab.load_branches()
 
         self.apply_project_settings()
 
-    def add_project(self):
+    def add_project(self) -> None:
         path = QFileDialog.getExistingDirectory(self, "Select Project Path")
         if path:
             self.set_current_project(path)
             self.save_settings()
 
-    def choose_project(self):
+    def choose_project(self) -> None:
         if not self.projects:
             self.show_welcome_dialog()
             return
@@ -663,18 +693,16 @@ class MainWindow(QMainWindow):
                     self.set_current_project(p["path"])
                     break
 
-    def show_welcome_dialog(self, exit_if_none: bool = True):
+    def show_welcome_dialog(self, exit_if_none: bool = True) -> None:
         dlg = WelcomeDialog(self)
         dlg.exec()
         if exit_if_none and not self.projects:
             self.close()
 
     def current_framework(self):
-        return (
-            self.framework_combo.currentText()
-            if hasattr(self, "framework_combo")
-            else "None"
-        )
+        if self.framework_combo is not None:
+            return self.framework_combo.currentText()
+        return "None"
 
     def default_log_paths(
         self,
@@ -719,19 +747,20 @@ class MainWindow(QMainWindow):
         except OSError as e:
             return f"Failed to read log file: {e}"
 
-    def refresh_logs(self):
+    def refresh_logs(self) -> None:
         if not self.ensure_project_path():
             return
 
         framework = self.current_framework()
         log_contents = ""
+        parts: list[str]
         if framework == "Laravel":
             log_files = self.log_paths or self.default_log_paths("Laravel")
             selector = getattr(self.logs_tab, "log_selector", None)
             if selector and selector.currentData():
                 log_files = [selector.currentData()]
 
-            parts: list[str] = []
+            parts = []
             for file in log_files:
                 path = Path(file)
                 if not path.is_absolute():
@@ -746,7 +775,7 @@ class MainWindow(QMainWindow):
         elif framework == "Symfony":
             log_files = self.log_paths or self.default_log_paths("Symfony")
 
-            parts: list[str] = []
+            parts = []
             for file in log_files:
                 path = Path(file)
                 if not path.is_absolute():
@@ -761,7 +790,7 @@ class MainWindow(QMainWindow):
         elif framework == "Yii":
             log_files = self.log_paths or self.default_log_paths("Yii")
 
-            parts: list[str] = []
+            parts = []
             for file in log_files:
                 path = Path(file)
                 if not path.is_absolute():
@@ -776,34 +805,38 @@ class MainWindow(QMainWindow):
         else:
             log_contents = f"Logs not implemented for {framework}"
 
-        self.log_view.setPlainText(log_contents.strip())
+        if self.log_view is not None:
+            self.log_view.setPlainText(log_contents.strip())
 
-    def save_settings(self):
-        if hasattr(self, "project_combo"):
+    def save_settings(self) -> None:
+        if self.project_combo is not None:
             project_path = self.project_combo.currentData()
             if not project_path:
                 project_path = self.project_combo.currentText()
         else:
             project_path = self.project_path
+        assert self.framework_combo is not None
         framework = self.framework_combo.currentText()
+        assert self.php_path_edit is not None
         php_path = self.php_path_edit.text()
         php_service = (
             self.php_service_edit.text()
-            if hasattr(self, "php_service_edit")
+            if self.php_service_edit is not None
             else self.php_service
         )
         server_port = (
             self.server_port_edit.value()
-            if hasattr(self, "server_port_edit")
+            if self.server_port_edit is not None
             else self.server_port
         )
+        assert self.docker_checkbox is not None
         use_docker = self.docker_checkbox.isChecked()
         yii_template = (
             self.yii_template_combo.currentText()
-            if hasattr(self, "yii_template_combo")
+            if self.yii_template_combo is not None
             else self.yii_template
         )
-        if hasattr(self, "settings_tab") and hasattr(
+        if self.settings_tab is not None and hasattr(
             self.settings_tab, "log_path_edits"
         ):
             paths = [e.text() for e in self.settings_tab.log_path_edits if e.text()]
@@ -811,11 +844,11 @@ class MainWindow(QMainWindow):
             paths = list(self.log_paths)
         git_remote = (
             self.remote_combo.currentText()
-            if hasattr(self, "remote_combo")
+            if self.remote_combo is not None
             else self.git_remote
         )
         if (
-            hasattr(self, "settings_tab")
+            self.settings_tab is not None
             and hasattr(self.settings_tab, "compose_file_edits")
         ):
             compose_files = [
@@ -826,23 +859,23 @@ class MainWindow(QMainWindow):
         else:
             compose_text = (
                 self.compose_files_edit.text()
-                if hasattr(self, "compose_files_edit")
+                if self.compose_files_edit is not None
                 else ";".join(self.compose_files)
             )
             compose_files = [p.strip() for p in compose_text.split(";") if p.strip()]
         compose_profile = (
             self.compose_profile_edit.text()
-            if hasattr(self, "compose_profile_edit")
+            if self.compose_profile_edit is not None
             else self.compose_profile
         )
         auto_refresh_secs = (
             self.refresh_spin.value()
-            if hasattr(self, "refresh_spin")
+            if self.refresh_spin is not None
             else self.auto_refresh_secs
         )
         theme = (
             self.theme_combo.currentText().lower()
-            if hasattr(self, "theme_combo")
+            if self.theme_combo is not None
             else self.theme
         )
 
@@ -881,7 +914,7 @@ class MainWindow(QMainWindow):
 
         self.project_path = project_path
         project_name = Path(project_path).name
-        if hasattr(self, "project_name_edit"):
+        if self.project_name_edit is not None:
             text = self.project_name_edit.text().strip()
             if text:
                 project_name = text
@@ -892,7 +925,7 @@ class MainWindow(QMainWindow):
             existing["name"] = project_name
         else:
             self.projects.append({"path": project_path, "name": project_name})
-        if hasattr(self, "project_combo"):
+        if self.project_combo is not None:
             idx = self.project_combo.findData(project_path)
             if idx >= 0:
                 self.project_combo.setItemText(idx, project_name)
@@ -953,17 +986,17 @@ class MainWindow(QMainWindow):
         if hasattr(self, "git_tab"):
             self.git_tab.load_branches()
 
-    def artisan(self, *args):
+    def artisan(self, *args: str) -> None:
         self.ensure_project_path()
         artisan_file = Path(self.project_path) / "artisan"
         self.run_command([self.php_path, str(artisan_file), *args])
 
-    def symfony(self, *args):
+    def symfony(self, *args: str) -> None:
         self.ensure_project_path()
         console = Path(self.project_path) / "bin" / "console"
         self.run_command([self.php_path, str(console), *args])
 
-    def yii(self, *args):
+    def yii(self, *args: str) -> None:
         self.ensure_project_path()
         script = os.path.join(self.project_path, "yii")
         yii_bat = os.path.join(self.project_path, "yii.bat")
@@ -973,7 +1006,7 @@ class MainWindow(QMainWindow):
             script = script + ".bat"
         self.run_command([self.php_path, script, *args])
 
-    def migrate(self):
+    def migrate(self) -> None:
         fw = self.current_framework()
         if fw == "Laravel":
             self.artisan("migrate")
@@ -984,7 +1017,7 @@ class MainWindow(QMainWindow):
         else:
             print(f"Migrate not implemented for {fw}")
 
-    def rollback(self):
+    def rollback(self) -> None:
         fw = self.current_framework()
         if fw == "Laravel":
             self.artisan("migrate:rollback")
@@ -995,24 +1028,24 @@ class MainWindow(QMainWindow):
         else:
             print(f"Rollback not implemented for {fw}")
 
-    def fresh(self):
+    def fresh(self) -> None:
         if self.current_framework() == "Laravel":
             self.artisan("migrate:fresh")
         else:
             print(f"Fresh not implemented for {self.current_framework()}")
 
-    def seed(self):
+    def seed(self) -> None:
         if self.current_framework() == "Laravel":
             self.artisan("db:seed")
         else:
             print(f"Seed not implemented for {self.current_framework()}")
 
-    def phpunit(self):
+    def phpunit(self) -> None:
         self.ensure_project_path()
         phpunit_file = Path(self.project_path) / "vendor" / "bin" / "phpunit"
         self.run_command([self.php_path, str(phpunit_file)])
 
-    def start_project(self):
+    def start_project(self) -> None:
         if self.project_running:
             print("Project already running")
             return
@@ -1052,11 +1085,15 @@ class MainWindow(QMainWindow):
                 "text": True,
             }
             if os.name == "nt":
-                popen_args["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+                popen_args["creationflags"] = getattr(
+                    subprocess, "CREATE_NEW_PROCESS_GROUP", 0
+                )
             else:
                 popen_args["start_new_session"] = True
 
-            self.server_process = subprocess.Popen(command, **popen_args)
+            self.server_process = subprocess.Popen(
+                command, **cast(dict[str, Any], popen_args)
+            )
 
             def stream():
                 assert self.server_process is not None
@@ -1069,7 +1106,7 @@ class MainWindow(QMainWindow):
         except FileNotFoundError:
             print(f"Command not found: {command[0]}")
 
-    def stop_project(self):
+    def stop_project(self) -> None:
         if self.use_docker:
             self.run_command(["docker", "compose", "down"])
             self.project_running = False
@@ -1085,7 +1122,9 @@ class MainWindow(QMainWindow):
             try:
                 if os.name == "nt":
                     if hasattr(self.server_process, "send_signal"):
-                        self.server_process.send_signal(signal.CTRL_BREAK_EVENT)
+                        self.server_process.send_signal(
+                            getattr(signal, "CTRL_BREAK_EVENT", signal.SIGTERM)
+                        )
                 else:
                     if hasattr(self.server_process, "pid"):
                         os.killpg(self.server_process.pid, signal.SIGINT)
@@ -1100,12 +1139,14 @@ class MainWindow(QMainWindow):
         self.project_running = False
         self.update_run_buttons()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: "QCloseEvent | None") -> None:
         if self.server_process and self.server_process.poll() is None:
             try:
                 if os.name == "nt":
                     if hasattr(self.server_process, "send_signal"):
-                        self.server_process.send_signal(signal.CTRL_BREAK_EVENT)
+                        self.server_process.send_signal(
+                            getattr(signal, "CTRL_BREAK_EVENT", signal.SIGTERM)
+                        )
                 else:
                     if hasattr(self.server_process, "pid"):
                         os.killpg(self.server_process.pid, signal.SIGINT)
@@ -1127,20 +1168,20 @@ class MainWindow(QMainWindow):
             print(f"Failed to write config: {e}")
         super().closeEvent(event)
 
-    def show_about_dialog(self):
+    def show_about_dialog(self) -> None:
         from .about_dialog import AboutDialog
 
         dlg = AboutDialog(self)
         dlg.exec()
 
-    def on_tab_changed(self, index: int):
+    def on_tab_changed(self, index: int) -> None:
         if index == getattr(self, "git_index", -1):
             self.git_tab.load_branches()
 
-    def clear_output(self):
+    def clear_output(self) -> None:
         self.output_view.clear()
 
-    def clear_log_file(self):
+    def clear_log_file(self) -> None:
         """Truncate the configured log file if it exists."""
         log_file = self.log_paths[0] if self.log_paths else ""
         if hasattr(self, "logs_tab") and hasattr(self.logs_tab, "log_selector"):
