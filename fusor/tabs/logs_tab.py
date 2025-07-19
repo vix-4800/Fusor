@@ -46,6 +46,18 @@ class LogsTab(QWidget):
         self.set_log_dirs(self.main_window.log_dirs)
         outer_layout.addWidget(self.log_selector)
 
+        # --- Log Level Selector ---
+        self.level_selector = QComboBox()
+        self.level_selector.addItems([
+            "All",
+            "DEBUG",
+            "INFO",
+            "WARNING",
+            "ERROR",
+            "CRITICAL",
+        ])
+        outer_layout.addWidget(self.level_selector)
+
         # --- Search ---
         search_layout = QHBoxLayout()
         search_layout.setSpacing(12)

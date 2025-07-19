@@ -69,12 +69,6 @@ def load_config():
                 projects.append(proj_dict)
         data["projects"] = projects
 
-        # Remove deprecated fields from project entries
-        for proj in data["projects"]:
-            proj.pop("show_console_output", None)
-            if "log_paths" in proj:
-                proj["log_dirs"] = proj.pop("log_paths")
-
         return data
     except FileNotFoundError:
         return deepcopy(DEFAULT_CONFIG)
