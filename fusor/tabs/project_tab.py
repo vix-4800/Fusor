@@ -53,6 +53,20 @@ class ProjectTab(QWidget):
         server_group.setLayout(server_layout)
         layout.addWidget(server_group)
 
+        self.terminal_btn = self._btn(
+            "Open Terminal",
+            self.open_terminal,
+            icon="utilities-terminal",
+        )
+        layout.addWidget(self.terminal_btn)
+
+        self.explorer_btn = self._btn(
+            "Open Folder",
+            self.open_explorer,
+            icon="document-open",
+        )
+        layout.addWidget(self.explorer_btn)
+
         # --- PHP Tools Group ---
         self.php_tools_group = QGroupBox("PHP Tools")
         php_layout = QVBoxLayout()
@@ -79,20 +93,6 @@ class ProjectTab(QWidget):
 
         self.php_tools_group.setLayout(php_layout)
         layout.addWidget(self.php_tools_group)
-
-        self.terminal_btn = self._btn(
-            "Open Terminal",
-            self.open_terminal,
-            icon="utilities-terminal",
-        )
-        layout.addWidget(self.terminal_btn)
-
-        self.explorer_btn = self._btn(
-            "Open Folder",
-            self.open_explorer,
-            icon="document-open",
-        )
-        layout.addWidget(self.explorer_btn)
 
         composer_group = QGroupBox("Composer")
         composer_layout = QVBoxLayout()
