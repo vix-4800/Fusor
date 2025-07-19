@@ -1,7 +1,9 @@
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QDialogButtonBox
 from PyQt6.QtCore import Qt
-
+import logging
 from . import APP_NAME, __version__, DESCRIPTION, AUTHOR
+
+logger = logging.getLogger(__name__)
 
 
 class AboutDialog(QDialog):

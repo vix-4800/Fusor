@@ -1,5 +1,6 @@
 import sys
 import os
+import logging
 from pathlib import Path
 import subprocess
 import signal
@@ -40,6 +41,8 @@ from .tabs.yii_tab import YiiTab
 from .tabs.docker_tab import DockerTab
 from .tabs.logs_tab import LogsTab
 from .tabs.settings_tab import SettingsTab
+
+logger = logging.getLogger(__name__)
 
 # allow tests to monkeypatch file operations easily
 open = builtins.open
@@ -576,18 +579,18 @@ class MainWindow(QMainWindow):
                     command, capture_output=True, text=True, cwd=cwd
                 )
                 if result.stdout:
-                    print(result.stdout.strip())
+                    logger.info(result.stdout.strip())
                 if result.stderr:
-                    print(result.stderr.strip())
+                    logger.warning(result.stderr.strip())
             except FileNotFoundError:
-                print(f"Command not found: {command[0]}")
+                logger.error("Command not found: %s", command[0])
 
-        print(f"$ {' '.join(command)}")
+        logger.info("$ %s", ' '.join(command))
         self.executor.submit(task)
 
     def ensure_project_path(self):
         if not self.project_path:
-            print("Project path not set")
+            logger.warning("Project path not set")
             self.show_welcome_dialog()
             return False
         return True
@@ -831,7 +834,7 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(
                 self, "Invalid settings", "All settings fields must be filled out."
             )
-            print("Failed to save settings: one or more fields were empty")
+            logger.warning("Failed to save settings: one or more fields were empty")
             return
 
         if not os.path.isdir(project_path):
@@ -840,7 +843,10 @@ class MainWindow(QMainWindow):
                 "Invalid project path",
                 "The specified project path does not exist.",
             )
-            print(f"Failed to save settings: directory does not exist - {project_path}")
+            logger.warning(
+                "Failed to save settings: directory does not exist - %s",
+                project_path,
+            )
             return
 
         if not use_docker:
@@ -853,7 +859,9 @@ class MainWindow(QMainWindow):
                     "Invalid PHP path",
                     "The specified PHP executable was not found.",
                 )
-                print(f"Failed to save settings: php not found - {php_path}")
+                logger.warning(
+                    "Failed to save settings: php not found - %s", php_path
+                )
                 return
 
         self.project_path = project_path
@@ -916,10 +924,10 @@ class MainWindow(QMainWindow):
         try:
             save_config(data)
         except OSError as e:
-            print(f"Failed to write config: {e}")
+            logger.error("Failed to write config: %s", e)
 
         apply_theme(self, self.theme)
-        print("Settings saved!")
+        logger.info("Settings saved!")
         self.mark_settings_saved()
 
         if hasattr(self, "logs_tab"):
@@ -959,7 +967,7 @@ class MainWindow(QMainWindow):
         elif fw == "Yii":
             self.yii("migrate")
         else:
-            print(f"Migrate not implemented for {fw}")
+            logger.info("Migrate not implemented for %s", fw)
 
     def rollback(self):
         fw = self.current_framework()
@@ -970,19 +978,19 @@ class MainWindow(QMainWindow):
         elif fw == "Yii":
             self.yii("migrate/down", "1")
         else:
-            print(f"Rollback not implemented for {fw}")
+            logger.info("Rollback not implemented for %s", fw)
 
     def fresh(self):
         if self.current_framework() == "Laravel":
             self.artisan("migrate:fresh")
         else:
-            print(f"Fresh not implemented for {self.current_framework()}")
+            logger.info("Fresh not implemented for %s", self.current_framework())
 
     def seed(self):
         if self.current_framework() == "Laravel":
             self.artisan("db:seed")
         else:
-            print(f"Seed not implemented for {self.current_framework()}")
+            logger.info("Seed not implemented for %s", self.current_framework())
 
     def phpunit(self):
         self.ensure_project_path()
@@ -991,7 +999,7 @@ class MainWindow(QMainWindow):
 
     def start_project(self):
         if self.project_running:
-            print("Project already running")
+            logger.warning("Project already running")
             return
 
         if self.use_docker:
@@ -1001,7 +1009,7 @@ class MainWindow(QMainWindow):
             return
 
         if self.server_process and self.server_process.poll() is None:
-            print("Project already running")
+            logger.warning("Project already running")
             return
 
         if not self.ensure_project_path():
@@ -1020,7 +1028,7 @@ class MainWindow(QMainWindow):
                 self.project_path,  # os.path.join(self.project_path, "public")
             ]
 
-        print(f"$ {' '.join(command)}")
+        logger.info("$ %s", ' '.join(command))
         try:
             popen_args = {
                 "cwd": self.project_path,
@@ -1038,13 +1046,13 @@ class MainWindow(QMainWindow):
             def stream():
                 assert self.server_process is not None
                 for line in self.server_process.stdout:
-                    print(line.rstrip())
+                    logger.info(line.rstrip())
 
             self.executor.submit(stream)
             self.project_running = True
             self.update_run_buttons()
         except FileNotFoundError:
-            print(f"Command not found: {command[0]}")
+            logger.error("Command not found: %s", command[0])
 
     def stop_project(self):
         if self.use_docker:
@@ -1054,11 +1062,11 @@ class MainWindow(QMainWindow):
             return
 
         if not self.project_running:
-            print("Project is not running")
+            logger.warning("Project is not running")
             return
 
         if self.server_process and self.server_process.poll() is None:
-            print("Stopping project...")
+            logger.info("Stopping project...")
             try:
                 if os.name == "nt":
                     if hasattr(self.server_process, "send_signal"):
@@ -1073,7 +1081,7 @@ class MainWindow(QMainWindow):
                     self.server_process.kill()
             self.server_process = None
         else:
-            print("Project is not running")
+            logger.warning("Project is not running")
         self.project_running = False
         self.update_run_buttons()
 
@@ -1101,7 +1109,7 @@ class MainWindow(QMainWindow):
         try:
             save_config(data)
         except OSError as e:
-            print(f"Failed to write config: {e}")
+            logger.error("Failed to write config: %s", e)
         super().closeEvent(event)
 
     def show_about_dialog(self):
@@ -1147,6 +1155,6 @@ class MainWindow(QMainWindow):
                 with open(str(log_path), "w", encoding="utf-8"):
                     pass
             except OSError as e:
-                print(f"Failed to clear log file: {e}")
+                logger.error("Failed to clear log file: %s", e)
 
         self.refresh_logs()

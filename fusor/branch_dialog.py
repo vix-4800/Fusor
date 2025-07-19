@@ -6,6 +6,9 @@ from PyQt6.QtWidgets import (
     QLabel,
     QLineEdit,
 )
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class BranchDialog(QDialog):

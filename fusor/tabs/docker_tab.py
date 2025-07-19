@@ -1,5 +1,8 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy, QScrollArea
 from ..icons import get_icon
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DockerTab(QWidget):

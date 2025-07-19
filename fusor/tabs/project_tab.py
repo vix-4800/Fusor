@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import logging
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -11,6 +12,8 @@ from PyQt6.QtWidgets import (
     QScrollArea,
 )
 from ..icons import get_icon
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectTab(QWidget):
@@ -104,7 +107,7 @@ class ProjectTab(QWidget):
         """Open a new terminal window in the current project directory."""
         path = self.main_window.project_path
         if not path:
-            print("Project path not set")
+            logger.warning("Project path not set")
             return
 
         if sys.platform == "darwin":
@@ -117,13 +120,13 @@ class ProjectTab(QWidget):
         try:
             subprocess.Popen(cmd, cwd=cwd)
         except FileNotFoundError:
-            print(f"Command not found: {cmd[0]}")
+            logger.error("Command not found: %s", cmd[0])
 
     def open_explorer(self):
         """Open the project directory in the system file explorer."""
         path = self.main_window.project_path
         if not path:
-            print("Project path not set")
+            logger.warning("Project path not set")
             return
 
         if os.name == "nt":

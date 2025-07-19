@@ -1,4 +1,7 @@
 from PyQt6.QtGui import QIcon
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_icon(name: str) -> QIcon:

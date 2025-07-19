@@ -8,6 +8,9 @@ from PyQt6.QtWidgets import (
 )
 
 from ..icons import get_icon
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class LaravelTab(QWidget):

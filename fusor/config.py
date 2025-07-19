@@ -1,5 +1,8 @@
 import json
 from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Path used to store user settings
 CONFIG_FILE = Path.home() / ".fusor_config.json"
@@ -87,7 +90,7 @@ def load_config():
     except FileNotFoundError:
         return DEFAULT_CONFIG.copy()
     except json.JSONDecodeError:
-        print("Failed to load config: invalid JSON")
+        logger.warning("Failed to load config: invalid JSON")
         return DEFAULT_CONFIG.copy()
 
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import subprocess
+import logging
 
 from PyQt6.QtWidgets import (
     QDialog,
@@ -14,6 +15,8 @@ from PyQt6.QtWidgets import (
 )
 
 from . import APP_NAME
+
+logger = logging.getLogger(__name__)
 
 
 class WelcomeDialog(QDialog):

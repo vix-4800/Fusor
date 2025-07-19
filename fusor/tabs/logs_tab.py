@@ -14,6 +14,9 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QTextCursor
 from ..icons import get_icon
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class LogsTab(QWidget):

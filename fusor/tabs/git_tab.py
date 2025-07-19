@@ -16,6 +16,9 @@ from ..icons import get_icon
 from ..branch_dialog import BranchDialog
 
 import subprocess
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class GitTab(QWidget):
@@ -136,7 +139,7 @@ class GitTab(QWidget):
         if not self.main_window.ensure_project_path():
             return
         command = ["git", *args]
-        print(f"$ {' '.join(command)}")
+        logger.info("$ %s", ' '.join(command))
         try:
             result = subprocess.run(
                 command,
@@ -145,12 +148,12 @@ class GitTab(QWidget):
                 cwd=self.main_window.project_path,
             )
             if result.stdout:
-                print(result.stdout.strip())
+                logger.info(result.stdout.strip())
             if result.stderr:
-                print(result.stderr.strip())
+                logger.warning(result.stderr.strip())
             return result
         except FileNotFoundError:
-            print("Command not found: git")
+            logger.error("Command not found: git")
             return None
 
     def fetch_local_branches(self) -> list[str]:
@@ -165,7 +168,7 @@ class GitTab(QWidget):
             )
             return [b.strip() for b in result.stdout.splitlines() if b.strip()]
         except FileNotFoundError:
-            print("Command not found: git")
+            logger.error("Command not found: git")
             return []
 
     def fetch_remote_branches(self) -> list[str]:
@@ -186,7 +189,7 @@ class GitTab(QWidget):
                     branches.append(parts[1].split("/", 2)[2])
             return branches
         except FileNotFoundError:
-            print("Command not found: git")
+            logger.error("Command not found: git")
             return []
 
     def show_branch_dialog(self):
@@ -221,7 +224,7 @@ class GitTab(QWidget):
             )
             current = head.stdout.strip()
         except FileNotFoundError:
-            print("Command not found: git")
+            logger.error("Command not found: git")
             current = ""
         self.current_branch = current
         self.current_branch_label.setText(current)
@@ -243,18 +246,18 @@ class GitTab(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             result = self.run_git_command("reset", "--hard")
             if result and result.returncode == 0:
-                print("Hard reset successful")
+                logger.info("Hard reset successful")
             else:
-                print("Hard reset failed")
+                logger.warning("Hard reset failed")
 
     def stash(self):
         if not self.main_window.ensure_project_path():
             return
         result = self.run_git_command("stash")
         if result and result.returncode == 0:
-            print("Changes stashed successfully")
+            logger.info("Changes stashed successfully")
         else:
-            print("Stash failed")
+            logger.warning("Stash failed")
 
     def view_log(self):
         """Show recent git log entries."""

@@ -1,5 +1,8 @@
 import os
 import subprocess
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def _get_latest_tag(default: str = "0.1.0") -> str:
