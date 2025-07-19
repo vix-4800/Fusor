@@ -1,3 +1,14 @@
+Metadata-Version: 2.4
+Name: fusor
+Version: 0.1.0
+Summary: A minimal PyQt6 application with helper tools for PHP development.
+Author: Fusor Dev
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: PyQt6~=6.9
+Dynamic: license-file
+
 # Fusor
 
 **Fusor** is a cross-platform desktop app built with PyQt6 that helps you manage PHP-based projects without touching the terminal. It’s designed for QA engineers, testers, junior developers, and anyone who wants to execute common project tasks with a click.
@@ -36,7 +47,7 @@ Fusor aims to **simplify routine PHP project operations** via a user-friendly vi
 | **Git**      | Switch branches, view status or diff, pull, hard reset, stash changes             |
 | **Database** | Dump or restore SQL, run migrations, seed data                                    |
 | **Docker**   | Build, pull, restart services, inspect containers _(visible only in Docker mode)_ |
-| **Yii**      | Common Yii console commands _(visible when framework is Yii)_                     |
+| **Yii**      | Common Yii console commands _(visible when framework is Yii)_ |
 | **Logs**     | View logs with optional auto-refresh                                              |
 | **Settings** | Choose framework, set PHP binary, Docker config, and manage project list          |
 

@@ -14,6 +14,7 @@ class BranchDialog(QDialog):
     def __init__(self, branches: list[str], parent=None):
         super().__init__(parent)
         self.setWindowTitle("Select Branch")
+        self.resize(650, 400)
         layout = QVBoxLayout(self)
 
         self.branches = list(branches)
