@@ -591,7 +591,7 @@ class MainWindow(QMainWindow):
     def ensure_project_path(self):
         if not self.project_path:
             print("Project path not set")
-            self.show_welcome_dialog()
+            self.show_welcome_dialog(exit_if_none=False)
             return False
         return True
 
@@ -655,10 +655,10 @@ class MainWindow(QMainWindow):
                     self.set_current_project(p["path"])
                     break
 
-    def show_welcome_dialog(self):
+    def show_welcome_dialog(self, exit_if_none: bool = True):
         dlg = WelcomeDialog(self)
         dlg.exec()
-        if not self.projects:
+        if exit_if_none and not self.projects:
             self.close()
 
     def current_framework(self):

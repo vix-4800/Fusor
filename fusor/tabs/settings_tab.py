@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from ..icons import get_icon
 from ..config import load_config, save_config
+from .. import main_window as mw_module
 
 
 class SettingsTab(QWidget):
@@ -41,9 +42,10 @@ class SettingsTab(QWidget):
         outer_layout.setContentsMargins(20, 20, 20, 20)
         outer_layout.setSpacing(20)
 
-        project_group = QGroupBox("Project Settings")
-        form = QFormLayout()
-        form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        # group: Project
+        project_group = QGroupBox("Project")
+        project_form = QFormLayout()
+        project_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
 
         self.project_combo = QComboBox()
         for proj in self.main_window.projects:
@@ -66,7 +68,7 @@ class SettingsTab(QWidget):
         project_row.addWidget(self.project_combo)
         project_row.addWidget(add_btn)
         project_row.addWidget(remove_btn)
-        form.addRow("Project:", self._wrap(project_row))
+        project_form.addRow("Project:", self._wrap(project_row))
 
         self.project_name_edit = QLineEdit()
         name = ""
@@ -75,7 +77,7 @@ class SettingsTab(QWidget):
                 name = p.get("name", "")
                 break
         self.project_name_edit.setText(name)
-        form.addRow("Project Name:", self.project_name_edit)
+        project_form.addRow("Project Name:", self.project_name_edit)
 
         self.php_path_edit = QLineEdit(self.main_window.php_path)
         self.php_browse_btn = QPushButton("Browse")
@@ -85,15 +87,21 @@ class SettingsTab(QWidget):
         php_path_row = QHBoxLayout()
         php_path_row.addWidget(self.php_path_edit)
         php_path_row.addWidget(self.php_browse_btn)
-        form.addRow("PHP Executable:", self._wrap(php_path_row))
+        php_group = QGroupBox("PHP")
+        php_form = QFormLayout()
+        php_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        php_form.addRow("PHP Executable:", self._wrap(php_path_row))
 
         self.php_service_edit = QLineEdit(self.main_window.php_service)
-        form.addRow("PHP Service:", self.php_service_edit)
+        docker_group = QGroupBox("Docker")
+        docker_form = QFormLayout()
+        docker_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        docker_form.addRow("PHP Service:", self.php_service_edit)
 
         self.server_port_edit = QSpinBox()
         self.server_port_edit.setRange(1, 65535)
         self.server_port_edit.setValue(self.main_window.server_port)
-        form.addRow("Server Port:", self.server_port_edit)
+        php_form.addRow("Server Port:", self.server_port_edit)
 
         self.compose_files_edit = QLineEdit(";".join(self.main_window.compose_files))
         self.compose_browse_btn = QPushButton("Browse")
@@ -105,10 +113,10 @@ class SettingsTab(QWidget):
         compose_row.addWidget(self.compose_browse_btn)
         self.compose_row = self._wrap(compose_row)
         self.compose_label = QLabel("Compose Files:")
-        form.addRow(self.compose_label, self.compose_row)
+        docker_form.addRow(self.compose_label, self.compose_row)
 
         self.compose_profile_edit = QLineEdit(self.main_window.compose_profile)
-        form.addRow("Compose Profile:", self.compose_profile_edit)
+        docker_form.addRow("Compose Profile:", self.compose_profile_edit)
 
         self.remote_combo = QComboBox()
         remotes = self.main_window.git_tab.get_remotes()
@@ -116,7 +124,7 @@ class SettingsTab(QWidget):
             self.remote_combo.addItems(remotes)
         if self.main_window.git_remote in remotes:
             self.remote_combo.setCurrentText(self.main_window.git_remote)
-        form.addRow("Git Remote:", self.remote_combo)
+        project_form.addRow("Git Remote:", self.remote_combo)
 
         self.framework_combo = QComboBox()
         self.framework_combo.addItems(["Laravel", "Yii", "Symfony", "None"])
@@ -138,7 +146,10 @@ class SettingsTab(QWidget):
             self.framework_combo.currentTextChanged.connect(
                 self.main_window.yii_tab.on_framework_changed
             )
-        form.addRow("Framework:", self.framework_combo)
+        framework_group = QGroupBox("Framework")
+        framework_form = QFormLayout()
+        framework_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        framework_form.addRow("Framework:", self.framework_combo)
 
         self.log_path_edits: list[QLineEdit] = []
         self.log_paths_layout = QVBoxLayout()
@@ -151,25 +162,31 @@ class SettingsTab(QWidget):
 
         self.log_paths_container = self._wrap(self.log_paths_layout)
         self.log_path_label = QLabel("Log Paths:")
-        form.addRow(self.log_path_label, self.log_paths_container)
+        logs_group = QGroupBox("Logs")
+        logs_form = QFormLayout()
+        logs_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        logs_form.addRow(self.log_path_label, self.log_paths_container)
 
         add_log_btn = QPushButton("Add Log Path")
         add_log_btn.setIcon(get_icon("list-add"))
         add_log_btn.setFixedHeight(30)
         add_log_btn.clicked.connect(lambda: self._add_log_path_field(""))
         self.add_log_btn = add_log_btn
-        form.addRow("", self._wrap(add_log_btn))
+        logs_form.addRow("", self._wrap(add_log_btn))
 
         self.refresh_spin = QSpinBox()
         self.refresh_spin.setRange(1, 3600)
         self.refresh_spin.setValue(self.main_window.auto_refresh_secs)
-        form.addRow("Auto refresh (seconds):", self.refresh_spin)
+        misc_group = QGroupBox("Misc")
+        misc_form = QFormLayout()
+        misc_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        misc_form.addRow("Auto refresh (seconds):", self.refresh_spin)
 
         self.theme_combo = QComboBox()
         self.theme_combo.addItems(["Dark", "Light"])
         if getattr(self.main_window, "theme", "dark") == "light":
             self.theme_combo.setCurrentText("Light")
-        form.addRow("Theme:", self.theme_combo)
+        misc_form.addRow("Theme:", self.theme_combo)
 
         self.yii_template_combo = QComboBox()
         self.yii_template_combo.addItems(["basic", "advanced"])
@@ -177,16 +194,27 @@ class SettingsTab(QWidget):
             self.yii_template_combo.setCurrentText(self.main_window.yii_template)
         self.yii_template_row = self._wrap(self.yii_template_combo)
         self.yii_template_label = QLabel("Yii Template:")
-        form.addRow(self.yii_template_label, self.yii_template_row)
+        framework_form.addRow(self.yii_template_label, self.yii_template_row)
 
         self.docker_checkbox = QCheckBox("Use Docker")
         self.docker_checkbox.setChecked(self.main_window.use_docker)
         self.docker_checkbox.setMinimumHeight(30)
         self.docker_checkbox.toggled.connect(self.on_docker_toggled)
-        form.addRow("", self.docker_checkbox)
+        docker_form.addRow("", self.docker_checkbox)
 
-        project_group.setLayout(form)
+        project_group.setLayout(project_form)
+        php_group.setLayout(php_form)
+        docker_group.setLayout(docker_form)
+        framework_group.setLayout(framework_form)
+        logs_group.setLayout(logs_form)
+        misc_group.setLayout(misc_form)
+
         outer_layout.addWidget(project_group)
+        outer_layout.addWidget(php_group)
+        outer_layout.addWidget(docker_group)
+        outer_layout.addWidget(framework_group)
+        outer_layout.addWidget(logs_group)
+        outer_layout.addWidget(misc_group)
 
         save_btn = QPushButton("Save Settings")
         save_btn.setIcon(get_icon("document-save"))
@@ -368,6 +396,9 @@ class SettingsTab(QWidget):
     def remove_project(self):
         index = self.project_combo.currentIndex()
         data = load_config()
+        extra = mw_module.load_config()
+        if extra.get("projects") or extra.get("current_project"):
+            data = extra
         path = ""
 
         if index < 0:
@@ -406,6 +437,8 @@ class SettingsTab(QWidget):
             }
         )
         save_config(data)
+        if save_config is not mw_module.save_config:
+            mw_module.save_config(data)
         self.main_window.mark_settings_saved()
         if not self.main_window.projects:
             self.main_window.show_welcome_dialog()
