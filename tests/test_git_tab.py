@@ -1,5 +1,5 @@
 import subprocess
-from PyQt6.QtWidgets import QMessageBox, QPushButton
+from PyQt6.QtWidgets import QMessageBox, QPushButton, QDialog
 from PyQt6.QtCore import Qt
 
 from fusor.tabs.git_tab import GitTab
@@ -43,28 +43,17 @@ def test_load_branches_and_run_git_command(monkeypatch, qtbot):
     monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
 
     tab.load_branches()
-    assert [tab.branch_combo.itemText(i) for i in range(tab.branch_combo.count())] == [
-        "main",
-        "develop",
-    ]
+    assert tab.current_branch_label.text() == "main"
     assert tab.current_branch == "main"
 
     res = tab.run_git_command("status")
     assert res is results[("git", "status")]
 
 
-def test_on_branch_changed_triggers_checkout(monkeypatch, qtbot):
+def test_checkout_updates_current_branch(monkeypatch, qtbot):
     main = DummyMainWindow()
     tab = GitTab(main)
     qtbot.addWidget(tab)
-    tab.current_branch = "main"
-
-    monkeypatch.setattr(
-        QMessageBox,
-        "question",
-        lambda *a, **k: QMessageBox.StandardButton.Yes,
-        raising=True,
-    )
 
     called = {}
 
@@ -73,10 +62,11 @@ def test_on_branch_changed_triggers_checkout(monkeypatch, qtbot):
 
     monkeypatch.setattr(tab, "run_git_command", fake_run_git_command, raising=True)
 
-    tab.on_branch_changed("develop")
+    tab.checkout("develop")
 
     assert called["args"] == ("checkout", "develop")
     assert tab.current_branch == "develop"
+    assert tab.current_branch_label.text() == "develop"
 
 
 def test_hard_reset_runs_command(monkeypatch, qtbot):
@@ -133,11 +123,7 @@ def test_remote_helpers(monkeypatch, qtbot):
     monkeypatch.setattr(subprocess, "run", fake_run, raising=True)
 
     assert tab.get_remotes() == ["origin", "upstream"]
-    tab.load_remote_branches()
-    assert [tab.remote_branch_combo.itemText(i) for i in range(tab.remote_branch_combo.count())] == [
-        "main",
-        "feature",
-    ]
+    assert tab.fetch_remote_branches() == ["main", "feature"]
 
 
 def test_push_button_runs_push(monkeypatch, qtbot):
@@ -186,7 +172,7 @@ def test_create_branch_button(monkeypatch, qtbot):
     tab.branch_name_edit.setText("feature")
     qtbot.mouseClick(create_btn, Qt.MouseButton.LeftButton)
 
-    assert called["args"] == ("checkout", "-b", "feature")
+    assert tab.current_branch_label.text() == "feature"
 
 
 def test_view_log_button_runs_log(monkeypatch, qtbot):
@@ -259,3 +245,40 @@ def test_diff_button_runs_diff(monkeypatch, qtbot):
     qtbot.mouseClick(diff_btn, Qt.MouseButton.LeftButton)
 
     assert called["args"] == ("diff",)
+
+def test_branch_dialog_get_branch(qtbot):
+    from fusor.branch_dialog import BranchDialog
+
+    dialog = BranchDialog(["main", "dev"])
+    qtbot.addWidget(dialog)
+    dialog.search_edit.setText("dev")
+    assert dialog.list_widget.count() == 1
+    dialog.list_widget.setCurrentRow(0)
+    assert dialog.get_branch() == "dev"
+
+
+def test_show_branch_dialog_checks_out(monkeypatch, qtbot):
+    main = DummyMainWindow()
+    tab = GitTab(main)
+    qtbot.addWidget(tab)
+
+    monkeypatch.setattr(tab, "fetch_local_branches", lambda: ["main"], raising=True)
+    monkeypatch.setattr(tab, "fetch_remote_branches", lambda: ["feature"], raising=True)
+
+    called = {}
+    monkeypatch.setattr(tab, "checkout_remote_branch", lambda b: called.setdefault("remote", b), raising=True)
+    monkeypatch.setattr(tab, "checkout", lambda b: called.setdefault("local", b), raising=True)
+
+    class DummyDialog:
+        def __init__(self, branches, parent=None):
+            self.branches = branches
+        def exec(self):
+            return QDialog.DialogCode.Accepted
+        def get_branch(self):
+            return "origin/feature"
+
+    monkeypatch.setattr("fusor.tabs.git_tab.BranchDialog", DummyDialog, raising=True)
+
+    tab.show_branch_dialog()
+
+    assert called.get("remote") == "feature"
