@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import json
 
 from fusor.tabs.project_tab import ProjectTab
 
@@ -119,3 +120,31 @@ def test_open_explorer_linux_fallback(monkeypatch, qtbot):
     monkeypatch.setattr(os, "name", "posix", raising=False)
     tab.open_explorer()
     assert cmds == [["xdg-open", main.project_path], ["gio", "open", main.project_path]]
+
+
+def test_update_php_tools_enable_buttons(tmp_path, qtbot):
+    data = {
+        "require-dev": {
+            "phpunit/phpunit": "*",
+            "rector/rector": "*",
+        }
+    }
+    (tmp_path / "composer.json").write_text(json.dumps(data))
+
+    tab, main = make_tab(qtbot)
+    main.project_path = str(tmp_path)
+    tab.update_php_tools()
+
+    assert tab.phpunit_btn.isEnabled()
+    assert tab.rector_btn.isEnabled()
+    assert not tab.csfixer_btn.isEnabled()
+
+
+def test_update_php_tools_disable_without_composer(tmp_path, qtbot):
+    tab, main = make_tab(qtbot)
+    main.project_path = str(tmp_path)
+    tab.update_php_tools()
+
+    assert not tab.phpunit_btn.isEnabled()
+    assert not tab.rector_btn.isEnabled()
+    assert not tab.csfixer_btn.isEnabled()
