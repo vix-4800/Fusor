@@ -78,12 +78,19 @@ class ProjectTab(QWidget):
         )
         self.rector_btn = self._btn(
             "Run Rector",
-            lambda: main_window.run_command([main_window.php_path, str(Path("vendor") / "bin" / "rector")]),
+            lambda: main_window.run_command(
+                [main_window.php_path, str(Path("vendor") / "bin" / "rector")]
+            ),
             icon="system-run",
         )
         self.csfixer_btn = self._btn(
             "Run PHP CS-Fixer",
-            lambda: main_window.run_command([main_window.php_path, str(Path("vendor") / "bin" / "php-cs-fixer")]),
+            lambda: main_window.run_command(
+                [
+                    main_window.php_path,
+                    str(Path("vendor") / "bin" / "php-cs-fixer"),
+                ]
+            ),
             icon="system-run",
         )
 
