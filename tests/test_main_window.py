@@ -3,6 +3,7 @@ import sys
 import subprocess
 import shutil
 from pathlib import Path
+import webbrowser
 
 import pytest
 from PyQt6.QtCore import QTimer, Qt
@@ -183,6 +184,7 @@ class TestMainWindow:
 
     def test_stop_project_uses_docker_compose_down(self, main_window, monkeypatch):
         main_window.use_docker = True
+        main_window.project_path = "/repo"
 
         captured = {}
 
@@ -203,6 +205,7 @@ class TestMainWindow:
     def test_stop_project_includes_compose_files(self, main_window, monkeypatch):
         main_window.use_docker = True
         main_window.compose_files = ["a.yml", "b.yml"]
+        main_window.project_path = "/repo"
 
         captured = {}
 
@@ -1042,3 +1045,61 @@ class TestMainWindow:
             "up",
             "-d",
         ]
+
+    def test_start_project_opens_browser(self, tmp_path: Path, main_window, monkeypatch):
+        main_window.project_path = str(tmp_path)
+        (tmp_path / "public").mkdir()
+
+        main_window.framework_choice = "None"
+        if hasattr(main_window, "framework_combo"):
+            main_window.framework_combo.setCurrentText("None")
+
+        main_window.open_browser = True
+
+        class DummyProcess:
+            def poll(self):
+                return None
+
+            stdout: list[str] = []
+
+        monkeypatch.setattr(subprocess, "Popen", lambda *a, **k: DummyProcess(), raising=True)
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+
+        opened = []
+        monkeypatch.setattr(webbrowser, "open", lambda url: opened.append(url), raising=True)
+
+        main_window.start_project()
+
+        assert opened == [f"http://localhost:{main_window.server_port}"]
+
+    def test_output_hidden_on_small_window(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        win.resize(400, 300)
+        qtbot.wait(10)
+
+        assert not win.output_view.isVisible()
+        assert not win.clear_output_button.isVisible()
+
+        win.resize(900, 700)
+        qtbot.wait(10)
+
+        assert win.output_view.isVisible()
+        assert win.clear_output_button.isVisible()
+
+    def test_minimum_window_size(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+
+        assert win.minimumWidth() == 400
+        assert win.minimumHeight() == 300

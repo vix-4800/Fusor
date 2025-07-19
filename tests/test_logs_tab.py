@@ -130,7 +130,22 @@ def test_auto_refresh_truncates_large_file(tmp_path, qtbot, monkeypatch):
     result = win.log_view.toPlainText().splitlines()
     assert result == lines[-1000:]
 
+def test_responsive_layout_hides_log_view(qtbot):
+    main = DummyMainWindow()
+    tab = LogsTab(main)
+    qtbot.addWidget(tab)
+    tab.show()
 
+    tab.update_responsive_layout(400)
+    assert not tab.log_view.isVisible()
+    assert not tab.prev_btn.isVisible()
+    assert not tab.next_btn.isVisible()
+
+    tab.update_responsive_layout(800)
+    assert tab.log_view.isVisible()
+    assert tab.prev_btn.isVisible()
+    assert tab.next_btn.isVisible()
+    
 def test_set_log_dirs_expands_directory(tmp_path, qtbot):
     logs = tmp_path / "logs"
     logs.mkdir()
@@ -146,4 +161,3 @@ def test_set_log_dirs_expands_directory(tmp_path, qtbot):
     items = [tab.log_selector.itemText(i) for i in range(tab.log_selector.count())]
     expected = ["All logs"] + [str(logs / f"log{i}.log") for i in range(2)]
     assert items == expected
-
