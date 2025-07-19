@@ -612,6 +612,23 @@ class TestMainWindow:
         assert shown
         win.close()
 
+    def test_exit_when_welcome_dialog_closed_without_project(self, main_window, monkeypatch):
+        closed = []
+        monkeypatch.setattr(main_window, "close", lambda: closed.append(True), raising=True)
+
+        class DummyDlg:
+            def exec(self):
+                return 0
+
+        monkeypatch.setattr(mw_module, "WelcomeDialog", lambda *a, **k: DummyDlg(), raising=True)
+
+        main_window.projects = []
+        main_window.project_path = ""
+
+        main_window.show_welcome_dialog()
+
+        assert closed == [True]
+
     def test_clear_output_button_clears_text(self, main_window, qtbot):
         main_window.output_view.setPlainText("hello")
 

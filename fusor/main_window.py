@@ -660,6 +660,8 @@ class MainWindow(QMainWindow):
     def show_welcome_dialog(self):
         dlg = WelcomeDialog(self)
         dlg.exec()
+        if not self.projects:
+            self.close()
 
     def current_framework(self):
         return (
