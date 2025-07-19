@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
     QGroupBox,
     QLabel,
     QLineEdit,
+    QScrollArea,
     QDialog,
 )
 
@@ -23,7 +24,17 @@ class GitTab(QWidget):
         self.main_window = main_window
         self.current_branch = ""
 
-        outer_layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        main_layout.addWidget(scroll)
+
+        container = QWidget()
+        scroll.setWidget(container)
+
+        outer_layout = QVBoxLayout(container)
         outer_layout.setContentsMargins(20, 20, 20, 20)
         outer_layout.setSpacing(16)
 

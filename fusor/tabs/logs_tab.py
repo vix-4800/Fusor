@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
     QGroupBox,
     QLineEdit,
     QComboBox,
+    QScrollArea,
 )
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QTextCursor
@@ -24,7 +25,17 @@ class LogsTab(QWidget):
         self._search_positions: list[int] = []
         self._current_search_index = 0
 
-        outer_layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        main_layout.addWidget(scroll)
+
+        container = QWidget()
+        scroll.setWidget(container)
+
+        outer_layout = QVBoxLayout(container)
         outer_layout.setContentsMargins(20, 20, 20, 20)
         outer_layout.setSpacing(16)
 
