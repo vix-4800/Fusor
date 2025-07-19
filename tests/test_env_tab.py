@@ -1,4 +1,3 @@
-from pathlib import Path
 from fusor.tabs.env_tab import EnvTab
 import fusor.tabs.env_tab as env_module
 
