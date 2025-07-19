@@ -369,12 +369,14 @@ class TestMainWindow:
         assert captured["cwd"] == "/repo"
 
     def test_refresh_logs_reads_custom_path(self, tmp_path: Path, main_window, monkeypatch):
-        log_file = tmp_path / "custom.log"
+        log_dir = tmp_path / "logs"
+        log_dir.mkdir()
+        log_file = log_dir / "custom.log"
         log_file.write_text("log text")
         main_window.project_path = str(tmp_path)
         main_window.log_view = FakeLogView()
-        main_window.log_paths = ["custom.log"]
-        main_window.logs_tab.set_log_paths(main_window.log_paths)
+        main_window.log_dirs = ["logs"]
+        main_window.logs_tab.set_log_dirs(main_window.log_dirs)
 
         opened = []
         real_open = mw_module.open
@@ -449,13 +451,15 @@ class TestMainWindow:
             assert f"{part} log" in main_window.log_view.text
 
     def test_refresh_logs_truncates_large_files(self, tmp_path: Path, main_window):
-        log_file = tmp_path / "large.log"
+        log_dir = tmp_path / "logs"
+        log_dir.mkdir()
+        log_file = log_dir / "large.log"
         lines = [f"line {i}" for i in range(2000)]
         log_file.write_text("\n".join(lines))
         main_window.project_path = str(tmp_path)
         main_window.log_view = FakeLogView()
-        main_window.log_paths = ["large.log"]
-        main_window.logs_tab.set_log_paths(main_window.log_paths)
+        main_window.log_dirs = ["logs"]
+        main_window.logs_tab.set_log_dirs(main_window.log_dirs)
         main_window.max_log_lines = 1000
 
         main_window.refresh_logs()
@@ -466,14 +470,16 @@ class TestMainWindow:
     def test_refresh_logs_reads_all_configured_files(self, tmp_path: Path, main_window, monkeypatch):
         paths = []
         for i in range(3):
-            p = tmp_path / f"log{i}.log"
+            d = tmp_path / f"dir{i}"
+            d.mkdir()
+            p = d / "app.log"
             p.write_text(f"msg{i}")
             paths.append(p)
 
         main_window.project_path = str(tmp_path)
         main_window.log_view = FakeLogView()
-        main_window.log_paths = [p.name for p in paths]
-        main_window.logs_tab.set_log_paths(main_window.log_paths)
+        main_window.log_dirs = [f"dir{i}" for i in range(3)]
+        main_window.logs_tab.set_log_dirs(main_window.log_dirs)
 
         opened = []
         real_open = mw_module.open
@@ -490,6 +496,35 @@ class TestMainWindow:
         for i in range(3):
             assert f"msg{i}" in main_window.log_view.text
 
+    def test_refresh_logs_reads_directory(self, tmp_path: Path, main_window, monkeypatch):
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir()
+        files = []
+        for i in range(2):
+            f = logs_dir / f"log{i}.log"
+            f.write_text(f"msg{i}")
+            files.append(f)
+
+        main_window.project_path = str(tmp_path)
+        main_window.log_view = FakeLogView()
+        main_window.log_dirs = ["logs"]
+        main_window.logs_tab.set_log_dirs(main_window.log_dirs)
+
+        opened = []
+        real_open = mw_module.open
+
+        def fake_open(path, *args, **kwargs):
+            opened.append(path)
+            return real_open(path, *args, **kwargs)
+
+        monkeypatch.setattr(mw_module, "open", fake_open, raising=True)
+
+        main_window.refresh_logs()
+
+        assert opened == [str(p) for p in files]
+        for i in range(2):
+            assert f"msg{i}" in main_window.log_view.text
+
     def test_yii_template_row_visibility(self, main_window, qtbot):
         main_window.framework_combo.setCurrentText("None")
         qtbot.wait(10)
@@ -501,40 +536,40 @@ class TestMainWindow:
         assert not main_window.settings_tab.yii_template_row.isHidden()
         assert not main_window.settings_tab.yii_template_label.isHidden()
 
-    def test_log_path_row_visibility(self, main_window, qtbot):
+    def test_log_dir_row_visibility(self, main_window, qtbot):
         main_window.framework_combo.setCurrentText("None")
         qtbot.wait(10)
-        assert main_window.settings_tab.log_paths_container.isHidden()
-        assert main_window.settings_tab.log_path_label.isHidden()
+        assert main_window.settings_tab.log_dirs_container.isHidden()
+        assert main_window.settings_tab.log_dir_label.isHidden()
 
         main_window.framework_combo.setCurrentText("Laravel")
         qtbot.wait(10)
-        assert not main_window.settings_tab.log_paths_container.isHidden()
-        assert not main_window.settings_tab.log_path_label.isHidden()
+        assert not main_window.settings_tab.log_dirs_container.isHidden()
+        assert not main_window.settings_tab.log_dir_label.isHidden()
 
         main_window.framework_combo.setCurrentText("Symfony")
         qtbot.wait(10)
-        assert not main_window.settings_tab.log_paths_container.isHidden()
-        assert not main_window.settings_tab.log_path_label.isHidden()
+        assert not main_window.settings_tab.log_dirs_container.isHidden()
+        assert not main_window.settings_tab.log_dir_label.isHidden()
 
         main_window.framework_combo.setCurrentText("Yii")
         qtbot.wait(10)
-        assert not main_window.settings_tab.log_paths_container.isHidden()
-        assert not main_window.settings_tab.log_path_label.isHidden()
+        assert not main_window.settings_tab.log_dirs_container.isHidden()
+        assert not main_window.settings_tab.log_dir_label.isHidden()
 
-    def test_default_log_paths_per_framework(self, main_window, qtbot):
+    def test_default_log_dirs_per_framework(self, main_window, qtbot):
         main_window.framework_combo.setCurrentText("Laravel")
         qtbot.wait(10)
-        assert main_window.settings_tab.log_path_edits[0].text() == str(Path("storage") / "logs" / "laravel.log")
+        assert main_window.settings_tab.log_dir_edits[0].text() == str(Path("storage") / "logs")
 
         main_window.framework_combo.setCurrentText("Symfony")
         qtbot.wait(10)
-        assert main_window.settings_tab.log_path_edits[0].text() == str(Path("var") / "log" / "dev.log")
+        assert main_window.settings_tab.log_dir_edits[0].text() == str(Path("var") / "log")
 
         main_window.framework_combo.setCurrentText("Yii")
         main_window.yii_template_combo.setCurrentText("basic")
         qtbot.wait(10)
-        assert main_window.settings_tab.log_path_edits[0].text() == str(Path("runtime") / "log" / "app.log")
+        assert main_window.settings_tab.log_dir_edits[0].text() == str(Path("runtime") / "log")
 
     def test_settings_unsaved_indicator(self, main_window, qtbot):
         idx = main_window.tabs.indexOf(main_window.settings_tab)
@@ -871,11 +906,13 @@ class TestMainWindow:
 
 
     def test_clear_log_button_truncates_file(self, tmp_path: Path, main_window, qtbot, monkeypatch):
-        log_file = tmp_path / "app.log"
+        logs = tmp_path / "logs"
+        logs.mkdir()
+        log_file = logs / "app.log"
         log_file.write_text("hello")
         main_window.project_path = str(tmp_path)
-        main_window.log_paths = ["app.log"]
-        main_window.logs_tab.set_log_paths(main_window.log_paths)
+        main_window.log_dirs = ["logs"]
+        main_window.logs_tab.set_log_dirs(main_window.log_dirs)
 
         monkeypatch.setattr(
             "PyQt6.QtWidgets.QMessageBox.question",
@@ -889,11 +926,13 @@ class TestMainWindow:
         assert log_file.read_text() == ""
 
     def test_clear_log_button_aborts_on_no(self, tmp_path: Path, main_window, qtbot, monkeypatch):
-        log_file = tmp_path / "app.log"
+        logs = tmp_path / "logs"
+        logs.mkdir()
+        log_file = logs / "app.log"
         log_file.write_text("hello")
         main_window.project_path = str(tmp_path)
-        main_window.log_paths = ["app.log"]
-        main_window.logs_tab.set_log_paths(main_window.log_paths)
+        main_window.log_dirs = ["logs"]
+        main_window.logs_tab.set_log_dirs(main_window.log_dirs)
 
         monkeypatch.setattr(
             "PyQt6.QtWidgets.QMessageBox.question",

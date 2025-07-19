@@ -5,7 +5,8 @@ from fusor.tabs.logs_tab import LogsTab
 class DummyMainWindow:
     def __init__(self):
         self.auto_refresh_secs = 12
-        self.log_paths = ["app.log"]
+        self.log_dirs = ["logs"]
+        self.project_path = ""
     def refresh_logs(self):
         pass
     def clear_log_file(self):
@@ -114,16 +115,35 @@ def test_auto_refresh_truncates_large_file(tmp_path, qtbot, monkeypatch):
     win.show()
 
     win.project_path = str(tmp_path)
-    win.log_paths = ["big.log"]
-    win.logs_tab.set_log_paths(win.log_paths)
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+    win.log_dirs = [str(log_dir)]
+    win.logs_tab.set_log_dirs(win.log_dirs)
     win.max_log_lines = 1000
 
     lines = [f"line {i}" for i in range(2000)]
-    (tmp_path / "big.log").write_text("\n".join(lines))
+    (log_dir / "big.log").write_text("\n".join(lines))
 
     win.logs_tab.auto_checkbox.setChecked(True)
     qtbot.wait(10)
 
     result = win.log_view.toPlainText().splitlines()
     assert result == lines[-1000:]
+
+
+def test_set_log_dirs_expands_directory(tmp_path, qtbot):
+    logs = tmp_path / "logs"
+    logs.mkdir()
+    for i in range(2):
+        (logs / f"log{i}.log").write_text("")
+
+    main = DummyMainWindow()
+    main.project_path = str(tmp_path)
+    main.log_dirs = [str(logs)]
+    tab = LogsTab(main)
+    qtbot.addWidget(tab)
+
+    items = [tab.log_selector.itemText(i) for i in range(tab.log_selector.count())]
+    expected = ["All logs"] + [str(logs / f"log{i}.log") for i in range(2)]
+    assert items == expected
 

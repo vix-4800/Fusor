@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import QTimer
 from typing import TYPE_CHECKING, Any, cast
+from .utils import expand_log_paths
 
 if TYPE_CHECKING:
     from PyQt6.QtWidgets import (
@@ -275,7 +276,7 @@ class MainWindow(QMainWindow):
         self.server_port_edit: QSpinBox | None = None
         self.docker_checkbox: QCheckBox | None = None
         self.yii_template_combo: QComboBox | None = None
-        self.log_path_edit: QLineEdit | None = None
+        self.log_dir_edit: QLineEdit | None = None
         self.remote_combo: QComboBox | None = None
         self.compose_files_edit: QLineEdit | None = None
         self.compose_profile_edit: QLineEdit | None = None
@@ -336,7 +337,7 @@ class MainWindow(QMainWindow):
         self.compose_files: list[str] = []
         self.compose_profile = ""
         self.yii_template = "basic"
-        self.log_paths: list[str] = []
+        self.log_dirs: list[str] = []
         self.git_remote = ""
         self.max_log_lines = DEFAULT_MAX_LOG_LINES
         self.auto_refresh_secs = 5
@@ -467,13 +468,13 @@ class MainWindow(QMainWindow):
         self.yii_template = settings.get(
             "yii_template", data.get("yii_template", self.yii_template)
         )
-        self.log_paths = settings.get("log_paths")
-        if not self.log_paths:
-            legacy = settings.get("log_path", data.get("log_path"))
+        self.log_dirs = settings.get("log_dirs")
+        if not self.log_dirs:
+            legacy = settings.get("log_paths") or settings.get("log_path", data.get("log_path"))
             if legacy:
-                self.log_paths = [legacy]
+                self.log_dirs = legacy if isinstance(legacy, list) else [legacy]
             else:
-                self.log_paths = self.default_log_paths(self.framework_choice)
+                self.log_dirs = self.default_log_dirs(self.framework_choice)
         self.git_remote = settings.get(
             "git_remote", data.get("git_remote", self.git_remote)
         )
@@ -541,14 +542,14 @@ class MainWindow(QMainWindow):
         self.server_port = int(cast(Any, settings["server_port"]))
         self.use_docker = bool(settings["use_docker"])
         self.yii_template = cast(str, settings["yii_template"])
-        value = settings.get("log_paths")
-        self.log_paths = list(cast(list[str], value)) if isinstance(value, list) else []
-        if not self.log_paths:
-            legacy = settings.get("log_path")
+        value = settings.get("log_dirs")
+        self.log_dirs = list(cast(list[str], value)) if isinstance(value, list) else []
+        if not self.log_dirs:
+            legacy = settings.get("log_paths") or settings.get("log_path")
             if legacy:
-                self.log_paths = [cast(str, legacy)]
+                self.log_dirs = legacy if isinstance(legacy, list) else [cast(str, legacy)]
             else:
-                self.log_paths = self.default_log_paths(self.framework_choice)
+                self.log_dirs = self.default_log_dirs(self.framework_choice)
         self.git_remote = cast(str, settings["git_remote"])
         comps = settings.get("compose_files")
         self.compose_files = (
@@ -573,9 +574,9 @@ class MainWindow(QMainWindow):
         if self.yii_template_combo is not None:
             self.yii_template_combo.setCurrentText(self.yii_template)
         if self.settings_tab is not None and hasattr(
-            self.settings_tab, "set_log_paths"
+            self.settings_tab, "set_log_dirs"
         ):
-            self.settings_tab.set_log_paths(self.log_paths)
+            self.settings_tab.set_log_dirs(self.log_dirs)
         if self.remote_combo is not None:
             remotes = self.git_tab.get_remotes() if hasattr(self, "git_tab") else []
             if self.git_remote and self.git_remote not in remotes:
@@ -711,26 +712,26 @@ class MainWindow(QMainWindow):
             return self.framework_combo.currentText()
         return "None"
 
-    def default_log_paths(
+    def default_log_dirs(
         self,
         framework: str | None = None,
         template: str | None = None,
     ) -> list[str]:
-        """Return default log file paths for the given framework."""
+        """Return default log directories for the given framework."""
         if framework is None:
             framework = self.framework_choice
         if framework == "Laravel":
-            return [str(Path("storage") / "logs" / "laravel.log")]
+            return [str(Path("storage") / "logs")]
         if framework == "Symfony":
-            return [str(Path("var") / "log" / "dev.log")]
+            return [str(Path("var") / "log")]
         if framework == "Yii":
             tmpl = template if template is not None else self.yii_template
             if tmpl == "advanced":
                 return [
-                    str(Path(part) / "runtime" / "logs" / "app.log")
+                    str(Path(part) / "runtime" / "logs")
                     for part in ["frontend", "backend", "console"]
                 ]
-            return [str(Path("runtime") / "log" / "app.log")]
+            return [str(Path("runtime") / "log")]
         return []
 
     def _tail_file(self, path: Path, lines: int) -> str:
@@ -762,10 +763,11 @@ class MainWindow(QMainWindow):
         log_contents = ""
         parts: list[str]
         if framework == "Laravel":
-            log_files = self.log_paths or self.default_log_paths("Laravel")
+            log_files = self.log_dirs or self.default_log_dirs("Laravel")
             selector = getattr(self.logs_tab, "log_selector", None)
             if selector and selector.currentData():
                 log_files = [selector.currentData()]
+            log_files = expand_log_paths(self.project_path, log_files)
 
             parts = []
             for file in log_files:
@@ -780,7 +782,8 @@ class MainWindow(QMainWindow):
                 parts.append(f"{heading}\n{content}" if heading else content)
             log_contents = "\n\n".join(parts)
         elif framework == "Symfony":
-            log_files = self.log_paths or self.default_log_paths("Symfony")
+            log_files = self.log_dirs or self.default_log_dirs("Symfony")
+            log_files = expand_log_paths(self.project_path, log_files)
 
             parts = []
             for file in log_files:
@@ -795,7 +798,8 @@ class MainWindow(QMainWindow):
                 parts.append(f"{heading}\n{content}" if heading else content)
             log_contents = "\n\n".join(parts)
         elif framework == "Yii":
-            log_files = self.log_paths or self.default_log_paths("Yii")
+            log_files = self.log_dirs or self.default_log_dirs("Yii")
+            log_files = expand_log_paths(self.project_path, log_files)
 
             parts = []
             for file in log_files:
@@ -844,11 +848,11 @@ class MainWindow(QMainWindow):
             else self.yii_template
         )
         if self.settings_tab is not None and hasattr(
-            self.settings_tab, "log_path_edits"
+            self.settings_tab, "log_dir_edits"
         ):
-            paths = [e.text() for e in self.settings_tab.log_path_edits if e.text()]
+            paths = [e.text() for e in self.settings_tab.log_dir_edits if e.text()]
         else:
-            paths = list(self.log_paths)
+            paths = list(self.log_dirs)
         git_remote = (
             self.remote_combo.currentText()
             if self.remote_combo is not None
@@ -944,7 +948,7 @@ class MainWindow(QMainWindow):
         self.server_port = server_port
         self.use_docker = use_docker
         self.yii_template = yii_template
-        self.log_paths = paths
+        self.log_dirs = paths
         self.git_remote = git_remote
         self.compose_files = compose_files
         self.compose_profile = compose_profile.strip()
@@ -961,7 +965,7 @@ class MainWindow(QMainWindow):
             "server_port": server_port,
             "use_docker": use_docker,
             "yii_template": yii_template,
-            "log_paths": paths,
+            "log_dirs": paths,
             "git_remote": git_remote,
             "compose_files": self.compose_files,
             "compose_profile": self.compose_profile,
@@ -987,8 +991,8 @@ class MainWindow(QMainWindow):
 
         if hasattr(self, "logs_tab"):
             self.logs_tab.update_timer_interval(self.auto_refresh_secs)
-            if hasattr(self.logs_tab, "set_log_paths"):
-                self.logs_tab.set_log_paths(self.log_paths)
+            if hasattr(self.logs_tab, "set_log_dirs"):
+                self.logs_tab.set_log_dirs(self.log_dirs)
 
         if hasattr(self, "git_tab"):
             self.git_tab.load_branches()
@@ -1190,7 +1194,10 @@ class MainWindow(QMainWindow):
 
     def clear_log_file(self) -> None:
         """Truncate the configured log file if it exists."""
-        log_file = self.log_paths[0] if self.log_paths else ""
+        log_file = ""
+        if self.log_dirs:
+            expanded = expand_log_paths(self.project_path, [self.log_dirs[0]])
+            log_file = expanded[0] if expanded else ""
         if hasattr(self, "logs_tab") and hasattr(self.logs_tab, "log_selector"):
             sel = self.logs_tab.log_selector.currentData()
             if sel:

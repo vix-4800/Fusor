@@ -15,8 +15,8 @@ DEFAULT_PROJECT_SETTINGS = {
     "server_port": 8000,
     "use_docker": False,
     "yii_template": "basic",
-    # list of log files for the project
-    "log_paths": [],
+    # list of directories containing log files for the project
+    "log_dirs": [],
     "git_remote": "",
     "compose_files": [],
     "compose_profile": "",
@@ -73,8 +73,10 @@ def load_config():
             for k in DEFAULT_PROJECT_SETTINGS:
                 if k in data and k not in settings:
                     settings[k] = data[k]
-            if "log_path" in data and "log_paths" not in settings:
-                settings["log_paths"] = [data["log_path"]]
+            if "log_path" in data and "log_dirs" not in settings:
+                settings["log_dirs"] = [data["log_path"]]
+            if "log_paths" in settings and "log_dirs" not in settings:
+                settings["log_dirs"] = settings.pop("log_paths")
 
         if "project_path" in data and data["project_path"]:
             path = data["project_path"]

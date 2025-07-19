@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QTextCursor
 from ..icons import get_icon
+from ..utils import expand_log_paths
 
 
 class LogsTab(QWidget):
@@ -41,7 +42,7 @@ class LogsTab(QWidget):
 
         # --- Log Selector ---
         self.log_selector = QComboBox()
-        self.set_log_paths(self.main_window.log_paths)
+        self.set_log_dirs(self.main_window.log_dirs)
         outer_layout.addWidget(self.log_selector)
 
         # --- Search ---
@@ -133,10 +134,11 @@ class LogsTab(QWidget):
         self._timer.setInterval(int(seconds) * 1000)
         self.auto_checkbox.setText(f"Auto refresh ({int(seconds)}s)")
 
-    def set_log_paths(self, paths: list[str]) -> None:
+    def set_log_dirs(self, paths: list[str]) -> None:
         self.log_selector.clear()
         self.log_selector.addItem("All logs", None)
-        for p in paths:
+        expanded = expand_log_paths(self.main_window.project_path, paths)
+        for p in expanded:
             self.log_selector.addItem(p, p)
 
     def on_auto_refresh_toggled(self, checked: bool) -> None:
