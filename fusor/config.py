@@ -30,13 +30,12 @@ DEFAULT_PROJECT_SETTINGS = {
 }
 
 # Default configuration values
-# ``projects`` previously stored a list of paths.  To allow storing extra
-# information per project (like a display name) it now stores a list of
-# dictionaries with at least ``path`` and ``name`` keys.
+# ``projects`` stores a list of dictionaries.  Each dictionary includes at
+# minimum ``path`` and ``name`` along with per-project settings like
+# ``framework`` or ``php_path``.
 DEFAULT_CONFIG = {
     "projects": [],  # list[dict]
     "current_project": "",
-    "project_settings": {},
     "theme": "dark",
     # Window geometry (width, height) and position (x, y)
     "window_size": [1024, 768],
@@ -55,39 +54,39 @@ def load_config():
         for key, value in DEFAULT_CONFIG.items():
             data.setdefault(key, value)
 
-        # migrate list of project paths into list of dicts
-        projects = []
+        # normalize project entries to dicts
+        projects: list[dict] = []
         for entry in data.get("projects", []):
             if isinstance(entry, str):
                 projects.append({"path": entry, "name": Path(entry).name})
             elif isinstance(entry, dict) and "path" in entry:
-                proj = {
-                    "path": entry["path"],
-                    "name": entry.get("name", Path(entry["path"]).name),
-                }
+                proj = {"path": entry["path"], "name": entry.get("name", Path(entry["path"]).name)}
                 for k, v in entry.items():
                     if k not in proj:
                         proj[k] = v
                 projects.append(proj)
         data["projects"] = projects
 
-        # migrate old flat settings into per-project block
+        # migrate old flat settings into current project entry
         current = data.get("current_project") or data.get("project_path")
         if current:
-            settings = data.setdefault("project_settings", {}).setdefault(current, {})
+            proj = next((p for p in data["projects"] if p.get("path") == current), None)
+            if proj is None:
+                proj = {"path": current, "name": Path(current).name}
+                data["projects"].append(proj)
             for k in DEFAULT_PROJECT_SETTINGS:
-                if k in data and k not in settings:
-                    settings[k] = data[k]
-            if "log_path" in data and "log_dirs" not in settings:
-                settings["log_dirs"] = [data["log_path"]]
-            if "log_paths" in settings and "log_dirs" not in settings:
-                settings["log_dirs"] = settings.pop("log_paths")
+                if k in data and k not in proj:
+                    proj[k] = data[k]
+            if "log_path" in data and "log_dirs" not in proj:
+                proj["log_dirs"] = [data["log_path"]]
+            if "log_paths" in proj:
+                proj["log_dirs"] = proj.pop("log_paths")
 
         if "project_path" in data and data["project_path"]:
             path = data["project_path"]
             if not any(p.get("path") == path for p in data["projects"]):
                 data["projects"].append({"path": path, "name": Path(path).name})
-            if not data["current_project"]:
+            if not data.get("current_project"):
                 data["current_project"] = path
 
         return data
