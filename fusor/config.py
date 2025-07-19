@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from copy import deepcopy
 
 # Path used to store user settings
 CONFIG_FILE = Path.home() / ".fusor_config.json"
@@ -46,7 +47,7 @@ def load_config():
         with config_path.open("r", encoding="utf-8") as f:
             data = json.load(f)
         if not isinstance(data, dict):
-            return DEFAULT_CONFIG.copy()
+            return deepcopy(DEFAULT_CONFIG)
         for key, value in DEFAULT_CONFIG.items():
             data.setdefault(key, value)
 
@@ -85,10 +86,10 @@ def load_config():
 
         return data
     except FileNotFoundError:
-        return DEFAULT_CONFIG.copy()
+        return deepcopy(DEFAULT_CONFIG)
     except json.JSONDecodeError:
         print("Failed to load config: invalid JSON")
-        return DEFAULT_CONFIG.copy()
+        return deepcopy(DEFAULT_CONFIG)
 
 
 def save_config(data):
