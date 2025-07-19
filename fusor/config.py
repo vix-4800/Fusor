@@ -26,6 +26,7 @@ DEFAULT_PROJECT_SETTINGS = {
     "auto_refresh_secs": 5,
     "open_browser": False,
     "max_log_lines": DEFAULT_MAX_LOG_LINES,
+    "enable_terminal": False,
 }
 
 # Default configuration values
