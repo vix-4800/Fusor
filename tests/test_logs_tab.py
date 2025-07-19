@@ -145,7 +145,7 @@ def test_responsive_layout_hides_log_view(qtbot):
     assert tab.log_view.isVisible()
     assert tab.prev_btn.isVisible()
     assert tab.next_btn.isVisible()
-    
+
 def test_set_log_dirs_expands_directory(tmp_path, qtbot):
     logs = tmp_path / "logs"
     logs.mkdir()
@@ -161,3 +161,4 @@ def test_set_log_dirs_expands_directory(tmp_path, qtbot):
     items = [tab.log_selector.itemText(i) for i in range(tab.log_selector.count())]
     expected = [str(logs / f"log{i}.log") for i in range(2)]
     assert items == expected
+
