@@ -1,5 +1,6 @@
 import sys
 import os
+from pathlib import Path
 import subprocess
 import signal
 import concurrent.futures
@@ -302,7 +303,7 @@ class MainWindow(QMainWindow):
         self.compose_files: list[str] = []
         self.compose_profile = ""
         self.yii_template = "basic"
-        self.log_path = os.path.join("storage", "logs", "laravel.log")
+        self.log_path = str(Path("storage") / "logs" / "laravel.log")
         self.log_paths: list[str] = [self.log_path]
         self.git_remote = ""
         self.max_log_lines = DEFAULT_MAX_LOG_LINES
@@ -387,18 +388,18 @@ class MainWindow(QMainWindow):
         self.projects = []
         for entry in data.get("projects", []):
             if isinstance(entry, dict) and "path" in entry:
-                name = entry.get("name", os.path.basename(entry["path"]))
+                name = entry.get("name", Path(entry["path"]).name)
                 proj = {"path": entry["path"], "name": name}
                 for k, v in entry.items():
                     if k not in proj:
                         proj[k] = v
                 self.projects.append(proj)
             elif isinstance(entry, str):
-                self.projects.append({"path": entry, "name": os.path.basename(entry)})
+                self.projects.append({"path": entry, "name": Path(entry).name})
         self.project_path = data.get("current_project", self.project_path)
         if not self.projects and data.get("project_path"):
             path = data["project_path"]
-            self.projects = [{"path": path, "name": os.path.basename(path)}]
+            self.projects = [{"path": path, "name": Path(path).name}]
         if not self.project_path and self.projects:
             self.project_path = self.projects[0]["path"]
 
@@ -578,7 +579,7 @@ class MainWindow(QMainWindow):
             self.log_view.setPlainText("")
         proj = next((p for p in self.projects if p.get("path") == path), None)
         if proj is None:
-            proj = {"path": path, "name": os.path.basename(path)}
+            proj = {"path": path, "name": Path(path).name}
             self.projects.append(proj)
         if hasattr(self, "project_combo"):
             self.project_combo.blockSignals(True)
@@ -595,7 +596,7 @@ class MainWindow(QMainWindow):
                 self.project_combo.setCurrentText(proj["name"])
             self.project_combo.blockSignals(False)
         if hasattr(self, "project_name_edit"):
-            self.project_name_edit.setText(proj.get("name", os.path.basename(path)))
+            self.project_name_edit.setText(proj.get("name", Path(path).name))
         if hasattr(self, "git_tab"):
             self.git_tab.remote_branches_loaded = False
             self.git_tab.load_branches()
@@ -638,10 +639,10 @@ class MainWindow(QMainWindow):
             else "None"
         )
 
-    def _tail_file(self, path: str, lines: int) -> str:
+    def _tail_file(self, path: Path, lines: int) -> str:
         """Return the last ``lines`` lines from ``path``."""
         try:
-            with open(path, "rb") as f:
+            with open(str(path), "rb") as f:
                 f.seek(0, os.SEEK_END)
                 remaining = f.tell()
                 block_size = 4096
@@ -673,10 +674,10 @@ class MainWindow(QMainWindow):
 
             parts: list[str] = []
             for file in log_files:
-                path = file
-                if not os.path.isabs(path):
-                    path = os.path.join(self.project_path, path)
-                if os.path.exists(path):
+                path = Path(file)
+                if not path.is_absolute():
+                    path = Path(self.project_path) / path
+                if path.exists():
                     content = self._tail_file(path, self.max_log_lines)
                 else:
                     content = f"Log file not found: {path}"
@@ -686,20 +687,19 @@ class MainWindow(QMainWindow):
         elif framework == "Yii":
             if self.yii_template == "advanced":
                 log_files = [
-                    os.path.join(self.project_path, part, "runtime", "logs", "app.log")
+                    Path(self.project_path) / part / "runtime" / "logs" / "app.log"
                     for part in ["frontend", "backend", "console"]
                 ]
             else:
-                log_files = [
-                    os.path.join(self.project_path, "runtime", "log", "app.log")
-                ]
+                log_files = [Path(self.project_path) / "runtime" / "log" / "app.log"]
 
             parts: list[str] = []
             for file in log_files:
-                if os.path.exists(file):
-                    content = self._tail_file(file, self.max_log_lines)
+                path = Path(file)
+                if path.exists():
+                    content = self._tail_file(path, self.max_log_lines)
                 else:
-                    content = f"Log file not found: {file}"
+                    content = f"Log file not found: {path}"
                 heading = f"=== {file} ===" if len(log_files) > 1 else ""
                 parts.append(f"{heading}\n{content}" if heading else content)
             log_contents = "\n\n".join(parts)
@@ -801,7 +801,7 @@ class MainWindow(QMainWindow):
                 return
 
         self.project_path = project_path
-        project_name = os.path.basename(project_path)
+        project_name = Path(project_path).name
         if hasattr(self, "project_name_edit"):
             text = self.project_name_edit.text().strip()
             if text:
@@ -879,13 +879,13 @@ class MainWindow(QMainWindow):
 
     def artisan(self, *args):
         self.ensure_project_path()
-        artisan_file = os.path.join(self.project_path, "artisan")
-        self.run_command([self.php_path, artisan_file, *args])
+        artisan_file = Path(self.project_path) / "artisan"
+        self.run_command([self.php_path, str(artisan_file), *args])
 
     def symfony(self, *args):
         self.ensure_project_path()
-        console = os.path.join(self.project_path, "bin", "console")
-        self.run_command([self.php_path, console, *args])
+        console = Path(self.project_path) / "bin" / "console"
+        self.run_command([self.php_path, str(console), *args])
 
     def migrate(self):
         fw = self.current_framework()
@@ -919,8 +919,8 @@ class MainWindow(QMainWindow):
 
     def phpunit(self):
         self.ensure_project_path()
-        phpunit_file = os.path.join(self.project_path, "vendor", "bin", "phpunit")
-        self.run_command([self.php_path, phpunit_file])
+        phpunit_file = Path(self.project_path) / "vendor" / "bin" / "phpunit"
+        self.run_command([self.php_path, str(phpunit_file)])
 
     def start_project(self):
         if self.project_running:
@@ -941,8 +941,8 @@ class MainWindow(QMainWindow):
             return
 
         if self.current_framework() == "Laravel":
-            artisan_file = os.path.join(self.project_path, "artisan")
-            command = [self.php_path, artisan_file, "serve"]
+            artisan_file = Path(self.project_path) / "artisan"
+            command = [self.php_path, str(artisan_file), "serve"]
         else:
             # fallback generic PHP server
             command = [
@@ -1058,10 +1058,11 @@ class MainWindow(QMainWindow):
             sel = self.logs_tab.log_selector.currentData()
             if sel:
                 log_file = sel
-        if not os.path.isabs(log_file):
-            log_file = os.path.join(self.project_path, log_file)
+        log_path = Path(log_file)
+        if not log_path.is_absolute():
+            log_path = Path(self.project_path) / log_path
 
-        if not os.path.exists(log_file):
+        if not log_path.exists():
             self.refresh_logs()
             return
 
@@ -1074,7 +1075,7 @@ class MainWindow(QMainWindow):
 
         if reply == QMessageBox.StandardButton.Yes:
             try:
-                with open(log_file, "w", encoding="utf-8"):
+                with open(str(log_path), "w", encoding="utf-8"):
                     pass
             except OSError as e:
                 print(f"Failed to clear log file: {e}")
