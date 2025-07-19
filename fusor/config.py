@@ -67,22 +67,6 @@ def load_config():
                 projects.append(proj)
         data["projects"] = projects
 
-        # migrate old project_settings block into projects
-        proj_settings = data.pop("project_settings", {})
-        if isinstance(proj_settings, dict):
-            for path, settings in proj_settings.items():
-                proj = next((p for p in data["projects"] if p.get("path") == path), None)
-                if proj is None:
-                    proj = {"path": path, "name": Path(path).name}
-                    data["projects"].append(proj)
-                if isinstance(settings, dict):
-                    if "log_path" in settings and "log_dirs" not in settings:
-                        settings["log_dirs"] = [settings["log_path"]]
-                    if "log_paths" in settings and "log_dirs" not in settings:
-                        settings["log_dirs"] = settings.pop("log_paths")
-                    for k, v in settings.items():
-                        proj.setdefault(k, v)
-
         # migrate old flat settings into current project entry
         current = data.get("current_project") or data.get("project_path")
         if current:
