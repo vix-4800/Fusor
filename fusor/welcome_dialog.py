@@ -47,8 +47,61 @@ class WelcomeDialog(QDialog):
             self.main_window.save_settings()
             self.accept()
 
-    def create_project(self) -> None:  # pragma: no cover - not implemented yet
-        QMessageBox.information(self, "Create Project", "Not implemented yet")
+    def create_project(self) -> None:
+        dest_base = QFileDialog.getExistingDirectory(self, "Select Destination")
+        if not dest_base:
+            return
+
+        name, ok = QInputDialog.getText(
+            self, "Create Project", "Project Directory Name:"
+        )
+        if not ok or not name:
+            return
+
+        dest = Path(dest_base) / name
+        if dest.exists():
+            QMessageBox.warning(self, "Create Project", "Destination already exists")
+            return
+
+        fw = getattr(self.main_window, "framework_choice", "Laravel")
+        if fw == "Laravel":
+            cmd = ["composer", "create-project", "laravel/laravel", str(dest)]
+        elif fw == "Symfony":
+            cmd = ["composer", "create-project", "symfony/skeleton", str(dest)]
+        elif fw == "Yii":
+            template = getattr(self.main_window, "yii_template", "basic")
+            pkg = (
+                "yiisoft/yii2-app-basic"
+                if template == "basic"
+                else "yiisoft/yii2-app-advanced"
+            )
+            cmd = ["composer", "create-project", pkg, str(dest)]
+        else:
+            dest.mkdir(parents=True, exist_ok=True)
+            cmd = ["composer", "init", "-n"]
+
+        try:
+            res = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                cwd=dest if cmd[1] == "init" else None,
+            )
+        except FileNotFoundError:
+            QMessageBox.warning(self, "Create Project", "composer executable not found")
+            return
+
+        if res.returncode != 0:
+            QMessageBox.warning(
+                self,
+                "Create Project",
+                res.stderr or "Failed to create project",
+            )
+            return
+
+        self.main_window.set_current_project(str(dest))
+        self.main_window.save_settings()
+        self.accept()
 
     def clone_project(self) -> None:
         url, ok = QInputDialog.getText(self, "Clone from Git", "Repository URL:")
