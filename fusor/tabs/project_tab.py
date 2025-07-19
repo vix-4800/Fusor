@@ -122,7 +122,7 @@ class ProjectTab(QWidget):
 
         self.update_php_tools()
 
-    def _btn(self, label, slot, icon: str | None = None):
+    def _btn(self, label: str, slot, icon: str | None = None) -> QPushButton:
         btn = QPushButton(label)
         if icon:
             btn.setIcon(get_icon(icon))
@@ -131,7 +131,7 @@ class ProjectTab(QWidget):
         btn.clicked.connect(slot)
         return btn
 
-    def open_terminal(self):
+    def open_terminal(self) -> None:
         """Open a new terminal window in the current project directory."""
         path = self.main_window.project_path
         if not path:
@@ -150,7 +150,7 @@ class ProjectTab(QWidget):
         except FileNotFoundError:
             print(f"Command not found: {cmd[0]}")
 
-    def open_explorer(self):
+    def open_explorer(self) -> None:
         """Open the project directory in the system file explorer."""
         path = self.main_window.project_path
         if not path:

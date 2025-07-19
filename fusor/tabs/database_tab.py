@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
     QFileDialog,
     QScrollArea,
 )
+from typing import Callable
 
 from ..icons import get_icon
 
@@ -59,11 +60,13 @@ class DatabaseTab(QWidget):
 
         outer_layout.addStretch(1)
 
-    def on_framework_changed(self, _text: str):
+    def on_framework_changed(self, _text: str) -> None:
         """Database tab has no framework specific controls."""
         pass
 
-    def _btn(self, text, slot, icon: str | None = None):
+    def _btn(
+        self, text: str, slot: Callable[[], None], icon: str | None = None
+    ) -> QPushButton:
         btn = QPushButton(text)
         if icon:
             btn.setIcon(get_icon(icon))
@@ -72,17 +75,17 @@ class DatabaseTab(QWidget):
         btn.clicked.connect(slot)
         return btn
 
-    def open_dbeaver(self):
+    def open_dbeaver(self) -> None:
         self.main_window.run_command(["dbeaver"])
 
-    def dump_sql(self):
+    def dump_sql(self) -> None:
         path, _ = QFileDialog.getSaveFileName(
             self, "Save SQL Dump", filter="SQL Files (*.sql)"
         )
         if path:
             self.main_window.run_command(["mysqldump", "--result-file", path])
 
-    def restore_dump(self):
+    def restore_dump(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
             self, "Select SQL Dump", filter="SQL Files (*.sql)"
         )

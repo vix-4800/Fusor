@@ -21,6 +21,7 @@ from PyQt6.QtCore import Qt
 from ..icons import get_icon
 from ..config import load_config, save_config
 from .. import main_window as mw_module
+from typing import Union
 
 
 class SettingsTab(QWidget):
@@ -293,7 +294,7 @@ class SettingsTab(QWidget):
         self.project_name_edit.setText(name)
         self.project_name_edit.blockSignals(False)
 
-    def _wrap(self, child):
+    def _wrap(self, child: Union[QLayout, QWidget]) -> QWidget:
         """Return a QWidget containing the given layout or widget."""
         container = QWidget()
         if isinstance(child, QLayout):
@@ -410,7 +411,7 @@ class SettingsTab(QWidget):
             self.log_path_edit = self.log_path_edits[0]
             self.main_window.log_path_edit = self.log_path_edit
 
-    def on_docker_toggled(self, checked: bool):
+    def on_docker_toggled(self, checked: bool) -> None:
         self.php_path_edit.setEnabled(not checked)
         self.php_browse_btn.setEnabled(not checked)
         self.php_service_edit.setEnabled(checked)
@@ -423,7 +424,7 @@ class SettingsTab(QWidget):
             self.main_window.tabs.setTabVisible(self.main_window.docker_index, checked)
             self.main_window.tabs.setTabEnabled(self.main_window.docker_index, checked)
 
-    def add_project(self):
+    def add_project(self) -> None:
         directory = QFileDialog.getExistingDirectory(
             self,
             "Select Project Directory",
@@ -453,7 +454,7 @@ class SettingsTab(QWidget):
                 self.main_window.framework_combo.setCurrentText(framework)
             self.main_window.save_settings()
 
-    def remove_project(self):
+    def remove_project(self) -> None:
         index = self.project_combo.currentIndex()
         data = load_config()
         extra = mw_module.load_config()
@@ -503,7 +504,7 @@ class SettingsTab(QWidget):
         if not self.main_window.projects:
             self.main_window.show_welcome_dialog()
 
-    def browse_php_path(self):
+    def browse_php_path(self) -> None:
         file, _ = QFileDialog.getOpenFileName(
             self,
             "Select PHP Executable",
@@ -512,7 +513,7 @@ class SettingsTab(QWidget):
         if file:
             self.php_path_edit.setText(file)
 
-    def browse_compose_file(self, edit: QLineEdit):
+    def browse_compose_file(self, edit: QLineEdit) -> None:
         file, _ = QFileDialog.getOpenFileName(
             self,
             "Select Compose File",
@@ -521,7 +522,7 @@ class SettingsTab(QWidget):
         if file:
             edit.setText(file)
 
-    def browse_log_path(self, edit: QLineEdit):
+    def browse_log_path(self, edit: QLineEdit) -> None:
         default = edit.text()
         if not default and getattr(self.main_window, "log_paths", []):
             default = self.main_window.log_paths[0]
@@ -533,7 +534,7 @@ class SettingsTab(QWidget):
         if file:
             edit.setText(file)
 
-    def on_framework_changed(self, text: str):
+    def on_framework_changed(self, text: str) -> None:
         visible = text == "Yii"
         self.yii_template_row.setVisible(visible)
         self.yii_template_label.setVisible(visible)

@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
 )
 
 from ..icons import get_icon
+from typing import Callable
 
 
 class SymfonyTab(QWidget):
@@ -64,7 +65,9 @@ class SymfonyTab(QWidget):
 
         self.on_framework_changed(self.main_window.framework_choice)
 
-    def _btn(self, text, slot, icon: str | None = None):
+    def _btn(
+        self, text: str, slot: Callable[[], None], icon: str | None = None
+    ) -> QPushButton:
         btn = QPushButton(text)
         if icon:
             btn.setIcon(get_icon(icon))
@@ -73,6 +76,6 @@ class SymfonyTab(QWidget):
         btn.clicked.connect(slot)
         return btn
 
-    def on_framework_changed(self, text: str):
+    def on_framework_changed(self, text: str) -> None:
         visible = text == "Symfony"
         self.console_group.setVisible(visible)
