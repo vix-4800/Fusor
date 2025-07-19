@@ -183,6 +183,7 @@ class TestMainWindow:
 
     def test_stop_project_uses_docker_compose_down(self, main_window, monkeypatch):
         main_window.use_docker = True
+        main_window.project_path = "/repo"
 
         captured = {}
 
@@ -203,6 +204,7 @@ class TestMainWindow:
     def test_stop_project_includes_compose_files(self, main_window, monkeypatch):
         main_window.use_docker = True
         main_window.compose_files = ["a.yml", "b.yml"]
+        main_window.project_path = "/repo"
 
         captured = {}
 

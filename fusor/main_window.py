@@ -994,17 +994,20 @@ class MainWindow(QMainWindow):
             self.git_tab.load_branches()
 
     def artisan(self, *args: str) -> None:
-        self.ensure_project_path()
+        if not self.ensure_project_path():
+            return
         artisan_file = Path(self.project_path) / "artisan"
         self.run_command([self.php_path, str(artisan_file), *args])
 
     def symfony(self, *args: str) -> None:
-        self.ensure_project_path()
+        if not self.ensure_project_path():
+            return
         console = Path(self.project_path) / "bin" / "console"
         self.run_command([self.php_path, str(console), *args])
 
     def yii(self, *args: str) -> None:
-        self.ensure_project_path()
+        if not self.ensure_project_path():
+            return
         script = os.path.join(self.project_path, "yii")
         yii_bat = os.path.join(self.project_path, "yii.bat")
         if os.name == "nt" and os.path.isfile(yii_bat):
@@ -1048,7 +1051,8 @@ class MainWindow(QMainWindow):
             print(f"Seed not implemented for {self.current_framework()}")
 
     def phpunit(self) -> None:
-        self.ensure_project_path()
+        if not self.ensure_project_path():
+            return
         phpunit_file = Path(self.project_path) / "vendor" / "bin" / "phpunit"
         self.run_command([self.php_path, str(phpunit_file)])
 
@@ -1058,6 +1062,8 @@ class MainWindow(QMainWindow):
             return
 
         if self.use_docker:
+            if not self.ensure_project_path():
+                return
             self.run_command(["docker", "compose", "up", "-d"])
             self.project_running = True
             self.update_run_buttons()
@@ -1115,6 +1121,8 @@ class MainWindow(QMainWindow):
 
     def stop_project(self) -> None:
         if self.use_docker:
+            if not self.ensure_project_path():
+                return
             self.run_command(["docker", "compose", "down"])
             self.project_running = False
             self.update_run_buttons()
