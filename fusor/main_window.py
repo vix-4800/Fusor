@@ -609,11 +609,14 @@ class MainWindow(QMainWindow):
 
     def notify(self, message: str, title: str = APP_NAME) -> None:
         """Show a transient system notification."""
-        if getattr(self, "_tray_icon", None) is None:
-            self._tray_icon = QSystemTrayIcon(self.windowIcon(), self)
-        self._tray_icon.show()
-        self._tray_icon.showMessage(title, message)
-        QTimer.singleShot(100, self._tray_icon.hide)
+        icon = self._tray_icon
+        if icon is None:
+            icon = QSystemTrayIcon(self.windowIcon(), self)
+            self._tray_icon = icon
+
+        icon.show()
+        icon.showMessage(title, message)
+        QTimer.singleShot(100, icon.hide)
 
     def update_run_buttons(self) -> None:
         """Enable or disable start and stop buttons based on running state."""
