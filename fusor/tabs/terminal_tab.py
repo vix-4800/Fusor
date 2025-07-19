@@ -89,7 +89,18 @@ class TerminalTab(QWidget):
         program = self._shell_program()
         if self.main_window.project_path:
             self.process.setWorkingDirectory(self.main_window.project_path)
-        self.process.start(program)
+        if getattr(self.main_window, "use_docker", False):
+            command = self.main_window._compose_prefix() + [
+                "exec",
+                "-T",
+                getattr(self.main_window, "php_service", "php"),
+            ]
+            if self.main_window.project_path:
+                command += ["-w", self.main_window.project_path]
+            command.append(program)
+            self.process.start(command[0], command[1:])
+        else:
+            self.process.start(program)
         self.start_btn.setEnabled(False)
         self.stop_btn.setEnabled(True)
         self.input_edit.setEnabled(True)
