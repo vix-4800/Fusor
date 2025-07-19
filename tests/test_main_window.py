@@ -1129,6 +1129,12 @@ class TestMainWindow:
         win.resize(900, 700)
         qtbot.wait(10)
 
+        assert not win.output_view.isVisible()
+        assert not win.clear_output_button.isVisible()
+
+        win.show_console_output = True
+        win._update_responsive_layout()
+
         assert win.output_view.isVisible()
         assert win.clear_output_button.isVisible()
 

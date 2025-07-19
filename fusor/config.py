@@ -29,6 +29,7 @@ DEFAULT_PROJECT_SETTINGS = {
     "open_browser": False,
     "max_log_lines": DEFAULT_MAX_LOG_LINES,
     "enable_terminal": False,
+    "show_console_output": False,
 }
 
 # Default configuration values
