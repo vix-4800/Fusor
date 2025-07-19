@@ -11,7 +11,7 @@ from PyQt6.QtCore import QTimer, Qt
 import fusor.main_window as mw_module
 from fusor.main_window import MainWindow
 from fusor import APP_NAME
-from PyQt6.QtWidgets import QMainWindow, QMessageBox
+from PyQt6.QtWidgets import QMainWindow, QMessageBox, QFileDialog
 from fusor.tabs.git_tab import GitTab
 
 # ---------------------------------------------------------------------------
@@ -1095,3 +1095,29 @@ class TestMainWindow:
 
         assert win.minimumWidth() == 400
         assert win.minimumHeight() == 300
+
+    def test_add_project_populates_remote_combo(self, tmp_path: Path, qtbot, monkeypatch):
+        remotes: list[str] = []
+
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(GitTab, "get_remotes", lambda self: remotes, raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        remotes.extend(["origin"])  # new project will report this remote
+        monkeypatch.setattr(
+            QFileDialog,
+            "getExistingDirectory",
+            lambda *a, **k: str(tmp_path),
+            raising=True,
+        )
+
+        win.settings_tab.add_project()
+
+        items = [win.remote_combo.itemText(i) for i in range(win.remote_combo.count())]
+        assert "origin" in items
+        win.close()

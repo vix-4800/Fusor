@@ -649,9 +649,15 @@ class MainWindow(QMainWindow):
             self.settings_tab.set_log_dirs(self.log_dirs)
         if self.remote_combo is not None:
             remotes = self.git_tab.get_remotes() if hasattr(self, "git_tab") else []
-            if self.git_remote and self.git_remote not in remotes:
-                self.remote_combo.addItem(self.git_remote)
-            self.remote_combo.setCurrentText(self.git_remote)
+            self.remote_combo.clear()
+            if remotes:
+                self.remote_combo.addItems(remotes)
+            if self.git_remote:
+                if self.git_remote not in remotes:
+                    self.remote_combo.addItem(self.git_remote)
+                self.remote_combo.setCurrentText(self.git_remote)
+            elif remotes:
+                self.remote_combo.setCurrentText(remotes[0])
         if (
             hasattr(self, "settings_tab")
             and hasattr(self.settings_tab, "set_compose_files")

@@ -54,3 +54,5 @@ def test_add_project_detects_symfony(tmp_path, monkeypatch, qtbot):
     assert tab.framework_combo.currentText() == "Symfony"
     assert main.project_path == str(tmp_path)
 
+
+
