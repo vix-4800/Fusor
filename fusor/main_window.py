@@ -441,10 +441,8 @@ class MainWindow(QMainWindow):
             legacy = settings.get("log_path", data.get("log_path"))
             if legacy:
                 self.log_paths = [legacy]
-            elif self.framework_choice == "Laravel":
-                self.log_paths = [str(Path("storage") / "logs" / "laravel.log")]
             else:
-                self.log_paths = []
+                self.log_paths = self.default_log_paths(self.framework_choice)
         self.git_remote = settings.get(
             "git_remote", data.get("git_remote", self.git_remote)
         )
@@ -517,10 +515,8 @@ class MainWindow(QMainWindow):
             legacy = settings.get("log_path")
             if legacy:
                 self.log_paths = [legacy]
-            elif self.framework_choice == "Laravel":
-                self.log_paths = [str(Path("storage") / "logs" / "laravel.log")]
             else:
-                self.log_paths = []
+                self.log_paths = self.default_log_paths(self.framework_choice)
         self.git_remote = settings["git_remote"]
         self.compose_files = settings["compose_files"]
         self.compose_profile = settings.get("compose_profile", "")
@@ -667,6 +663,28 @@ class MainWindow(QMainWindow):
             else "None"
         )
 
+    def default_log_paths(
+        self,
+        framework: str | None = None,
+        template: str | None = None,
+    ) -> list[str]:
+        """Return default log file paths for the given framework."""
+        if framework is None:
+            framework = self.framework_choice
+        if framework == "Laravel":
+            return [str(Path("storage") / "logs" / "laravel.log")]
+        if framework == "Symfony":
+            return [str(Path("var") / "log" / "dev.log")]
+        if framework == "Yii":
+            tmpl = template if template is not None else self.yii_template
+            if tmpl == "advanced":
+                return [
+                    str(Path(part) / "runtime" / "logs" / "app.log")
+                    for part in ["frontend", "backend", "console"]
+                ]
+            return [str(Path("runtime") / "log" / "app.log")]
+        return []
+
     def _tail_file(self, path: Path, lines: int) -> str:
         """Return the last ``lines`` lines from ``path``."""
         try:
@@ -695,7 +713,7 @@ class MainWindow(QMainWindow):
         framework = self.current_framework()
         log_contents = ""
         if framework == "Laravel":
-            log_files = self.log_paths
+            log_files = self.log_paths or self.default_log_paths("Laravel")
             selector = getattr(self.logs_tab, "log_selector", None)
             if selector and selector.currentData():
                 log_files = [selector.currentData()]
@@ -712,18 +730,29 @@ class MainWindow(QMainWindow):
                 heading = f"=== {file} ===" if len(log_files) > 1 else ""
                 parts.append(f"{heading}\n{content}" if heading else content)
             log_contents = "\n\n".join(parts)
-        elif framework == "Yii":
-            if self.yii_template == "advanced":
-                log_files = [
-                    Path(self.project_path) / part / "runtime" / "logs" / "app.log"
-                    for part in ["frontend", "backend", "console"]
-                ]
-            else:
-                log_files = [Path(self.project_path) / "runtime" / "log" / "app.log"]
+        elif framework == "Symfony":
+            log_files = self.log_paths or self.default_log_paths("Symfony")
 
             parts: list[str] = []
             for file in log_files:
                 path = Path(file)
+                if not path.is_absolute():
+                    path = Path(self.project_path) / path
+                if path.exists():
+                    content = self._tail_file(path, self.max_log_lines)
+                else:
+                    content = f"Log file not found: {path}"
+                heading = f"=== {file} ===" if len(log_files) > 1 else ""
+                parts.append(f"{heading}\n{content}" if heading else content)
+            log_contents = "\n\n".join(parts)
+        elif framework == "Yii":
+            log_files = self.log_paths or self.default_log_paths("Yii")
+
+            parts: list[str] = []
+            for file in log_files:
+                path = Path(file)
+                if not path.is_absolute():
+                    path = Path(self.project_path) / path
                 if path.exists():
                     content = self._tail_file(path, self.max_log_lines)
                 else:

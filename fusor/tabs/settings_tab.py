@@ -231,6 +231,9 @@ class SettingsTab(QWidget):
         self.yii_template_combo.currentTextChanged.connect(
             self.main_window.mark_settings_dirty
         )
+        self.yii_template_combo.currentTextChanged.connect(
+            self.on_yii_template_changed
+        )
         self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
         self.refresh_spin.valueChanged.connect(self.main_window.mark_settings_dirty)
         self.theme_combo.currentTextChanged.connect(
@@ -415,10 +418,17 @@ class SettingsTab(QWidget):
         self.yii_template_row.setVisible(visible)
         self.yii_template_label.setVisible(visible)
 
-        log_visible = text == "Laravel"
+        log_visible = text in ["Laravel", "Yii", "Symfony"]
         self.log_paths_container.setVisible(log_visible)
         self.log_path_label.setVisible(log_visible)
         self.add_log_btn.setVisible(log_visible)
+        if log_visible:
+            template = self.yii_template_combo.currentText()
+            paths = self.main_window.default_log_paths(text, template)
+            self.set_log_paths(paths or [""])
+            self.main_window.log_paths = paths
+            if hasattr(self.main_window, "logs_tab"):
+                self.main_window.logs_tab.set_log_paths(paths)
 
         for attr in ["database_tab", "laravel_tab", "symfony_tab", "yii_tab"]:
             tab = getattr(self.main_window, attr, None)
@@ -436,3 +446,12 @@ class SettingsTab(QWidget):
                 show = text == fw
                 self.main_window.tabs.setTabVisible(idx, show)
                 self.main_window.tabs.setTabEnabled(idx, show)
+
+    def on_yii_template_changed(self, text: str) -> None:
+        if self.framework_combo.currentText() != "Yii":
+            return
+        paths = self.main_window.default_log_paths("Yii", text)
+        self.set_log_paths(paths or [""])
+        self.main_window.log_paths = paths
+        if hasattr(self.main_window, "logs_tab"):
+            self.main_window.logs_tab.set_log_paths(paths)

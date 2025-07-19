@@ -512,6 +512,30 @@ class TestMainWindow:
         assert not main_window.settings_tab.log_paths_container.isHidden()
         assert not main_window.settings_tab.log_path_label.isHidden()
 
+        main_window.framework_combo.setCurrentText("Symfony")
+        qtbot.wait(10)
+        assert not main_window.settings_tab.log_paths_container.isHidden()
+        assert not main_window.settings_tab.log_path_label.isHidden()
+
+        main_window.framework_combo.setCurrentText("Yii")
+        qtbot.wait(10)
+        assert not main_window.settings_tab.log_paths_container.isHidden()
+        assert not main_window.settings_tab.log_path_label.isHidden()
+
+    def test_default_log_paths_per_framework(self, main_window, qtbot):
+        main_window.framework_combo.setCurrentText("Laravel")
+        qtbot.wait(10)
+        assert main_window.settings_tab.log_path_edits[0].text() == str(Path("storage") / "logs" / "laravel.log")
+
+        main_window.framework_combo.setCurrentText("Symfony")
+        qtbot.wait(10)
+        assert main_window.settings_tab.log_path_edits[0].text() == str(Path("var") / "log" / "dev.log")
+
+        main_window.framework_combo.setCurrentText("Yii")
+        main_window.yii_template_combo.setCurrentText("basic")
+        qtbot.wait(10)
+        assert main_window.settings_tab.log_path_edits[0].text() == str(Path("runtime") / "log" / "app.log")
+
     def test_settings_unsaved_indicator(self, main_window, qtbot):
         idx = main_window.tabs.indexOf(main_window.settings_tab)
         assert main_window.tabs.tabText(idx) == "Settings"
