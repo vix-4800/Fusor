@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from copy import deepcopy
 
 # Path used to store user settings
 CONFIG_FILE = Path.home() / ".fusor_config.json"
@@ -12,6 +13,8 @@ DEFAULT_PROJECT_SETTINGS = {
     "framework": "Laravel",
     "php_path": "php",
     "php_service": "php",
+    # path of the project inside docker containers
+    "docker_project_path": "/app",
     "server_port": 8000,
     "use_docker": False,
     "yii_template": "basic",
@@ -21,6 +24,7 @@ DEFAULT_PROJECT_SETTINGS = {
     "compose_files": [],
     "compose_profile": "",
     "auto_refresh_secs": 5,
+    "open_browser": False,
     "max_log_lines": DEFAULT_MAX_LOG_LINES,
     "enable_terminal": False,
 }
@@ -47,7 +51,7 @@ def load_config():
         with config_path.open("r", encoding="utf-8") as f:
             data = json.load(f)
         if not isinstance(data, dict):
-            return DEFAULT_CONFIG.copy()
+            return deepcopy(DEFAULT_CONFIG)
         for key, value in DEFAULT_CONFIG.items():
             data.setdefault(key, value)
 
@@ -86,10 +90,10 @@ def load_config():
 
         return data
     except FileNotFoundError:
-        return DEFAULT_CONFIG.copy()
+        return deepcopy(DEFAULT_CONFIG)
     except json.JSONDecodeError:
         print("Failed to load config: invalid JSON")
-        return DEFAULT_CONFIG.copy()
+        return deepcopy(DEFAULT_CONFIG)
 
 
 def save_config(data):

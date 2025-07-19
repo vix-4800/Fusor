@@ -6,6 +6,7 @@ import signal
 import concurrent.futures
 import builtins
 import shutil
+import webbrowser
 from PyQt6.QtWidgets import (
     QMainWindow,
     QTabWidget,
@@ -274,6 +275,7 @@ class MainWindow(QMainWindow):
         self.php_path_edit: QLineEdit | None = None
         self.php_service_edit: QLineEdit | None = None
         self.server_port_edit: QSpinBox | None = None
+        self.docker_project_path_edit: QLineEdit | None = None
         self.docker_checkbox: QCheckBox | None = None
         self.yii_template_combo: QComboBox | None = None
         self.log_path_edit: QLineEdit | None = None
@@ -283,6 +285,7 @@ class MainWindow(QMainWindow):
         self.refresh_spin: QSpinBox | None = None
         self.theme_combo: QComboBox | None = None
         self.terminal_checkbox: QCheckBox | None = None
+        self.open_browser_checkbox: QCheckBox | None = None
         self.log_view: QTextEdit | None = None
 
         self.tabs = QTabWidget()
@@ -333,6 +336,7 @@ class MainWindow(QMainWindow):
         self.framework_choice = "Laravel"
         self.php_path = "php"
         self.php_service = "php"
+        self.docker_project_path = "/app"
         self.server_port = 8000
         self.use_docker = False
         self.compose_files: list[str] = []
@@ -343,6 +347,7 @@ class MainWindow(QMainWindow):
         self.max_log_lines = DEFAULT_MAX_LOG_LINES
         self.enable_terminal = False
         self.auto_refresh_secs = 5
+        self.open_browser = False
         self.load_config()
         apply_theme(self, self.theme)
 
@@ -468,6 +473,10 @@ class MainWindow(QMainWindow):
         self.php_service = settings.get(
             "php_service", data.get("php_service", self.php_service)
         )
+        self.docker_project_path = settings.get(
+            "docker_project_path",
+            data.get("docker_project_path", self.docker_project_path),
+        )
         self.server_port = settings.get(
             "server_port", data.get("server_port", self.server_port)
         )
@@ -500,6 +509,9 @@ class MainWindow(QMainWindow):
         self.enable_terminal = settings.get(
             "enable_terminal",
             data.get("enable_terminal", self.enable_terminal),
+        )
+        self.open_browser = settings.get(
+            "open_browser", data.get("open_browser", self.open_browser)
         )
 
         self.theme = data.get("theme", self.theme)
@@ -552,6 +564,7 @@ class MainWindow(QMainWindow):
         self.framework_choice = cast(str, settings["framework"])
         self.php_path = cast(str, settings["php_path"])
         self.php_service = cast(str, settings["php_service"])
+        self.docker_project_path = cast(str, settings.get("docker_project_path", "/app"))
         self.server_port = int(cast(Any, settings["server_port"]))
         self.use_docker = bool(settings["use_docker"])
         self.yii_template = cast(str, settings["yii_template"])
@@ -570,6 +583,7 @@ class MainWindow(QMainWindow):
         )
         self.compose_profile = cast(str, settings.get("compose_profile", ""))
         self.auto_refresh_secs = int(cast(Any, settings["auto_refresh_secs"]))
+        self.open_browser = bool(settings.get("open_browser", False))
         self.max_log_lines = int(
             cast(Any, settings.get("max_log_lines", self.max_log_lines))
         )
@@ -611,6 +625,8 @@ class MainWindow(QMainWindow):
             self.refresh_spin.setValue(self.auto_refresh_secs)
         if self.terminal_checkbox is not None:
             self.terminal_checkbox.setChecked(self.enable_terminal)
+        if self.open_browser_checkbox is not None:
+            self.open_browser_checkbox.setChecked(self.open_browser)
         if hasattr(self, "logs_tab"):
             self.logs_tab.update_timer_interval(self.auto_refresh_secs)
         if hasattr(self, "terminal_index"):
@@ -901,6 +917,11 @@ class MainWindow(QMainWindow):
             if self.compose_profile_edit is not None
             else self.compose_profile
         )
+        docker_project_path = (
+            self.docker_project_path_edit.text()
+            if self.docker_project_path_edit is not None
+            else self.docker_project_path
+        )
         auto_refresh_secs = (
             self.refresh_spin.value()
             if self.refresh_spin is not None
@@ -915,6 +936,11 @@ class MainWindow(QMainWindow):
             self.terminal_checkbox.isChecked()
             if self.terminal_checkbox is not None
             else self.enable_terminal
+        )
+        open_browser = (
+            self.open_browser_checkbox.isChecked()
+            if self.open_browser_checkbox is not None
+            else self.open_browser
         )
 
         if (
@@ -979,9 +1005,11 @@ class MainWindow(QMainWindow):
         self.git_remote = git_remote
         self.compose_files = compose_files
         self.compose_profile = compose_profile.strip()
+        self.docker_project_path = docker_project_path.strip() or self.docker_project_path
         self.auto_refresh_secs = int(auto_refresh_secs)
         self.theme = theme
         self.enable_terminal = enable_terminal
+        self.open_browser = bool(open_browser)
         self.max_log_lines = int(getattr(self, "max_log_lines", DEFAULT_MAX_LOG_LINES))
 
         data = load_config()
@@ -997,7 +1025,9 @@ class MainWindow(QMainWindow):
             "git_remote": git_remote,
             "compose_files": self.compose_files,
             "compose_profile": self.compose_profile,
+            "docker_project_path": self.docker_project_path,
             "auto_refresh_secs": self.auto_refresh_secs,
+            "open_browser": self.open_browser,
             "max_log_lines": self.max_log_lines,
             "enable_terminal": self.enable_terminal,
         }
@@ -1027,19 +1057,25 @@ class MainWindow(QMainWindow):
             self.git_tab.load_branches()
 
     def artisan(self, *args: str) -> None:
-        self.ensure_project_path()
-        artisan_file = Path(self.project_path) / "artisan"
+        if not self.ensure_project_path():
+            return
+        base = self.docker_project_path if self.use_docker else self.project_path
+        artisan_file = Path(base) / "artisan"
         self.run_command([self.php_path, str(artisan_file), *args])
 
     def symfony(self, *args: str) -> None:
-        self.ensure_project_path()
-        console = Path(self.project_path) / "bin" / "console"
+        if not self.ensure_project_path():
+            return
+        base = self.docker_project_path if self.use_docker else self.project_path
+        console = Path(base) / "bin" / "console"
         self.run_command([self.php_path, str(console), *args])
 
     def yii(self, *args: str) -> None:
-        self.ensure_project_path()
-        script = os.path.join(self.project_path, "yii")
-        yii_bat = os.path.join(self.project_path, "yii.bat")
+        if not self.ensure_project_path():
+            return
+        base = self.docker_project_path if self.use_docker else self.project_path
+        script = os.path.join(base, "yii")
+        yii_bat = os.path.join(base, "yii.bat")
         if os.name == "nt" and os.path.isfile(yii_bat):
             script = yii_bat
         elif not os.path.isfile(script) and os.path.isfile(script + ".bat"):
@@ -1081,8 +1117,10 @@ class MainWindow(QMainWindow):
             print(f"Seed not implemented for {self.current_framework()}")
 
     def phpunit(self) -> None:
-        self.ensure_project_path()
-        phpunit_file = Path(self.project_path) / "vendor" / "bin" / "phpunit"
+        if not self.ensure_project_path():
+            return
+        base = self.docker_project_path if self.use_docker else self.project_path
+        phpunit_file = Path(base) / "vendor" / "bin" / "phpunit"
         self.run_command([self.php_path, str(phpunit_file)])
 
     def start_project(self) -> None:
@@ -1091,6 +1129,8 @@ class MainWindow(QMainWindow):
             return
 
         if self.use_docker:
+            if not self.ensure_project_path():
+                return
             self.run_command(["docker", "compose", "up", "-d"])
             self.project_running = True
             self.update_run_buttons()
@@ -1143,11 +1183,15 @@ class MainWindow(QMainWindow):
             self.executor.submit(stream)
             self.project_running = True
             self.update_run_buttons()
+            if self.open_browser:
+                webbrowser.open(f"http://localhost:{self.server_port}")
         except FileNotFoundError:
             print(f"Command not found: {command[0]}")
 
     def stop_project(self) -> None:
         if self.use_docker:
+            if not self.ensure_project_path():
+                return
             self.run_command(["docker", "compose", "down"])
             self.project_running = False
             self.update_run_buttons()
