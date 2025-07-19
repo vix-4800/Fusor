@@ -1,4 +1,8 @@
 from PyQt6.QtCore import Qt
+import os
+import sys
+import subprocess
+import fusor.tabs.logs_tab as logs_tab
 
 from fusor.tabs.logs_tab import LogsTab
 
@@ -10,6 +14,8 @@ class DummyMainWindow:
     def refresh_logs(self):
         pass
     def clear_log_file(self):
+        pass
+    def open_file(self, path: str):
         pass
 
 def test_timer_interval(qtbot):
@@ -161,3 +167,93 @@ def test_set_log_dirs_expands_directory(tmp_path, qtbot):
     items = [tab.log_selector.itemText(i) for i in range(tab.log_selector.count())]
     expected = [str(logs / f"log{i}.log") for i in range(2)]
     assert items == expected
+
+
+def _make_tab_for_open(tmp_path, qtbot):
+    log_file = tmp_path / "test.log"
+    log_file.write_text("")
+    main = DummyMainWindow()
+    main.project_path = str(tmp_path)
+    main.log_dirs = [str(log_file)]
+    from fusor.main_window import MainWindow
+    main.open_file = MainWindow.open_file.__get__(main, DummyMainWindow)
+    tab = LogsTab(main)
+    qtbot.addWidget(tab)
+    return tab, main, log_file
+
+
+def test_open_file_windows(monkeypatch, qtbot, tmp_path):
+    tab, main, log_file = _make_tab_for_open(tmp_path, qtbot)
+
+    captured = {}
+    monkeypatch.setattr(os, "startfile", lambda p: captured.setdefault("path", p), raising=False)
+    monkeypatch.setattr(os, "name", "nt", raising=False)
+    import pathlib
+    monkeypatch.setattr(logs_tab, "Path", pathlib.PosixPath)
+    monkeypatch.setattr(logs_tab, "PurePath", pathlib.PurePosixPath)
+
+    qtbot.mouseClick(tab.open_btn, Qt.MouseButton.LeftButton)
+
+    assert captured["path"] == str(log_file)
+
+
+def test_open_file_macos(monkeypatch, qtbot, tmp_path):
+    tab, main, log_file = _make_tab_for_open(tmp_path, qtbot)
+
+    called = {}
+
+    def fake_popen(cmd, *a, **kw):
+        called["cmd"] = cmd
+        class P:
+            ...
+        return P()
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen, raising=True)
+    monkeypatch.setattr(sys, "platform", "darwin", raising=False)
+    monkeypatch.setattr(os, "name", "posix", raising=False)
+
+    qtbot.mouseClick(tab.open_btn, Qt.MouseButton.LeftButton)
+
+    assert called["cmd"] == ["open", str(log_file)]
+
+
+def test_open_file_linux(monkeypatch, qtbot, tmp_path):
+    tab, main, log_file = _make_tab_for_open(tmp_path, qtbot)
+
+    cmds = []
+
+    def fake_popen(cmd, *a, **kw):
+        cmds.append(cmd)
+        class P:
+            ...
+        return P()
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen, raising=True)
+    monkeypatch.setattr(sys, "platform", "linux", raising=False)
+    monkeypatch.setattr(os, "name", "posix", raising=False)
+
+    qtbot.mouseClick(tab.open_btn, Qt.MouseButton.LeftButton)
+
+    assert cmds == [["xdg-open", str(log_file)]]
+
+
+def test_open_file_linux_fallback(monkeypatch, qtbot, tmp_path):
+    tab, main, log_file = _make_tab_for_open(tmp_path, qtbot)
+
+    cmds = []
+
+    def fake_popen(cmd, *a, **kw):
+        cmds.append(cmd)
+        if cmd[0] == "xdg-open":
+            raise FileNotFoundError
+        class P:
+            ...
+        return P()
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen, raising=True)
+    monkeypatch.setattr(sys, "platform", "linux", raising=False)
+    monkeypatch.setattr(os, "name", "posix", raising=False)
+
+    qtbot.mouseClick(tab.open_btn, Qt.MouseButton.LeftButton)
+
+    assert cmds == [["xdg-open", str(log_file)], ["gio", "open", str(log_file)]]

@@ -1385,3 +1385,18 @@ class MainWindow(QMainWindow):
                 print(f"Failed to clear log file: {e}")
 
         self.refresh_logs()
+
+    def open_file(self, path: str) -> None:
+        """Open ``path`` using the system's default application."""
+        if os.name == "nt":
+            os.startfile(path)  # type: ignore[attr-defined]
+            return
+
+        if sys.platform == "darwin":
+            subprocess.Popen(["open", path])
+            return
+
+        try:
+            subprocess.Popen(["xdg-open", path])
+        except FileNotFoundError:
+            subprocess.Popen(["gio", "open", path])

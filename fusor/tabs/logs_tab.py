@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QTextCursor
+from pathlib import Path, PurePath
 from ..icons import get_icon
 from ..utils import expand_log_paths
 
@@ -109,6 +110,15 @@ class LogsTab(QWidget):
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
         control_layout.addWidget(self.clear_btn)
+
+        self.open_btn = QPushButton("Open File")
+        self.open_btn.setIcon(get_icon("document-open"))
+        self.open_btn.setMinimumHeight(36)
+        self.open_btn.clicked.connect(self.open_selected_log)
+        self.open_btn.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        control_layout.addWidget(self.open_btn)
 
         self.auto_checkbox = QCheckBox()
         self.auto_checkbox.setMinimumHeight(36)
@@ -220,6 +230,18 @@ class LogsTab(QWidget):
             self._search_positions
         )
         self._move_to_current_match(length)
+
+    def open_selected_log(self) -> None:
+        """Open the currently selected log file with the system default app."""
+        path = self.log_selector.currentData()
+        if not path:
+            return
+        p = PurePath(path)
+        if not p.is_absolute():
+            p = Path(self.main_window.project_path) / p
+        else:
+            p = Path(p)
+        self.main_window.open_file(str(p))
 
     def update_responsive_layout(self, width: int) -> None:
         """Adjust layout visibility based on parent window width."""
