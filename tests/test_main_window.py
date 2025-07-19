@@ -1024,3 +1024,14 @@ class TestMainWindow:
 
         assert win.output_view.isVisible()
         assert win.clear_output_button.isVisible()
+
+    def test_minimum_window_size(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+
+        assert win.minimumWidth() == 400
+        assert win.minimumHeight() == 300

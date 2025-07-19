@@ -264,6 +264,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle(f"{APP_NAME} – PHP QA Toolbox")
         self.resize(1024, 768)
+        self.setMinimumSize(400, 300)
         self.theme = "dark"
 
         # Widgets populated by SettingsTab and LogsTab
@@ -544,8 +545,15 @@ class MainWindow(QMainWindow):
 
         self.help_button.setVisible(width >= 500)
 
-        if hasattr(self, "logs_tab") and hasattr(self.logs_tab, "update_responsive_layout"):
+        if hasattr(self, "logs_tab") and hasattr(
+            self.logs_tab, "update_responsive_layout"
+        ):
             self.logs_tab.update_responsive_layout(width)
+
+        if hasattr(self, "git_tab") and hasattr(
+            self.git_tab, "update_responsive_layout"
+        ):
+            self.git_tab.update_responsive_layout(width)
 
     def apply_project_settings(self) -> None:
         """Load settings for the current project and update widgets."""

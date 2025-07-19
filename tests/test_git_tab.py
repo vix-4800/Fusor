@@ -282,3 +282,18 @@ def test_show_branch_dialog_checks_out(monkeypatch, qtbot):
     tab.show_branch_dialog()
 
     assert called.get("remote") == "feature"
+
+
+def test_branch_truncates_on_small_width(qtbot):
+    main = DummyMainWindow()
+    tab = GitTab(main)
+    qtbot.addWidget(tab)
+
+    long_branch = "feature/some-very-long-branch-name"
+    tab.current_branch = long_branch
+    tab.update_responsive_layout(400)
+    assert tab.current_branch_label.text() != long_branch
+    assert tab.current_branch_label.text().endswith("\u2026")
+
+    tab.update_responsive_layout(800)
+    assert tab.current_branch_label.text() == long_branch
