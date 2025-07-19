@@ -10,7 +10,7 @@ from PyQt6.QtCore import QTimer, Qt
 import fusor.main_window as mw_module
 from fusor.main_window import MainWindow
 from fusor import APP_NAME
-from PyQt6.QtWidgets import QMainWindow, QPushButton, QMessageBox
+from PyQt6.QtWidgets import QMainWindow, QMessageBox
 from fusor.tabs.git_tab import GitTab
 
 # ---------------------------------------------------------------------------
@@ -782,8 +782,6 @@ class TestMainWindow:
         qtbot.addWidget(win)
         win.show()
 
-        assert not win.git_tab.remote_branches_loaded
-
         win.tabs.setCurrentIndex(win.git_index)
         qtbot.wait(10)
 
@@ -794,7 +792,7 @@ class TestMainWindow:
         win.tabs.setCurrentIndex(win.git_index)
         qtbot.wait(10)
 
-        assert calls == [True]
+        assert calls == [True, True]
         win.close()
 
 

@@ -218,7 +218,6 @@ class GitTab(QWidget):
         self.current_branch = branch
         self.current_branch_label.setText(branch)
 
-
     def hard_reset(self):
         if not self.main_window.ensure_project_path():
             return
