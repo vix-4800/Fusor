@@ -428,6 +428,11 @@ class MainWindow(QMainWindow):
 
         self.tabs.currentChanged.connect(self.on_tab_changed)
         self.update_run_buttons()
+        self._update_responsive_layout()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._update_responsive_layout()
 
     def load_config(self):
         data = load_config()
@@ -528,6 +533,19 @@ class MainWindow(QMainWindow):
                 self.project_tab.start_btn.setEnabled(not self.project_running)
             if hasattr(self.project_tab, "stop_btn"):
                 self.project_tab.stop_btn.setEnabled(self.project_running)
+
+    def _update_responsive_layout(self) -> None:
+        """Adjust UI elements based on the current window size."""
+        width = self.width()
+
+        show_output = width >= 700
+        self.output_view.setVisible(show_output)
+        self.clear_output_button.setVisible(show_output)
+
+        self.help_button.setVisible(width >= 500)
+
+        if hasattr(self, "logs_tab") and hasattr(self.logs_tab, "update_responsive_layout"):
+            self.logs_tab.update_responsive_layout(width)
 
     def apply_project_settings(self) -> None:
         """Load settings for the current project and update widgets."""
