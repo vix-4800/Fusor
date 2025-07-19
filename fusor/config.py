@@ -22,6 +22,7 @@ DEFAULT_PROJECT_SETTINGS = {
     "compose_profile": "",
     "auto_refresh_secs": 5,
     "max_log_lines": DEFAULT_MAX_LOG_LINES,
+    "enable_terminal": False,
 }
 
 # Default configuration values

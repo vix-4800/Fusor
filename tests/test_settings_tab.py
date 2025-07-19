@@ -18,6 +18,7 @@ class DummyMainWindow:
         self.auto_refresh_secs = 5
         self.theme = "dark"
         self.git_remote = ""
+        self.enable_terminal = False
         self.git_tab = type("G", (), {"get_remotes": lambda self: []})()
         self.database_tab = type("D", (), {"on_framework_changed": lambda self, t: None})()
         self.mark_settings_dirty = lambda *a, **k: None

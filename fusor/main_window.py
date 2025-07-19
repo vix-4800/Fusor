@@ -49,6 +49,7 @@ from .tabs.symfony_tab import SymfonyTab
 from .tabs.yii_tab import YiiTab
 from .tabs.docker_tab import DockerTab
 from .tabs.logs_tab import LogsTab
+from .tabs.terminal_tab import TerminalTab
 from .tabs.settings_tab import SettingsTab
 
 # allow tests to monkeypatch file operations easily
@@ -281,6 +282,7 @@ class MainWindow(QMainWindow):
         self.compose_profile_edit: QLineEdit | None = None
         self.refresh_spin: QSpinBox | None = None
         self.theme_combo: QComboBox | None = None
+        self.terminal_checkbox: QCheckBox | None = None
         self.log_view: QTextEdit | None = None
 
         self.tabs = QTabWidget()
@@ -339,6 +341,7 @@ class MainWindow(QMainWindow):
         self.log_paths: list[str] = []
         self.git_remote = ""
         self.max_log_lines = DEFAULT_MAX_LOG_LINES
+        self.enable_terminal = False
         self.auto_refresh_secs = 5
         self.load_config()
         apply_theme(self, self.theme)
@@ -368,6 +371,9 @@ class MainWindow(QMainWindow):
         self.logs_tab = LogsTab(self)
         self.tabs.addTab(self.logs_tab, "Logs")
 
+        self.terminal_tab = TerminalTab(self)
+        self.terminal_index = self.tabs.addTab(self.terminal_tab, "Terminal")
+
         self.settings_tab = SettingsTab(self)
         self.settings_index = self.tabs.addTab(self.settings_tab, "Settings")
         self.update_settings_tab_title()
@@ -388,6 +394,10 @@ class MainWindow(QMainWindow):
         show_yii = self.framework_choice == "Yii"
         self.tabs.setTabVisible(self.yii_index, show_yii)
         self.tabs.setTabEnabled(self.yii_index, show_yii)
+
+        # terminal tab availability
+        self.tabs.setTabVisible(self.terminal_index, self.enable_terminal)
+        self.tabs.setTabEnabled(self.terminal_index, self.enable_terminal)
 
         # populate settings widgets with loaded values
         if self.project_combo is not None:
@@ -487,6 +497,10 @@ class MainWindow(QMainWindow):
             "auto_refresh_secs",
             data.get("auto_refresh_secs", self.auto_refresh_secs),
         )
+        self.enable_terminal = settings.get(
+            "enable_terminal",
+            data.get("enable_terminal", self.enable_terminal),
+        )
 
         self.theme = data.get("theme", self.theme)
 
@@ -559,6 +573,9 @@ class MainWindow(QMainWindow):
         self.max_log_lines = int(
             cast(Any, settings.get("max_log_lines", self.max_log_lines))
         )
+        self.enable_terminal = bool(
+            settings.get("enable_terminal", self.enable_terminal)
+        )
 
         if self.framework_combo is not None:
             self.framework_combo.setCurrentText(self.framework_choice)
@@ -592,8 +609,13 @@ class MainWindow(QMainWindow):
             self.compose_profile_edit.setText(self.compose_profile)
         if self.refresh_spin is not None:
             self.refresh_spin.setValue(self.auto_refresh_secs)
+        if self.terminal_checkbox is not None:
+            self.terminal_checkbox.setChecked(self.enable_terminal)
         if hasattr(self, "logs_tab"):
             self.logs_tab.update_timer_interval(self.auto_refresh_secs)
+        if hasattr(self, "terminal_index"):
+            self.tabs.setTabVisible(self.terminal_index, self.enable_terminal)
+            self.tabs.setTabEnabled(self.terminal_index, self.enable_terminal)
 
         self.mark_settings_saved()
 
@@ -668,6 +690,10 @@ class MainWindow(QMainWindow):
             self.project_name_edit.setText(proj.get("name", Path(path).name))
         if hasattr(self, "git_tab"):
             self.git_tab.load_branches()
+
+        if hasattr(self, "terminal_index"):
+            self.tabs.setTabVisible(self.terminal_index, self.enable_terminal)
+            self.tabs.setTabEnabled(self.terminal_index, self.enable_terminal)
 
         self.apply_project_settings()
 
@@ -885,6 +911,11 @@ class MainWindow(QMainWindow):
             if self.theme_combo is not None
             else self.theme
         )
+        enable_terminal = (
+            self.terminal_checkbox.isChecked()
+            if self.terminal_checkbox is not None
+            else self.enable_terminal
+        )
 
         if (
             not project_path
@@ -950,6 +981,7 @@ class MainWindow(QMainWindow):
         self.compose_profile = compose_profile.strip()
         self.auto_refresh_secs = int(auto_refresh_secs)
         self.theme = theme
+        self.enable_terminal = enable_terminal
         self.max_log_lines = int(getattr(self, "max_log_lines", DEFAULT_MAX_LOG_LINES))
 
         data = load_config()
@@ -967,6 +999,7 @@ class MainWindow(QMainWindow):
             "compose_profile": self.compose_profile,
             "auto_refresh_secs": self.auto_refresh_secs,
             "max_log_lines": self.max_log_lines,
+            "enable_terminal": self.enable_terminal,
         }
         data.update(
             {

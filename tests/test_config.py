@@ -22,6 +22,7 @@ def test_save_then_load(tmp_path, monkeypatch):
                 "git_remote": "origin",
                 "compose_files": ["dc.yml"],
                 "auto_refresh_secs": 7,
+                "enable_terminal": False,
             }
         },
         "theme": "light",

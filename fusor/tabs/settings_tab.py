@@ -197,6 +197,11 @@ class SettingsTab(QWidget):
             self.theme_combo.setCurrentText("Light")
         misc_form.addRow("Theme:", self.theme_combo)
 
+        self.terminal_checkbox = QCheckBox("Enable Terminal Tab")
+        self.terminal_checkbox.setChecked(self.main_window.enable_terminal)
+        self.terminal_checkbox.setMinimumHeight(30)
+        misc_form.addRow("", self.terminal_checkbox)
+
         self.yii_template_combo = QComboBox()
         self.yii_template_combo.addItems(["basic", "advanced"])
         if hasattr(self.main_window, "yii_template"):
@@ -209,6 +214,7 @@ class SettingsTab(QWidget):
         self.docker_checkbox.setChecked(self.main_window.use_docker)
         self.docker_checkbox.setMinimumHeight(30)
         self.docker_checkbox.toggled.connect(self.on_docker_toggled)
+        self.terminal_checkbox.toggled.connect(self.on_terminal_toggled)
         docker_form.addRow("", self.docker_checkbox)
 
         project_group.setLayout(project_form)
@@ -246,8 +252,10 @@ class SettingsTab(QWidget):
         self.main_window.compose_profile_edit = self.compose_profile_edit
         self.main_window.refresh_spin = self.refresh_spin
         self.main_window.theme_combo = self.theme_combo
+        self.main_window.terminal_checkbox = self.terminal_checkbox
 
         self.on_docker_toggled(self.docker_checkbox.isChecked())
+        self.on_terminal_toggled(self.terminal_checkbox.isChecked())
         current_fw = self.framework_combo.currentText()
         self.on_framework_changed(current_fw)
         self.main_window.database_tab.on_framework_changed(current_fw)
@@ -275,6 +283,9 @@ class SettingsTab(QWidget):
         self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
         self.refresh_spin.valueChanged.connect(self.main_window.mark_settings_dirty)
         self.theme_combo.currentTextChanged.connect(
+            self.main_window.mark_settings_dirty
+        )
+        self.terminal_checkbox.toggled.connect(
             self.main_window.mark_settings_dirty
         )
         self.project_name_edit.textChanged.connect(self.main_window.mark_settings_dirty)
@@ -423,6 +434,11 @@ class SettingsTab(QWidget):
         if hasattr(self.main_window, "docker_index"):
             self.main_window.tabs.setTabVisible(self.main_window.docker_index, checked)
             self.main_window.tabs.setTabEnabled(self.main_window.docker_index, checked)
+
+    def on_terminal_toggled(self, checked: bool) -> None:
+        if hasattr(self.main_window, "terminal_index"):
+            self.main_window.tabs.setTabVisible(self.main_window.terminal_index, checked)
+            self.main_window.tabs.setTabEnabled(self.main_window.terminal_index, checked)
 
     def add_project(self) -> None:
         directory = QFileDialog.getExistingDirectory(
