@@ -41,11 +41,13 @@ class ProjectTab(QWidget):
             "Start",
             main_window.start_project,
             icon="media-playback-start",
+            color="#28a745",
         )
         self.stop_btn = self._btn(
             "Stop",
             main_window.stop_project,
             icon="media-playback-stop",
+            color="#dc3545",
         )
         server_layout.addWidget(self.start_btn)
         server_layout.addWidget(self.stop_btn)
@@ -122,12 +124,16 @@ class ProjectTab(QWidget):
 
         self.update_php_tools()
 
-    def _btn(self, label: str, slot, icon: str | None = None) -> QPushButton:
+    def _btn(
+        self, label: str, slot, icon: str | None = None, color: str | None = None
+    ) -> QPushButton:
         btn = QPushButton(label)
         if icon:
             btn.setIcon(get_icon(icon))
         btn.setMinimumHeight(36)
         btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        if color:
+            btn.setStyleSheet(f"QPushButton:enabled {{ background-color: {color}; }}")
         btn.clicked.connect(slot)
         return btn
 
