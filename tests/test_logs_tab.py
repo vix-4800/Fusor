@@ -257,3 +257,63 @@ def test_open_file_linux_fallback(monkeypatch, qtbot, tmp_path):
     qtbot.mouseClick(tab.open_btn, Qt.MouseButton.LeftButton)
 
     assert cmds == [["xdg-open", str(log_file)], ["gio", "open", str(log_file)]]
+
+
+def _make_window_with_log(tmp_path, qtbot, monkeypatch, lines):
+    from PyQt6.QtCore import QTimer
+    from fusor import main_window as mw_module
+    from fusor.main_window import MainWindow
+
+    monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+    monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+    monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+    win = MainWindow()
+    qtbot.addWidget(win)
+    win.show()
+
+    win.project_path = str(tmp_path)
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+    log_file = log_dir / "app.log"
+    log_file.write_text("\n".join(lines))
+    win.log_dirs = [str(log_dir)]
+    win.logs_tab.set_log_dirs(win.log_dirs)
+
+    return win, log_file
+
+
+def test_refresh_logs_filters_by_level(tmp_path, qtbot, monkeypatch):
+    lines = [
+        "DEBUG debug msg",
+        "INFO info msg",
+        "WARNING warn msg",
+        "ERROR error msg",
+        "CRITICAL crit msg",
+    ]
+
+    win, _ = _make_window_with_log(tmp_path, qtbot, monkeypatch, lines)
+    win.logs_tab.level_selector.setCurrentText("WARNING")
+
+    win.refresh_logs()
+
+    result = win.log_view.toPlainText().splitlines()
+    assert result == lines[2:]
+
+
+def test_refresh_logs_level_all_shows_everything(tmp_path, qtbot, monkeypatch):
+    lines = [
+        "DEBUG debug msg",
+        "INFO info msg",
+        "WARNING warn msg",
+        "ERROR error msg",
+        "CRITICAL crit msg",
+    ]
+
+    win, _ = _make_window_with_log(tmp_path, qtbot, monkeypatch, lines)
+    win.logs_tab.level_selector.setCurrentText("All")
+
+    win.refresh_logs()
+
+    result = win.log_view.toPlainText().splitlines()
+    assert result == lines

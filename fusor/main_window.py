@@ -936,6 +936,13 @@ class MainWindow(QMainWindow):
             log_files = expand_log_paths(self.project_path, log_files)
 
             parts = []
+            level_selector = getattr(self.logs_tab, "level_selector", None)
+            level = level_selector.currentText() if level_selector else "All"
+            level_order = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+            allowed = None
+            if level != "All" and level in level_order:
+                idx = level_order.index(level)
+                allowed = set(level_order[idx:])
             for file in log_files:
                 path = Path(file)
                 if not path.is_absolute():
@@ -944,6 +951,12 @@ class MainWindow(QMainWindow):
                     content = self._tail_file(path, self.max_log_lines)
                 else:
                     content = f"Log file not found: {path}"
+                if allowed is not None:
+                    content = "\n".join(
+                        line
+                        for line in content.splitlines()
+                        if any(level_marker in line for level_marker in allowed)
+                    )
                 heading = f"=== {file} ===" if len(log_files) > 1 else ""
                 parts.append(f"{heading}\n{content}" if heading else content)
             log_contents = "\n\n".join(parts)
@@ -952,6 +965,13 @@ class MainWindow(QMainWindow):
             log_files = expand_log_paths(self.project_path, log_files)
 
             parts = []
+            level_selector = getattr(self.logs_tab, "level_selector", None)
+            level = level_selector.currentText() if level_selector else "All"
+            level_order = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+            allowed = None
+            if level != "All" and level in level_order:
+                idx = level_order.index(level)
+                allowed = set(level_order[idx:])
             for file in log_files:
                 path = Path(file)
                 if not path.is_absolute():
@@ -960,6 +980,12 @@ class MainWindow(QMainWindow):
                     content = self._tail_file(path, self.max_log_lines)
                 else:
                     content = f"Log file not found: {path}"
+                if allowed is not None:
+                    content = "\n".join(
+                        line
+                        for line in content.splitlines()
+                        if any(level_marker in line for level_marker in allowed)
+                    )
                 heading = f"=== {file} ===" if len(log_files) > 1 else ""
                 parts.append(f"{heading}\n{content}" if heading else content)
             log_contents = "\n\n".join(parts)
@@ -968,6 +994,13 @@ class MainWindow(QMainWindow):
             log_files = expand_log_paths(self.project_path, log_files)
 
             parts = []
+            level_selector = getattr(self.logs_tab, "level_selector", None)
+            level = level_selector.currentText() if level_selector else "All"
+            level_order = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+            allowed = None
+            if level != "All" and level in level_order:
+                idx = level_order.index(level)
+                allowed = set(level_order[idx:])
             for file in log_files:
                 path = Path(file)
                 if not path.is_absolute():
@@ -976,6 +1009,12 @@ class MainWindow(QMainWindow):
                     content = self._tail_file(path, self.max_log_lines)
                 else:
                     content = f"Log file not found: {path}"
+                if allowed is not None:
+                    content = "\n".join(
+                        line
+                        for line in content.splitlines()
+                        if any(level_marker in line for level_marker in allowed)
+                    )
                 heading = f"=== {file} ===" if len(log_files) > 1 else ""
                 parts.append(f"{heading}\n{content}" if heading else content)
             log_contents = "\n\n".join(parts)

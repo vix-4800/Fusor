@@ -72,12 +72,12 @@ def load_config():
 
         # migrate old console output setting from projects
         if "show_console_output" not in data:
-            for proj in data["projects"]:
-                if "show_console_output" in proj:
-                    data["show_console_output"] = bool(proj["show_console_output"])
+            for p in data["projects"]:
+                if "show_console_output" in p:
+                    data["show_console_output"] = bool(p["show_console_output"])
                     break
-        for proj in data["projects"]:
-            proj.pop("show_console_output", None)
+        for p in data["projects"]:
+            p.pop("show_console_output", None)
 
         # migrate old flat settings into current project entry
         current = data.get("current_project") or data.get("project_path")
