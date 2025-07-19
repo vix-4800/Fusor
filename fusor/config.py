@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 from copy import deepcopy
-from typing import Any
 
 # Path used to store user settings
 CONFIG_FILE = Path.home() / ".fusor_config.json"
@@ -70,39 +69,11 @@ def load_config():
                 projects.append(proj_dict)
         data["projects"] = projects
 
-        # migrate old console output setting from projects
-        if "show_console_output" not in data:
-            for proj in data["projects"]:
-                if "show_console_output" in proj:
-                    data["show_console_output"] = bool(proj["show_console_output"])
-                    break
+        # Remove deprecated fields from project entries
         for proj in data["projects"]:
             proj.pop("show_console_output", None)
-
-        # migrate old flat settings into current project entry
-        current = data.get("current_project") or data.get("project_path")
-        if current:
-            proj: dict[str, Any] | None = next(
-                (p for p in data["projects"] if p.get("path") == current),
-                None,
-            )
-            if proj is None:
-                proj = {"path": current, "name": Path(current).name}
-                data["projects"].append(proj)
-            for k in DEFAULT_PROJECT_SETTINGS:
-                if k in data and k not in proj:
-                    proj[k] = data[k]
-            if "log_path" in data and "log_dirs" not in proj:
-                proj["log_dirs"] = [data["log_path"]]
             if "log_paths" in proj:
                 proj["log_dirs"] = proj.pop("log_paths")
-
-        if "project_path" in data and data["project_path"]:
-            path = data["project_path"]
-            if not any(p.get("path") == path for p in data["projects"]):
-                data["projects"].append({"path": path, "name": Path(path).name})
-            if not data.get("current_project"):
-                data["current_project"] = path
 
         return data
     except FileNotFoundError:

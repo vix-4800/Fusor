@@ -488,9 +488,6 @@ class MainWindow(QMainWindow):
             elif isinstance(entry, str):
                 self.projects.append({"path": entry, "name": Path(entry).name})
         self.project_path = data.get("current_project", self.project_path)
-        if not self.projects and data.get("project_path"):
-            path = data["project_path"]
-            self.projects = [{"path": path, "name": Path(path).name}]
         if not self.project_path and self.projects:
             self.project_path = self.projects[0]["path"]
 
@@ -540,11 +537,7 @@ class MainWindow(QMainWindow):
             list[str], settings.get("log_dirs")
         ) if isinstance(settings.get("log_dirs"), list) else []
         if not self.log_dirs:
-            legacy = settings.get("log_paths") or settings.get("log_path", data.get("log_path"))
-            if legacy:
-                self.log_dirs = legacy if isinstance(legacy, list) else [legacy]
-            else:
-                self.log_dirs = self.default_log_dirs(self.framework_choice)
+            self.log_dirs = self.default_log_dirs(self.framework_choice)
         self.git_remote = cast(
             str,
             settings.get("git_remote", data.get("git_remote", self.git_remote)),
@@ -674,11 +667,7 @@ class MainWindow(QMainWindow):
         value = settings.get("log_dirs")
         self.log_dirs = list(cast(list[str], value)) if isinstance(value, list) else []
         if not self.log_dirs:
-            legacy = settings.get("log_paths") or settings.get("log_path")
-            if legacy:
-                self.log_dirs = legacy if isinstance(legacy, list) else [cast(str, legacy)]
-            else:
-                self.log_dirs = self.default_log_dirs(self.framework_choice)
+            self.log_dirs = self.default_log_dirs(self.framework_choice)
         self.git_remote = cast(str, settings["git_remote"])
         comps = settings.get("compose_files")
         self.compose_files = (
