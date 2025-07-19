@@ -49,6 +49,7 @@ from .tabs.database_tab import DatabaseTab
 from .tabs.laravel_tab import LaravelTab
 from .tabs.symfony_tab import SymfonyTab
 from .tabs.yii_tab import YiiTab
+from .tabs.node_tab import NodeTab
 from .tabs.docker_tab import DockerTab
 from .tabs.logs_tab import LogsTab
 from .tabs.terminal_tab import TerminalTab
@@ -375,6 +376,9 @@ class MainWindow(QMainWindow):
 
         self.docker_tab = DockerTab(self)
         self.docker_index = self.tabs.addTab(self.docker_tab, "Docker")
+
+        self.node_tab = NodeTab(self)
+        self.node_index = self.tabs.addTab(self.node_tab, "Node")
 
         self.logs_tab = LogsTab(self)
         self.logs_index = self.tabs.addTab(self.logs_tab, "Logs")
