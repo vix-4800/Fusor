@@ -6,6 +6,7 @@ import signal
 import concurrent.futures
 import builtins
 import shutil
+import webbrowser
 from PyQt6.QtWidgets import (
     QMainWindow,
     QTabWidget,
@@ -281,6 +282,7 @@ class MainWindow(QMainWindow):
         self.compose_profile_edit: QLineEdit | None = None
         self.refresh_spin: QSpinBox | None = None
         self.theme_combo: QComboBox | None = None
+        self.open_browser_checkbox: QCheckBox | None = None
         self.log_view: QTextEdit | None = None
 
         self.tabs = QTabWidget()
@@ -340,6 +342,7 @@ class MainWindow(QMainWindow):
         self.git_remote = ""
         self.max_log_lines = DEFAULT_MAX_LOG_LINES
         self.auto_refresh_secs = 5
+        self.open_browser = False
         self.load_config()
         apply_theme(self, self.theme)
 
@@ -487,6 +490,9 @@ class MainWindow(QMainWindow):
             "auto_refresh_secs",
             data.get("auto_refresh_secs", self.auto_refresh_secs),
         )
+        self.open_browser = settings.get(
+            "open_browser", data.get("open_browser", self.open_browser)
+        )
 
         self.theme = data.get("theme", self.theme)
 
@@ -556,6 +562,7 @@ class MainWindow(QMainWindow):
         )
         self.compose_profile = cast(str, settings.get("compose_profile", ""))
         self.auto_refresh_secs = int(cast(Any, settings["auto_refresh_secs"]))
+        self.open_browser = bool(settings.get("open_browser", False))
         self.max_log_lines = int(
             cast(Any, settings.get("max_log_lines", self.max_log_lines))
         )
@@ -592,6 +599,8 @@ class MainWindow(QMainWindow):
             self.compose_profile_edit.setText(self.compose_profile)
         if self.refresh_spin is not None:
             self.refresh_spin.setValue(self.auto_refresh_secs)
+        if self.open_browser_checkbox is not None:
+            self.open_browser_checkbox.setChecked(self.open_browser)
         if hasattr(self, "logs_tab"):
             self.logs_tab.update_timer_interval(self.auto_refresh_secs)
 
@@ -885,6 +894,11 @@ class MainWindow(QMainWindow):
             if self.theme_combo is not None
             else self.theme
         )
+        open_browser = (
+            self.open_browser_checkbox.isChecked()
+            if self.open_browser_checkbox is not None
+            else self.open_browser
+        )
 
         if (
             not project_path
@@ -950,6 +964,7 @@ class MainWindow(QMainWindow):
         self.compose_profile = compose_profile.strip()
         self.auto_refresh_secs = int(auto_refresh_secs)
         self.theme = theme
+        self.open_browser = bool(open_browser)
         self.max_log_lines = int(getattr(self, "max_log_lines", DEFAULT_MAX_LOG_LINES))
 
         data = load_config()
@@ -966,6 +981,7 @@ class MainWindow(QMainWindow):
             "compose_files": self.compose_files,
             "compose_profile": self.compose_profile,
             "auto_refresh_secs": self.auto_refresh_secs,
+            "open_browser": self.open_browser,
             "max_log_lines": self.max_log_lines,
         }
         data.update(
@@ -1110,6 +1126,8 @@ class MainWindow(QMainWindow):
             self.executor.submit(stream)
             self.project_running = True
             self.update_run_buttons()
+            if self.open_browser:
+                webbrowser.open(f"http://localhost:{self.server_port}")
         except FileNotFoundError:
             print(f"Command not found: {command[0]}")
 
