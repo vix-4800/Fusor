@@ -568,7 +568,6 @@ class MainWindow(QMainWindow):
                 self.project_combo.setCurrentText(os.path.basename(path))
             self.project_combo.blockSignals(False)
         if hasattr(self, "git_tab"):
-            self.git_tab.remote_branches_loaded = False
             self.git_tab.load_branches()
 
         self.apply_project_settings()
@@ -777,7 +776,6 @@ class MainWindow(QMainWindow):
                 self.logs_tab.set_log_paths(self.log_paths)
 
         if hasattr(self, "git_tab"):
-            self.git_tab.remote_branches_loaded = False
             self.git_tab.load_branches()
 
     def artisan(self, *args):
@@ -946,8 +944,7 @@ class MainWindow(QMainWindow):
 
     def on_tab_changed(self, index: int):
         if index == getattr(self, "git_index", -1):
-            if not self.git_tab.remote_branches_loaded:
-                self.git_tab.load_remote_branches()
+            self.git_tab.load_branches()
 
     def clear_output(self):
         self.output_view.clear()
