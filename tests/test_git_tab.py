@@ -297,3 +297,28 @@ def test_branch_truncates_on_small_width(qtbot):
 
     tab.update_responsive_layout(800)
     assert tab.current_branch_label.text() == long_branch
+
+
+def test_commit_button_runs_commit(monkeypatch, qtbot):
+    main = DummyMainWindow()
+    tab = GitTab(main)
+    qtbot.addWidget(tab)
+
+    called = {}
+
+    def fake_run_git_command(*args):
+        called["args"] = args
+
+    monkeypatch.setattr(tab, "run_git_command", fake_run_git_command, raising=True)
+
+    commit_btn: QPushButton | None = None
+    for btn in tab.findChildren(QPushButton):
+        if btn.text() == "Commit":
+            commit_btn = btn
+            break
+    assert commit_btn is not None
+
+    tab.commit_message_edit.setText("initial commit")
+    qtbot.mouseClick(commit_btn, Qt.MouseButton.LeftButton)
+
+    assert called["args"] == ("commit", "-m", "initial commit")
