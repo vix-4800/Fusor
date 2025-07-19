@@ -29,6 +29,7 @@ from .config import (
     DEFAULT_MAX_LOG_LINES,
 )
 from .qtextedit_logger import QTextEditLogger
+from .welcome_dialog import WelcomeDialog
 
 from .tabs.project_tab import ProjectTab
 from .tabs.git_tab import GitTab
@@ -374,7 +375,10 @@ class MainWindow(QMainWindow):
         if self.project_path:
             self.git_tab.load_branches()
         else:
-            QTimer.singleShot(0, self.choose_project)
+            if not self.projects:
+                QTimer.singleShot(0, self.show_welcome_dialog)
+            else:
+                QTimer.singleShot(0, self.choose_project)
 
         if (
             hasattr(self, "_geom_size")
@@ -579,7 +583,7 @@ class MainWindow(QMainWindow):
     def ensure_project_path(self):
         if not self.project_path:
             print("Project path not set")
-            self.close()
+            self.show_welcome_dialog()
             return False
         return True
 
@@ -623,7 +627,7 @@ class MainWindow(QMainWindow):
 
     def choose_project(self):
         if not self.projects:
-            self.add_project()
+            self.show_welcome_dialog()
             return
         names = [p["name"] for p in self.projects]
         current_index = next(
@@ -643,6 +647,10 @@ class MainWindow(QMainWindow):
                 if p["name"] == name:
                     self.set_current_project(p["path"])
                     break
+
+    def show_welcome_dialog(self):
+        dlg = WelcomeDialog(self)
+        dlg.exec()
 
     def current_framework(self):
         return (
