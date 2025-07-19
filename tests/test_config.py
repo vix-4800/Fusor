@@ -42,3 +42,14 @@ def test_load_invalid_json(tmp_path, monkeypatch):
     cfg_file.write_text("{ invalid json")
     monkeypatch.setattr(config, "CONFIG_FILE", str(cfg_file))
     assert config.load_config() == DEFAULT_CONFIG
+
+
+def test_load_returns_copy(tmp_path, monkeypatch):
+    """Modifying the loaded config should not affect DEFAULT_CONFIG."""
+    cfg_file = tmp_path / "missing.json"
+    monkeypatch.setattr(config, "CONFIG_FILE", str(cfg_file))
+    loaded = config.load_config()
+    loaded["projects"].append({"path": "/foo", "name": "foo"})
+    loaded["window_size"][0] = 500
+    assert DEFAULT_CONFIG["projects"] == []
+    assert DEFAULT_CONFIG["window_size"] == [1024, 768]
