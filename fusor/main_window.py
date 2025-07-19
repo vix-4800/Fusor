@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QFileDialog,
     QInputDialog,
+    QSystemTrayIcon,
 )
 from PyQt6.QtCore import QTimer
 from typing import TYPE_CHECKING, Any, cast
@@ -49,9 +50,11 @@ from .tabs.database_tab import DatabaseTab
 from .tabs.laravel_tab import LaravelTab
 from .tabs.symfony_tab import SymfonyTab
 from .tabs.yii_tab import YiiTab
+from .tabs.node_tab import NodeTab
 from .tabs.docker_tab import DockerTab
 from .tabs.logs_tab import LogsTab
 from .tabs.terminal_tab import TerminalTab
+from .tabs.env_tab import EnvTab
 from .tabs.settings_tab import SettingsTab
 
 # allow tests to monkeypatch file operations easily
@@ -323,6 +326,7 @@ class MainWindow(QMainWindow):
         self.server_process = None
         self.project_running = False
         self.settings_dirty = False
+        self._tray_icon: QSystemTrayIcon | None = None
 
         # Redirect stdout to the output view only
         self._stdout_logger = QTextEditLogger(
@@ -377,8 +381,14 @@ class MainWindow(QMainWindow):
         self.docker_tab = DockerTab(self)
         self.docker_index = self.tabs.addTab(self.docker_tab, "Docker")
 
+        self.node_tab = NodeTab(self)
+        self.node_index = self.tabs.addTab(self.node_tab, "Node")
+
         self.logs_tab = LogsTab(self)
         self.logs_index = self.tabs.addTab(self.logs_tab, "Logs")
+
+        self.env_tab = EnvTab(self)
+        self.env_index = self.tabs.addTab(self.env_tab, ".env")
 
         self.terminal_tab = TerminalTab(self)
         self.terminal_index = self.tabs.addTab(self.terminal_tab, "Terminal")
@@ -407,6 +417,11 @@ class MainWindow(QMainWindow):
         log_visible = self.framework_choice in ["Laravel", "Symfony", "Yii"]
         self.tabs.setTabVisible(self.logs_index, log_visible)
         self.tabs.setTabEnabled(self.logs_index, log_visible)
+
+        # env tab visibility based on project selection
+        show_env = bool(self.project_path)
+        self.tabs.setTabVisible(self.env_index, show_env)
+        self.tabs.setTabEnabled(self.env_index, show_env)
 
         # terminal tab availability
         self.tabs.setTabVisible(self.terminal_index, self.enable_terminal)
@@ -463,11 +478,11 @@ class MainWindow(QMainWindow):
         for entry in data.get("projects", []):
             if isinstance(entry, dict) and "path" in entry:
                 name = entry.get("name", Path(entry["path"]).name)
-                proj = {"path": entry["path"], "name": name}
+                proj_dict = {"path": entry["path"], "name": name}
                 for k, v in entry.items():
-                    if k not in proj:
-                        proj[k] = v
-                self.projects.append(proj)
+                    if k not in proj_dict:
+                        proj_dict[k] = v
+                self.projects.append(proj_dict)
             elif isinstance(entry, str):
                 self.projects.append({"path": entry, "name": Path(entry).name})
         self.project_path = data.get("current_project", self.project_path)
@@ -477,8 +492,11 @@ class MainWindow(QMainWindow):
         if not self.project_path and self.projects:
             self.project_path = self.projects[0]["path"]
 
-        proj = next((p for p in data.get("projects", []) if p.get("path") == self.project_path), None)
-        settings = DEFAULT_PROJECT_SETTINGS.copy()
+        proj: dict[str, Any] | None = next(
+            (p for p in data.get("projects", []) if p.get("path") == self.project_path),
+            None,
+        )
+        settings: dict[str, Any] = DEFAULT_PROJECT_SETTINGS.copy()
         settings.update(data.get("project_settings", {}).get(self.project_path, {}))
         if isinstance(proj, dict):
             temp = proj.copy()
@@ -486,62 +504,81 @@ class MainWindow(QMainWindow):
             temp.pop("name", None)
             settings.update(temp)
 
-        self.framework_choice = settings.get(
-            "framework", data.get("framework", self.framework_choice)
+        self.framework_choice = cast(
+            str,
+            settings.get("framework", data.get("framework", self.framework_choice)),
         )
-        self.php_path = settings.get("php_path", data.get("php_path", self.php_path))
-        self.php_service = settings.get(
-            "php_service", data.get("php_service", self.php_service)
+        self.php_path = cast(str, settings.get("php_path", data.get("php_path", self.php_path)))
+        self.php_service = cast(
+            str,
+            settings.get("php_service", data.get("php_service", self.php_service)),
         )
-        self.db_service = settings.get(
-            "db_service", data.get("db_service", self.db_service)
+        self.db_service = cast(
+            str,
+            settings.get("db_service", data.get("db_service", self.db_service)),
         )
-        self.docker_project_path = settings.get(
-            "docker_project_path",
-            data.get("docker_project_path", self.docker_project_path),
+        self.docker_project_path = cast(
+            str,
+            settings.get(
+                "docker_project_path",
+                data.get("docker_project_path", self.docker_project_path),
+            ),
         )
-        self.server_port = settings.get(
-            "server_port", data.get("server_port", self.server_port)
+        self.server_port = int(
+            cast(Any, settings.get("server_port", data.get("server_port", self.server_port)))
         )
-        self.use_docker = settings.get(
-            "use_docker", data.get("use_docker", self.use_docker)
+        self.use_docker = bool(
+            settings.get("use_docker", data.get("use_docker", self.use_docker))
         )
-        self.yii_template = settings.get(
-            "yii_template", data.get("yii_template", self.yii_template)
+        self.yii_template = cast(
+            str,
+            settings.get("yii_template", data.get("yii_template", self.yii_template)),
         )
-        self.log_dirs = settings.get("log_dirs")
+        self.log_dirs = cast(
+            list[str], settings.get("log_dirs")
+        ) if isinstance(settings.get("log_dirs"), list) else []
         if not self.log_dirs:
             legacy = settings.get("log_paths") or settings.get("log_path", data.get("log_path"))
             if legacy:
                 self.log_dirs = legacy if isinstance(legacy, list) else [legacy]
             else:
                 self.log_dirs = self.default_log_dirs(self.framework_choice)
-        self.git_remote = settings.get(
-            "git_remote", data.get("git_remote", self.git_remote)
+        self.git_remote = cast(
+            str,
+            settings.get("git_remote", data.get("git_remote", self.git_remote)),
         )
-        self.compose_files = settings.get(
-            "compose_files", data.get("compose_files", self.compose_files)
+        self.compose_files = (
+            list(cast(list[str], settings.get("compose_files")))
+            if isinstance(settings.get("compose_files"), list)
+            else cast(list[str], data.get("compose_files", self.compose_files))
         )
-        self.compose_profile = settings.get(
-            "compose_profile", data.get("compose_profile", self.compose_profile)
+        self.compose_profile = cast(
+            str,
+            settings.get("compose_profile", data.get("compose_profile", self.compose_profile)),
         )
-        self.auto_refresh_secs = settings.get(
-            "auto_refresh_secs",
-            data.get("auto_refresh_secs", self.auto_refresh_secs),
+        self.auto_refresh_secs = int(
+            cast(
+                Any,
+                settings.get(
+                    "auto_refresh_secs",
+                    data.get("auto_refresh_secs", self.auto_refresh_secs),
+                ),
+            )
         )
-        self.enable_terminal = settings.get(
-            "enable_terminal",
-            data.get("enable_terminal", self.enable_terminal),
+        self.enable_terminal = bool(
+            settings.get("enable_terminal", data.get("enable_terminal", self.enable_terminal))
         )
-        self.open_browser = settings.get(
-            "open_browser", data.get("open_browser", self.open_browser)
+        self.open_browser = bool(
+            settings.get("open_browser", data.get("open_browser", self.open_browser))
         )
 
         self.theme = data.get("theme", self.theme)
 
-        self.max_log_lines = settings.get(
-            "max_log_lines",
-            data.get("max_log_lines", self.max_log_lines),
+        self.max_log_lines = int(
+            cast(
+                Any,
+                settings.get("max_log_lines", data.get("max_log_lines", self.max_log_lines)),
+            )
         )
 
         self._geom_size = data.get("window_size")
@@ -569,6 +606,14 @@ class MainWindow(QMainWindow):
         if self.settings_dirty:
             self.settings_dirty = False
             self.update_settings_tab_title()
+
+    def notify(self, message: str, title: str = APP_NAME) -> None:
+        """Show a transient system notification."""
+        if getattr(self, "_tray_icon", None) is None:
+            self._tray_icon = QSystemTrayIcon(self.windowIcon(), self)
+        self._tray_icon.show()
+        self._tray_icon.showMessage(title, message)
+        QTimer.singleShot(100, self._tray_icon.hide)
 
     def update_run_buttons(self) -> None:
         """Enable or disable start and stop buttons based on running state."""
@@ -690,6 +735,12 @@ class MainWindow(QMainWindow):
         if hasattr(self, "terminal_index"):
             self.tabs.setTabVisible(self.terminal_index, self.enable_terminal)
             self.tabs.setTabEnabled(self.terminal_index, self.enable_terminal)
+        if hasattr(self, "env_index"):
+            show_env = bool(self.project_path)
+            self.tabs.setTabVisible(self.env_index, show_env)
+            self.tabs.setTabEnabled(self.env_index, show_env)
+            if show_env and hasattr(self, "env_tab"):
+                self.env_tab.load_env()
 
         self.mark_settings_saved()
 
@@ -723,8 +774,10 @@ class MainWindow(QMainWindow):
                     print(result.stdout.strip())
                 if result.stderr:
                     print(result.stderr.strip())
+                self.notify(f"Finished: {' '.join(command)}")
             except FileNotFoundError:
                 print(f"Command not found: {command[0]}")
+                self.notify(f"Command not found: {command[0]}")
 
         print(f"$ {' '.join(command)}")
         self.executor.submit(task)
@@ -768,6 +821,11 @@ class MainWindow(QMainWindow):
         if hasattr(self, "terminal_index"):
             self.tabs.setTabVisible(self.terminal_index, self.enable_terminal)
             self.tabs.setTabEnabled(self.terminal_index, self.enable_terminal)
+        if hasattr(self, "env_index"):
+            self.tabs.setTabVisible(self.env_index, True)
+            self.tabs.setTabEnabled(self.env_index, True)
+            if hasattr(self, "env_tab"):
+                self.env_tab.load_env()
 
         self.apply_project_settings()
 
@@ -1234,6 +1292,7 @@ class MainWindow(QMainWindow):
             self.run_command(["docker", "compose", "up", "-d"])
             self.project_running = True
             self.update_run_buttons()
+            self.notify("Project started")
             return
 
         if self.server_process and self.server_process.poll() is None:
@@ -1285,6 +1344,7 @@ class MainWindow(QMainWindow):
             self.update_run_buttons()
             if self.open_browser:
                 webbrowser.open(f"http://localhost:{self.server_port}")
+            self.notify("Project started")
         except FileNotFoundError:
             print(f"Command not found: {command[0]}")
 
@@ -1295,6 +1355,7 @@ class MainWindow(QMainWindow):
             self.run_command(["docker", "compose", "down"])
             self.project_running = False
             self.update_run_buttons()
+            self.notify("Project stopped")
             return
 
         if not self.project_running:
@@ -1322,6 +1383,7 @@ class MainWindow(QMainWindow):
             print("Project is not running")
         self.project_running = False
         self.update_run_buttons()
+        self.notify("Project stopped")
 
     def closeEvent(self, event: "QCloseEvent | None") -> None:
         if self.server_process and self.server_process.poll() is None:
