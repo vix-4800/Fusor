@@ -371,6 +371,30 @@ class TestMainWindow:
 
         assert captured["cwd"] == "/repo"
 
+    def test_run_command_notifies(self, main_window, monkeypatch):
+        notified = []
+
+        class DummyTray:
+            def __init__(self, *a, **k):
+                pass
+
+            def show(self):
+                pass
+
+            def hide(self):
+                pass
+
+            def showMessage(self, title, msg):
+                notified.append((title, msg))
+
+        monkeypatch.setattr(mw_module, "QSystemTrayIcon", DummyTray, raising=False)
+        monkeypatch.setattr(subprocess, "run", lambda *a, **k: type("R", (), {"stdout": "", "stderr": ""})(), raising=True)
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+
+        main_window.run_command(["echo", "hi"])
+
+        assert notified == [(APP_NAME, "Finished: echo hi")]
+
     def test_refresh_logs_reads_custom_path(self, tmp_path: Path, main_window, monkeypatch):
         log_dir = tmp_path / "logs"
         log_dir.mkdir()
@@ -1144,3 +1168,50 @@ class TestMainWindow:
         items = [win.remote_combo.itemText(i) for i in range(win.remote_combo.count())]
         assert "origin" in items
         win.close()
+
+    def test_start_and_stop_project_notify(self, tmp_path: Path, main_window, monkeypatch):
+        notified = []
+
+        class DummyTray:
+            def __init__(self, *a, **k):
+                pass
+
+            def show(self):
+                pass
+
+            def hide(self):
+                pass
+
+            def showMessage(self, title, msg):
+                notified.append((title, msg))
+
+        class DummyProc:
+            stdout: list[str] = []
+
+            def poll(self):
+                return None
+
+            def wait(self, timeout=5):
+                pass
+
+            def kill(self):
+                pass
+
+        monkeypatch.setattr(mw_module, "QSystemTrayIcon", DummyTray, raising=False)
+        monkeypatch.setattr(subprocess, "Popen", lambda *a, **k: DummyProc(), raising=True)
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+        monkeypatch.setattr(os, "killpg", lambda *a, **k: None, raising=False)
+
+        main_window.project_path = str(tmp_path)
+        (tmp_path / "public").mkdir()
+        main_window.framework_choice = "None"
+
+        main_window.start_project()
+        assert (APP_NAME, "Project started") in notified
+
+        main_window.server_process = DummyProc()
+        main_window.project_running = True
+        notified.clear()
+
+        main_window.stop_project()
+        assert (APP_NAME, "Project stopped") in notified
