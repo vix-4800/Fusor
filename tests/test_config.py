@@ -9,11 +9,9 @@ def test_save_then_load(tmp_path, monkeypatch):
         "bar": [1, 2, 3],
         "projects": [
             {"path": "/one", "name": "one"},
-            {"path": "/two", "name": "two"},
-        ],
-        "current_project": "/two",
-        "project_settings": {
-            "/two": {
+            {
+                "path": "/two",
+                "name": "two",
                 "use_docker": True,
                 "php_service": "php",
                 "server_port": 9000,
@@ -23,8 +21,9 @@ def test_save_then_load(tmp_path, monkeypatch):
                 "compose_files": ["dc.yml"],
                 "auto_refresh_secs": 7,
                 "enable_terminal": False,
-            }
-        },
+            },
+        ],
+        "current_project": "/two",
         "theme": "light",
         "window_size": [800, 600],
         "window_position": [10, 20],

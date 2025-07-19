@@ -525,13 +525,10 @@ class SettingsTab(QWidget):
             else:
                 self.main_window.project_path = ""
 
-        settings = data.get("project_settings", {})
-        settings.pop(path, None)
         data.update(
             {
                 "projects": self.main_window.projects,
                 "current_project": self.main_window.project_path,
-                "project_settings": settings,
             }
         )
         save_config(data)

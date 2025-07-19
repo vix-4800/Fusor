@@ -644,9 +644,8 @@ class TestMainWindow:
         monkeypatch.setattr(
             "fusor.tabs.settings_tab.load_config",
             lambda: {
-                "projects": [{"path": "/one", "name": "one"}],
+                "projects": [{"path": "/one", "name": "one", "server_port": 8000}],
                 "current_project": "/one",
-                "project_settings": {"/one": {"server_port": 8000}},
             },
             raising=True,
         )
@@ -668,7 +667,6 @@ class TestMainWindow:
         assert win.project_path == ""
         assert saved["projects"] == []
         assert saved["current_project"] == ""
-        assert "/one" not in saved.get("project_settings", {})
         assert shown
         win.close()
 
@@ -720,7 +718,7 @@ class TestMainWindow:
         main_window.save_settings()
 
         assert not warnings
-        assert saved["project_settings"]["/tmp"]["php_path"] == "php"
+        assert saved["projects"][0]["php_path"] == "php"
 
     def test_project_change_updates_settings(self, qtbot, monkeypatch):
         monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
@@ -729,14 +727,10 @@ class TestMainWindow:
             "load_config",
             lambda: {
                 "projects": [
-                    {"path": "/one", "name": "one"},
-                    {"path": "/two", "name": "two"},
+                    {"path": "/one", "name": "one", "server_port": 8000},
+                    {"path": "/two", "name": "two", "server_port": 8001},
                 ],
                 "current_project": "/one",
-                "project_settings": {
-                    "/one": {"server_port": 8000},
-                    "/two": {"server_port": 8001},
-                },
             },
             raising=True,
         )
@@ -991,7 +985,7 @@ class TestMainWindow:
         main_window.save_settings()
 
         assert main_window.compose_files == ["a.yml", "b.yml"]
-        assert saved["project_settings"]["/tmp"]["compose_files"] == ["a.yml", "b.yml"]
+        assert saved["projects"][0]["compose_files"] == ["a.yml", "b.yml"]
 
     def test_save_settings_updates_project_name(self, main_window, monkeypatch):
         main_window.project_combo.addItem("/tmp", "/tmp")
@@ -1010,8 +1004,8 @@ class TestMainWindow:
 
         main_window.save_settings()
 
-        assert main_window.projects == [{"path": "/tmp", "name": "MyProj"}]
-        assert saved["projects"] == [{"path": "/tmp", "name": "MyProj"}]
+        assert main_window.projects[0]["name"] == "MyProj"
+        assert saved["projects"][0]["name"] == "MyProj"
         assert main_window.project_combo.itemText(0) == "MyProj"
 
     def test_start_project_includes_compose_profile(self, tmp_path: Path, main_window, monkeypatch):

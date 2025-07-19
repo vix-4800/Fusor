@@ -471,7 +471,14 @@ class MainWindow(QMainWindow):
         if not self.project_path and self.projects:
             self.project_path = self.projects[0]["path"]
 
-        settings = data.get("project_settings", {}).get(self.project_path, {})
+        proj = next((p for p in data.get("projects", []) if p.get("path") == self.project_path), None)
+        settings = DEFAULT_PROJECT_SETTINGS.copy()
+        settings.update(data.get("project_settings", {}).get(self.project_path, {}))
+        if isinstance(proj, dict):
+            temp = proj.copy()
+            temp.pop("path", None)
+            temp.pop("name", None)
+            settings.update(temp)
 
         self.framework_choice = settings.get(
             "framework", data.get("framework", self.framework_choice)
@@ -585,8 +592,14 @@ class MainWindow(QMainWindow):
     def apply_project_settings(self) -> None:
         """Load settings for the current project and update widgets."""
         data = load_config()
+        proj = next((p for p in data.get("projects", []) if p.get("path") == self.project_path), None)
         settings = DEFAULT_PROJECT_SETTINGS.copy()
         settings.update(data.get("project_settings", {}).get(self.project_path, {}))
+        if isinstance(proj, dict):
+            temp = proj.copy()
+            temp.pop("path", None)
+            temp.pop("name", None)
+            settings.update(temp)
 
         self.framework_choice = cast(str, settings["framework"])
         self.php_path = cast(str, settings["php_path"])
@@ -1043,29 +1056,60 @@ class MainWindow(QMainWindow):
         self.max_log_lines = int(getattr(self, "max_log_lines", DEFAULT_MAX_LOG_LINES))
 
         data = load_config()
-        settings = data.get("project_settings", {})
-        settings[project_path] = {
-            "framework": framework,
-            "php_path": php_path,
-            "php_service": php_service,
-            "server_port": server_port,
-            "use_docker": use_docker,
-            "yii_template": yii_template,
-            "log_dirs": paths,
-            "git_remote": git_remote,
-            "compose_files": self.compose_files,
-            "compose_profile": self.compose_profile,
-            "docker_project_path": self.docker_project_path,
-            "auto_refresh_secs": self.auto_refresh_secs,
-            "open_browser": self.open_browser,
-            "max_log_lines": self.max_log_lines,
-            "enable_terminal": self.enable_terminal,
-        }
+        updated_projects = []
+        found = False
+        for p in self.projects:
+            if p.get("path") == project_path and not found:
+                proj = {
+                    "path": project_path,
+                    "name": project_name,
+                    "framework": framework,
+                    "php_path": php_path,
+                    "php_service": php_service,
+                    "server_port": server_port,
+                    "use_docker": use_docker,
+                    "yii_template": yii_template,
+                    "log_dirs": paths,
+                    "git_remote": git_remote,
+                    "compose_files": self.compose_files,
+                    "compose_profile": self.compose_profile,
+                    "docker_project_path": self.docker_project_path,
+                    "auto_refresh_secs": self.auto_refresh_secs,
+                    "open_browser": self.open_browser,
+                    "max_log_lines": self.max_log_lines,
+                    "enable_terminal": self.enable_terminal,
+                }
+                updated_projects.append(proj)
+                found = True
+            else:
+                updated_projects.append(p.copy())
+        if not found:
+            updated_projects.append(
+                {
+                    "path": project_path,
+                    "name": project_name,
+                    "framework": framework,
+                    "php_path": php_path,
+                    "php_service": php_service,
+                    "server_port": server_port,
+                    "use_docker": use_docker,
+                    "yii_template": yii_template,
+                    "log_dirs": paths,
+                    "git_remote": git_remote,
+                    "compose_files": self.compose_files,
+                    "compose_profile": self.compose_profile,
+                    "docker_project_path": self.docker_project_path,
+                    "auto_refresh_secs": self.auto_refresh_secs,
+                    "open_browser": self.open_browser,
+                    "max_log_lines": self.max_log_lines,
+                    "enable_terminal": self.enable_terminal,
+                }
+            )
+        self.projects = updated_projects
         data.update(
             {
                 "projects": self.projects,
                 "current_project": project_path,
-                "project_settings": settings,
                 "theme": self.theme,
             }
         )
