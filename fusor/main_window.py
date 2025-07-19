@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QFileDialog,
     QInputDialog,
+    QSystemTrayIcon,
 )
 from PyQt6.QtCore import QTimer
 from typing import TYPE_CHECKING, Any, cast
@@ -322,6 +323,7 @@ class MainWindow(QMainWindow):
         self.server_process = None
         self.project_running = False
         self.settings_dirty = False
+        self._tray_icon: QSystemTrayIcon | None = None
 
         # Redirect stdout to the output view only
         self._stdout_logger = QTextEditLogger(
@@ -565,6 +567,14 @@ class MainWindow(QMainWindow):
             self.settings_dirty = False
             self.update_settings_tab_title()
 
+    def notify(self, message: str, title: str = APP_NAME) -> None:
+        """Show a transient system notification."""
+        if getattr(self, "_tray_icon", None) is None:
+            self._tray_icon = QSystemTrayIcon(self.windowIcon(), self)
+        self._tray_icon.show()
+        self._tray_icon.showMessage(title, message)
+        QTimer.singleShot(100, self._tray_icon.hide)
+
     def update_run_buttons(self) -> None:
         """Enable or disable start and stop buttons based on running state."""
         if hasattr(self, "project_tab"):
@@ -715,8 +725,10 @@ class MainWindow(QMainWindow):
                     print(result.stdout.strip())
                 if result.stderr:
                     print(result.stderr.strip())
+                self.notify(f"Finished: {' '.join(command)}")
             except FileNotFoundError:
                 print(f"Command not found: {command[0]}")
+                self.notify(f"Command not found: {command[0]}")
 
         print(f"$ {' '.join(command)}")
         self.executor.submit(task)
@@ -1218,6 +1230,7 @@ class MainWindow(QMainWindow):
             self.run_command(["docker", "compose", "up", "-d"])
             self.project_running = True
             self.update_run_buttons()
+            self.notify("Project started")
             return
 
         if self.server_process and self.server_process.poll() is None:
@@ -1269,6 +1282,7 @@ class MainWindow(QMainWindow):
             self.update_run_buttons()
             if self.open_browser:
                 webbrowser.open(f"http://localhost:{self.server_port}")
+            self.notify("Project started")
         except FileNotFoundError:
             print(f"Command not found: {command[0]}")
 
@@ -1279,6 +1293,7 @@ class MainWindow(QMainWindow):
             self.run_command(["docker", "compose", "down"])
             self.project_running = False
             self.update_run_buttons()
+            self.notify("Project stopped")
             return
 
         if not self.project_running:
@@ -1306,6 +1321,7 @@ class MainWindow(QMainWindow):
             print("Project is not running")
         self.project_running = False
         self.update_run_buttons()
+        self.notify("Project stopped")
 
     def closeEvent(self, event: "QCloseEvent | None") -> None:
         if self.server_process and self.server_process.poll() is None:
