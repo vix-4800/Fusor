@@ -1,5 +1,7 @@
 # Fusor
 
+[![Tests](https://github.com/vix-4800/Fusor/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/vix-4800/Fusor/actions/workflows/tests.yml)
+
 **Fusor** is a cross-platform desktop app built with PyQt6 that helps you manage PHP-based projects without touching the terminal. It’s designed for QA engineers, testers, junior developers, and anyone who wants to execute common project tasks with a click.
 
 ![Main window with tabs](docs/screenshot.jpg)
