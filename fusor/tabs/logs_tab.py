@@ -137,7 +137,6 @@ class LogsTab(QWidget):
 
     def set_log_dirs(self, paths: list[str]) -> None:
         self.log_selector.clear()
-        self.log_selector.addItem("All logs", None)
         expanded = expand_log_paths(self.main_window.project_path, paths)
         for p in expanded:
             self.log_selector.addItem(p, p)

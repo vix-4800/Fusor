@@ -495,9 +495,8 @@ class TestMainWindow:
 
         main_window.refresh_logs()
 
-        assert opened == [str(p) for p in paths]
-        for i in range(3):
-            assert f"msg{i}" in main_window.log_view.text
+        assert opened == [str(paths[0])]
+        assert "msg0" in main_window.log_view.text
 
     def test_refresh_logs_reads_directory(self, tmp_path: Path, main_window, monkeypatch):
         logs_dir = tmp_path / "logs"
@@ -524,9 +523,8 @@ class TestMainWindow:
 
         main_window.refresh_logs()
 
-        assert opened == [str(p) for p in files]
-        for i in range(2):
-            assert f"msg{i}" in main_window.log_view.text
+        assert opened == [str(files[0])]
+        assert "msg0" in main_window.log_view.text
 
     def test_yii_template_row_visibility(self, main_window, qtbot):
         main_window.framework_combo.setCurrentText("None")
