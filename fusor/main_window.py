@@ -759,6 +759,9 @@ class MainWindow(QMainWindow):
         ):
             self.project_tab.update_php_tools()
 
+        if hasattr(self, "node_tab") and hasattr(self.node_tab, "update_npm_scripts"):
+            self.node_tab.update_npm_scripts()
+
     def run_command(self, command: list[str], service: str | None = None) -> None:
         if self.use_docker:
             if len(command) >= 2 and command[0] == "docker" and command[1] == "compose":

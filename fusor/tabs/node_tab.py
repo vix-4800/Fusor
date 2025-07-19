@@ -1,5 +1,14 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy, QScrollArea
+from PyQt6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QPushButton,
+    QSizePolicy,
+    QScrollArea,
+    QGroupBox,
+)
 from typing import Callable
+from pathlib import Path
+import json
 
 from ..icons import get_icon
 
@@ -33,7 +42,14 @@ class NodeTab(QWidget):
         layout.addWidget(self.npm_dev_btn)
         layout.addWidget(self.npm_build_btn)
 
+        self.npm_scripts_group = QGroupBox("NPM Scripts")
+        self.npm_scripts_layout = QVBoxLayout()
+        self.npm_scripts_group.setLayout(self.npm_scripts_layout)
+        layout.addWidget(self.npm_scripts_group)
+
         layout.addStretch(1)
+
+        self.update_npm_scripts()
 
     def _btn(self, text: str, slot: Callable[[], None], icon: str | None = None) -> QPushButton:
         btn = QPushButton(text)
@@ -52,3 +68,38 @@ class NodeTab(QWidget):
 
     def npm_run_build(self) -> None:
         self.main_window.run_command(["npm", "run", "build"])
+
+    def update_npm_scripts(self) -> None:
+        """Load npm scripts from package.json and create buttons."""
+        scripts: list[str] = []
+        path = self.main_window.project_path
+        if path:
+            package = Path(path) / "package.json"
+            try:
+                with open(package, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                scr = data.get("scripts", {})
+                if isinstance(scr, dict):
+                    scripts = list(scr.keys())
+            except OSError:
+                pass
+
+        for btn in getattr(self, "_script_buttons", []):
+            self.npm_scripts_layout.removeWidget(btn)
+            btn.deleteLater()
+        self._script_buttons = []
+
+        for name in scripts:
+            btn = self._btn(
+                f"npm run {name}",
+                lambda _=False, n=name: self.main_window.run_command([
+                    "npm",
+                    "run",
+                    n,
+                ]),
+                icon="system-run",
+            )
+            self.npm_scripts_layout.addWidget(btn)
+            self._script_buttons.append(btn)
+
+        self.npm_scripts_group.setVisible(bool(scripts))
