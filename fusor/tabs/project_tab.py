@@ -41,7 +41,6 @@ class ProjectTab(QWidget):
             "Start",
             main_window.start_project,
             icon="media-playback-start",
-            color="#28a745",
         )
         self.stop_btn = self._btn(
             "Stop",
