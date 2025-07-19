@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
     QInputDialog,
     QSystemTrayIcon,
 )
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, pyqtSignal
 from typing import TYPE_CHECKING, Any, cast
 from .utils import expand_log_paths
 
@@ -266,8 +266,10 @@ def apply_theme(widget: QMainWindow, theme: str) -> None:
 
 
 class MainWindow(QMainWindow):
+    notify_signal = pyqtSignal(str, str)
     def __init__(self):
         super().__init__()
+        self.notify_signal.connect(self._show_notification)
         self.setWindowTitle(f"{APP_NAME} – PHP QA Toolbox")
         self.resize(1024, 768)
         self.setMinimumSize(400, 300)
@@ -606,7 +608,10 @@ class MainWindow(QMainWindow):
             self.update_settings_tab_title()
 
     def notify(self, message: str, title: str = APP_NAME) -> None:
-        """Show a transient system notification."""
+        """Emit a signal to show a transient system notification."""
+        self.notify_signal.emit(message, title)
+
+    def _show_notification(self, message: str, title: str = APP_NAME) -> None:
         icon = self._tray_icon
         if icon is None:
             icon = QSystemTrayIcon(self.windowIcon(), self)
