@@ -656,7 +656,11 @@ class MainWindow(QMainWindow):
             else "None"
         )
 
-    def default_log_paths(self, framework: str | None = None, template: str | None = None) -> list[str]:
+    def default_log_paths(
+        self,
+        framework: str | None = None,
+        template: str | None = None,
+    ) -> list[str]:
         """Return default log file paths for the given framework."""
         if framework is None:
             framework = self.framework_choice
