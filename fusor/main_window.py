@@ -555,6 +555,9 @@ class MainWindow(QMainWindow):
 
         self.mark_settings_saved()
 
+        if hasattr(self, "project_tab") and hasattr(self.project_tab, "update_php_tools"):
+            self.project_tab.update_php_tools()
+
     def run_command(self, command):
         if self.use_docker:
             if len(command) >= 2 and command[0] == "docker" and command[1] == "compose":

@@ -32,7 +32,7 @@ Fusor aims to **simplify routine PHP project operations** via a user-friendly vi
 
 | Tab          | Description                                                                       |
 | ------------ | --------------------------------------------------------------------------------- |
-| **Project**  | Start/stop server, run PHPUnit, Composer install/update                           |
+| **Project**  | Start/stop server, Composer install/update, PHP tools (PHPUnit, Rector, CS-Fixer) |
 | **Git**      | Switch branches, view status or diff, pull, hard reset, stash changes             |
 | **Database** | Dump or restore SQL, run migrations, seed data                                    |
 | **Docker**   | Build, pull, restart services, inspect containers _(visible only in Docker mode)_ |

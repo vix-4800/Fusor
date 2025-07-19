@@ -1,6 +1,8 @@
 import os
 import sys
 import subprocess
+import json
+from pathlib import Path
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -51,12 +53,32 @@ class ProjectTab(QWidget):
         server_group.setLayout(server_layout)
         layout.addWidget(server_group)
 
-        phpunit_btn = self._btn(
+        # --- PHP Tools Group ---
+        self.php_tools_group = QGroupBox("PHP Tools")
+        php_layout = QVBoxLayout()
+
+        self.phpunit_btn = self._btn(
             "Run PHPUnit",
             main_window.phpunit,
             icon="system-run",
         )
-        layout.addWidget(phpunit_btn)
+        self.rector_btn = self._btn(
+            "Run Rector",
+            lambda: main_window.run_command([main_window.php_path, str(Path("vendor") / "bin" / "rector")]),
+            icon="system-run",
+        )
+        self.csfixer_btn = self._btn(
+            "Run PHP CS-Fixer",
+            lambda: main_window.run_command([main_window.php_path, str(Path("vendor") / "bin" / "php-cs-fixer")]),
+            icon="system-run",
+        )
+
+        php_layout.addWidget(self.phpunit_btn)
+        php_layout.addWidget(self.rector_btn)
+        php_layout.addWidget(self.csfixer_btn)
+
+        self.php_tools_group.setLayout(php_layout)
+        layout.addWidget(self.php_tools_group)
 
         self.terminal_btn = self._btn(
             "Open Terminal",
@@ -90,6 +112,8 @@ class ProjectTab(QWidget):
         layout.addWidget(composer_group)
 
         layout.addStretch(1)
+
+        self.update_php_tools()
 
     def _btn(self, label, slot, icon: str | None = None):
         btn = QPushButton(label)
@@ -138,3 +162,27 @@ class ProjectTab(QWidget):
             subprocess.Popen(["xdg-open", path])
         except FileNotFoundError:
             subprocess.Popen(["gio", "open", path])
+
+    def update_php_tools(self) -> None:
+        """Enable or disable PHP tool buttons based on composer.json."""
+        packages: set[str] = set()
+        path = self.main_window.project_path
+        if path:
+            composer = Path(path) / "composer.json"
+            try:
+                with open(composer, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                for key in ("require", "require-dev"):
+                    pkgs = data.get(key, {})
+                    if isinstance(pkgs, dict):
+                        packages.update(pkgs.keys())
+            except OSError:
+                pass
+
+        mapping = {
+            "phpunit/phpunit": self.phpunit_btn,
+            "rector/rector": self.rector_btn,
+            "friendsofphp/php-cs-fixer": self.csfixer_btn,
+        }
+        for pkg, btn in mapping.items():
+            btn.setEnabled(pkg in packages)
