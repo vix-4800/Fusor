@@ -93,11 +93,13 @@ class TerminalTab(QWidget):
             command = self.main_window._compose_prefix() + [
                 "exec",
                 "-T",
-                getattr(self.main_window, "php_service", "php"),
             ]
             if self.main_window.project_path:
                 command += ["-w", self.main_window.project_path]
-            command.append(program)
+            command += [
+                getattr(self.main_window, "php_service", "php"),
+                program,
+            ]
             self.process.start(command[0], command[1:])
         else:
             self.process.start(program)
