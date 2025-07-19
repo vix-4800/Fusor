@@ -11,8 +11,7 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QScrollArea,
 )
-import os
-from PyQt6.QtCore import QTimer, Qt, QProcess
+from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QTextCursor
 from ..icons import get_icon
 from ..utils import expand_log_paths
@@ -118,15 +117,6 @@ class LogsTab(QWidget):
             self.auto_checkbox, alignment=Qt.AlignmentFlag.AlignVCenter
         )
 
-        self.follow_checkbox = QCheckBox("Follow")
-        self.follow_checkbox.setMinimumHeight(36)
-        self.follow_checkbox.setChecked(False)
-        control_layout.addWidget(
-            self.follow_checkbox, alignment=Qt.AlignmentFlag.AlignVCenter
-        )
-
-        self.follow_process: QProcess | None = None
-
         control_box.setLayout(control_layout)
         outer_layout.addWidget(control_box)
 
@@ -140,10 +130,6 @@ class LogsTab(QWidget):
         self.update_timer_interval(self.main_window.auto_refresh_secs)
         self._timer.timeout.connect(self.main_window.refresh_logs)
         self.auto_checkbox.toggled.connect(self.on_auto_refresh_toggled)
-        self.follow_checkbox.toggled.connect(self.on_follow_toggled)
-        self.log_selector.currentIndexChanged.connect(
-            self.on_log_selection_changed
-        )
 
     def update_timer_interval(self, seconds: int) -> None:
         self._timer.setInterval(int(seconds) * 1000)
@@ -162,64 +148,6 @@ class LogsTab(QWidget):
             self.main_window.refresh_logs()
         else:
             self._timer.stop()
-
-    # ------------------------------------------------------------------
-    # Follow mode handling
-    # ------------------------------------------------------------------
-    def _append_follow_output(self) -> None:
-        if not self.follow_process:
-            return
-        out = bytes(self.follow_process.readAllStandardOutput().data()).decode(
-            errors="ignore"
-        )
-        err = bytes(self.follow_process.readAllStandardError().data()).decode(
-            errors="ignore"
-        )
-        text = out + err
-        if text:
-            cursor = self.log_view.textCursor()
-            cursor.movePosition(QTextCursor.MoveOperation.End)
-            self.log_view.setTextCursor(cursor)
-            self.log_view.insertPlainText(text)
-            self.log_view.moveCursor(QTextCursor.MoveOperation.End)
-
-    def _start_follow_process(self) -> None:
-        self._stop_follow_process()
-        path = self.log_selector.currentData()
-        if not path:
-            self.follow_checkbox.setChecked(False)
-            return
-        if not os.path.isabs(path):
-            path = os.path.join(self.main_window.project_path, path)
-        self.main_window.refresh_logs()
-        proc = QProcess(self)
-        if os.name == "nt":
-            program = "powershell"
-            args = [
-                "-Command",
-                f"Get-Content -Path '{path}' -Wait -Tail 0",
-            ]
-            proc.start(program, args)
-        else:
-            proc.start("tail", ["-F", path])
-        proc.readyReadStandardOutput.connect(self._append_follow_output)
-        proc.readyReadStandardError.connect(self._append_follow_output)
-        self.follow_process = proc
-
-    def _stop_follow_process(self) -> None:
-        if self.follow_process and self.follow_process.state() == QProcess.ProcessState.Running:
-            self.follow_process.kill()
-        self.follow_process = None
-
-    def on_follow_toggled(self, checked: bool) -> None:
-        if checked:
-            self._start_follow_process()
-        else:
-            self._stop_follow_process()
-
-    def on_log_selection_changed(self) -> None:
-        if self.follow_process:
-            self._start_follow_process()
 
     def search_logs(self) -> None:
         text = self.search_edit.text().strip()
