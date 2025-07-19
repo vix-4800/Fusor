@@ -1,6 +1,6 @@
-from pathlib import Path
 from fusor.tabs.env_tab import EnvTab
 import fusor.tabs.env_tab as env_module
+
 
 class DummyMainWindow:
     def __init__(self, path: str):
@@ -32,4 +32,3 @@ def test_load_edit_save(tmp_path, qtbot, monkeypatch):
 
     assert opened[1] == (str(env_file), "w")
     assert env_file.read_text() == "FOO=2"
-

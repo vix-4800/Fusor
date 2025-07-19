@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPlainTextEdit, QPushButton
 # allow easy monkeypatching
 open = builtins.open
 
+
 class EnvTab(QWidget):
     """Edit the .env file of the current project."""
 
@@ -53,4 +54,3 @@ class EnvTab(QWidget):
                 f.write(self.editor.toPlainText())
         except OSError as e:
             print(f"Failed to write .env file: {e}")
-
