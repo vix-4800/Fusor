@@ -544,7 +544,10 @@ class MainWindow(QMainWindow):
             if self.git_remote and self.git_remote not in remotes:
                 self.remote_combo.addItem(self.git_remote)
             self.remote_combo.setCurrentText(self.git_remote)
-        if hasattr(self, "settings_tab") and hasattr(self.settings_tab, "set_compose_files"):
+        if (
+            hasattr(self, "settings_tab")
+            and hasattr(self.settings_tab, "set_compose_files")
+        ):
             self.settings_tab.set_compose_files(self.compose_files)
         elif hasattr(self, "compose_files_edit"):
             self.compose_files_edit.setText(";".join(self.compose_files))
@@ -557,7 +560,10 @@ class MainWindow(QMainWindow):
 
         self.mark_settings_saved()
 
-        if hasattr(self, "project_tab") and hasattr(self.project_tab, "update_php_tools"):
+        if (
+            hasattr(self, "project_tab")
+            and hasattr(self.project_tab, "update_php_tools")
+        ):
             self.project_tab.update_php_tools()
 
     def run_command(self, command):
@@ -808,8 +814,15 @@ class MainWindow(QMainWindow):
             if hasattr(self, "remote_combo")
             else self.git_remote
         )
-        if hasattr(self, "settings_tab") and hasattr(self.settings_tab, "compose_file_edits"):
-            compose_files = [e.text().strip() for e in self.settings_tab.compose_file_edits if e.text().strip()]
+        if (
+            hasattr(self, "settings_tab")
+            and hasattr(self.settings_tab, "compose_file_edits")
+        ):
+            compose_files = [
+                e.text().strip()
+                for e in self.settings_tab.compose_file_edits
+                if e.text().strip()
+            ]
         else:
             compose_text = (
                 self.compose_files_edit.text()
