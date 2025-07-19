@@ -159,7 +159,7 @@ def test_set_log_dirs_expands_directory(tmp_path, qtbot):
     qtbot.addWidget(tab)
 
     items = [tab.log_selector.itemText(i) for i in range(tab.log_selector.count())]
-    expected = ["All logs"] + [str(logs / f"log{i}.log") for i in range(2)]
+    expected = [str(logs / f"log{i}.log") for i in range(2)]
     assert items == expected
 
 
