@@ -13,6 +13,8 @@ DEFAULT_PROJECT_SETTINGS = {
     "framework": "Laravel",
     "php_path": "php",
     "php_service": "php",
+    # path of the project inside docker containers
+    "docker_project_path": "/app",
     "server_port": 8000,
     "use_docker": False,
     "yii_template": "basic",

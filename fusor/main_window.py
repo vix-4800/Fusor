@@ -274,6 +274,7 @@ class MainWindow(QMainWindow):
         self.php_path_edit: QLineEdit | None = None
         self.php_service_edit: QLineEdit | None = None
         self.server_port_edit: QSpinBox | None = None
+        self.docker_project_path_edit: QLineEdit | None = None
         self.docker_checkbox: QCheckBox | None = None
         self.yii_template_combo: QComboBox | None = None
         self.log_path_edit: QLineEdit | None = None
@@ -333,6 +334,7 @@ class MainWindow(QMainWindow):
         self.framework_choice = "Laravel"
         self.php_path = "php"
         self.php_service = "php"
+        self.docker_project_path = "/app"
         self.server_port = 8000
         self.use_docker = False
         self.compose_files: list[str] = []
@@ -461,6 +463,10 @@ class MainWindow(QMainWindow):
         self.php_service = settings.get(
             "php_service", data.get("php_service", self.php_service)
         )
+        self.docker_project_path = settings.get(
+            "docker_project_path",
+            data.get("docker_project_path", self.docker_project_path),
+        )
         self.server_port = settings.get(
             "server_port", data.get("server_port", self.server_port)
         )
@@ -544,6 +550,7 @@ class MainWindow(QMainWindow):
         self.framework_choice = cast(str, settings["framework"])
         self.php_path = cast(str, settings["php_path"])
         self.php_service = cast(str, settings["php_service"])
+        self.docker_project_path = cast(str, settings.get("docker_project_path", "/app"))
         self.server_port = int(cast(Any, settings["server_port"]))
         self.use_docker = bool(settings["use_docker"])
         self.yii_template = cast(str, settings["yii_template"])
@@ -884,6 +891,11 @@ class MainWindow(QMainWindow):
             if self.compose_profile_edit is not None
             else self.compose_profile
         )
+        docker_project_path = (
+            self.docker_project_path_edit.text()
+            if self.docker_project_path_edit is not None
+            else self.docker_project_path
+        )
         auto_refresh_secs = (
             self.refresh_spin.value()
             if self.refresh_spin is not None
@@ -962,6 +974,7 @@ class MainWindow(QMainWindow):
         self.git_remote = git_remote
         self.compose_files = compose_files
         self.compose_profile = compose_profile.strip()
+        self.docker_project_path = docker_project_path.strip() or self.docker_project_path
         self.auto_refresh_secs = int(auto_refresh_secs)
         self.theme = theme
         self.open_browser = bool(open_browser)
@@ -980,6 +993,7 @@ class MainWindow(QMainWindow):
             "git_remote": git_remote,
             "compose_files": self.compose_files,
             "compose_profile": self.compose_profile,
+            "docker_project_path": self.docker_project_path,
             "auto_refresh_secs": self.auto_refresh_secs,
             "open_browser": self.open_browser,
             "max_log_lines": self.max_log_lines,
@@ -1012,20 +1026,23 @@ class MainWindow(QMainWindow):
     def artisan(self, *args: str) -> None:
         if not self.ensure_project_path():
             return
-        artisan_file = Path(self.project_path) / "artisan"
+        base = self.docker_project_path if self.use_docker else self.project_path
+        artisan_file = Path(base) / "artisan"
         self.run_command([self.php_path, str(artisan_file), *args])
 
     def symfony(self, *args: str) -> None:
         if not self.ensure_project_path():
             return
-        console = Path(self.project_path) / "bin" / "console"
+        base = self.docker_project_path if self.use_docker else self.project_path
+        console = Path(base) / "bin" / "console"
         self.run_command([self.php_path, str(console), *args])
 
     def yii(self, *args: str) -> None:
         if not self.ensure_project_path():
             return
-        script = os.path.join(self.project_path, "yii")
-        yii_bat = os.path.join(self.project_path, "yii.bat")
+        base = self.docker_project_path if self.use_docker else self.project_path
+        script = os.path.join(base, "yii")
+        yii_bat = os.path.join(base, "yii.bat")
         if os.name == "nt" and os.path.isfile(yii_bat):
             script = yii_bat
         elif not os.path.isfile(script) and os.path.isfile(script + ".bat"):
@@ -1069,7 +1086,8 @@ class MainWindow(QMainWindow):
     def phpunit(self) -> None:
         if not self.ensure_project_path():
             return
-        phpunit_file = Path(self.project_path) / "vendor" / "bin" / "phpunit"
+        base = self.docker_project_path if self.use_docker else self.project_path
+        phpunit_file = Path(base) / "vendor" / "bin" / "phpunit"
         self.run_command([self.php_path, str(phpunit_file)])
 
     def start_project(self) -> None:

@@ -12,6 +12,7 @@ class DummyMainWindow:
         self.server_port = 8000
         self.compose_files = []
         self.compose_profile = ""
+        self.docker_project_path = "/app"
         self.use_docker = False
         self.yii_template = "basic"
         self.log_paths = []
