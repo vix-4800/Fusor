@@ -33,15 +33,20 @@ Fusor aims to **simplify routine PHP project operations** via a user-friendly vi
 
 ## Tab Overview
 
-| Tab          | Description                                                                       |
-| ------------ | --------------------------------------------------------------------------------- |
-| **Project**  | Start/stop server, Composer install/update, PHP tools (PHPUnit, Rector, CS-Fixer) |
-| **Git**      | Switch branches, view status or diff, pull, hard reset, stash changes             |
-| **Database** | Dump or restore SQL, run migrations, seed data                                    |
-| **Docker**   | Build, pull, restart services, inspect containers _(visible only in Docker mode)_ |
-| **Node**     | Run npm install, dev, and build commands |
-| **Yii**      | Common Yii console commands _(visible when framework is Yii)_                     |
-| **Logs**     | View logs with optional auto-refresh and open log files in your default application |
+| Tab          | Description                                                                                    |
+| ------------ | ---------------------------------------------------------------------------------------------- |
+| **Project**  | Start/stop server, Composer install/update, PHP tools (PHPUnit, Rector, CS-Fixer)              |
+| **Git**      | Switch branches, view status or diff, pull, hard reset, stash changes                          |
+| **Database** | Dump or restore SQL, run migrations, seed data                                                 |
+| **Laravel**  | Migrate, rollback, fresh seed, and other artisan helpers _(visible when framework is Laravel)_ |
+| **Symfony**  | Clear cache and manage Doctrine migrations _(visible when framework is Symfony)_               |
+| **Yii**      | Common Yii console commands _(visible when framework is Yii)_                                  |
+| **Docker**   | Build, pull, restart services, inspect containers _(visible only in Docker mode)_              |
+| **Node**     | Run npm install, dev, and build commands                                                       |
+| **Logs**     | View logs with optional auto-refresh and open log files in your default application            |
+| **.env**     | Edit the project's environment file                                                            |
+| **Terminal** | Embedded terminal for custom commands                                                          |
+| **Settings** | Configure projects, PHP path, Docker options, and other preferences                            |
 
 ---
 
