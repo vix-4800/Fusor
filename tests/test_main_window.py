@@ -595,6 +595,8 @@ class TestMainWindow:
         monkeypatch.setattr(os.path, "isdir", lambda p: True, raising=True)
         monkeypatch.setattr(os.path, "isfile", lambda p: True, raising=True)
         monkeypatch.setattr("PyQt6.QtWidgets.QMessageBox.warning", lambda *a, **k: None, raising=True)
+        shown = []
+        monkeypatch.setattr(MainWindow, "show_welcome_dialog", lambda self: shown.append(True), raising=True)
 
         win = MainWindow()
         qtbot.addWidget(win)
@@ -607,6 +609,7 @@ class TestMainWindow:
         assert saved["projects"] == []
         assert saved["current_project"] == ""
         assert "/one" not in saved.get("project_settings", {})
+        assert shown
         win.close()
 
     def test_clear_output_button_clears_text(self, main_window, qtbot):

@@ -404,6 +404,8 @@ class SettingsTab(QWidget):
         )
         save_config(data)
         self.main_window.mark_settings_saved()
+        if not self.main_window.projects:
+            self.main_window.show_welcome_dialog()
 
     def browse_php_path(self):
         file, _ = QFileDialog.getOpenFileName(
