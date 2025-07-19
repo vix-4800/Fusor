@@ -115,8 +115,8 @@ def test_start_shell_docker_exec(monkeypatch, qtbot):
         "compose",
         "exec",
         "-T",
-        "php",
         "-w",
         "/proj",
+        "php",
         "/bin/sh",
     ]
