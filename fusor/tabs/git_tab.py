@@ -315,7 +315,7 @@ class GitTab(QWidget):
         return branch[: self._truncate_width - 1] + "\u2026"
 
     def update_responsive_layout(self, width: int) -> None:
-        if width < 500:
+        if width < 650:
             self.current_branch_label.setText(
                 self._truncate_branch(self.current_branch)
             )
