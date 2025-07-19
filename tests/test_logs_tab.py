@@ -161,3 +161,23 @@ def test_set_log_dirs_expands_directory(tmp_path, qtbot):
     items = [tab.log_selector.itemText(i) for i in range(tab.log_selector.count())]
     expected = [str(logs / f"log{i}.log") for i in range(2)]
     assert items == expected
+
+
+def test_log_selector_change_triggers_refresh(qtbot):
+    called = []
+
+    main = DummyMainWindow()
+
+    def refresh():
+        called.append(True)
+
+    main.refresh_logs = refresh
+    main.log_dirs = ["one.log", "two.log"]
+
+    tab = LogsTab(main)
+    qtbot.addWidget(tab)
+
+    tab.log_selector.setCurrentIndex(1)
+    qtbot.wait(10)
+
+    assert called

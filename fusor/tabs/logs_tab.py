@@ -43,6 +43,9 @@ class LogsTab(QWidget):
         # --- Log Selector ---
         self.log_selector = QComboBox()
         self.set_log_dirs(self.main_window.log_dirs)
+        self.log_selector.currentIndexChanged.connect(
+            self.main_window.refresh_logs
+        )
         outer_layout.addWidget(self.log_selector)
 
         # --- Search ---
