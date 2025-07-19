@@ -614,7 +614,12 @@ class MainWindow(QMainWindow):
     def _show_notification(self, message: str, title: str = APP_NAME) -> None:
         icon = self._tray_icon
         if icon is None:
-            icon = QSystemTrayIcon(self.windowIcon(), self)
+            tray_icon = self.windowIcon()
+            if tray_icon.isNull():
+                from .icons import get_notification_icon
+
+                tray_icon = get_notification_icon()
+            icon = QSystemTrayIcon(tray_icon, self)
             self._tray_icon = icon
 
         icon.show()
