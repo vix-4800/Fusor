@@ -191,7 +191,10 @@ class GitTab(QWidget):
 
     def show_branch_dialog(self):
         local = self.fetch_local_branches()
-        remote = [f"{self.main_window.git_remote}/{b}" for b in self.fetch_remote_branches()]
+        remote = [
+            f"{self.main_window.git_remote}/{b}"
+            for b in self.fetch_remote_branches()
+        ]
         dialog = BranchDialog(local + remote, self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             branch = dialog.get_branch()
