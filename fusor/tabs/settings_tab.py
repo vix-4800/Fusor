@@ -213,6 +213,13 @@ class SettingsTab(QWidget):
             self.open_browser_checkbox.setChecked(self.main_window.open_browser)
         misc_form.addRow("", self.open_browser_checkbox)
 
+        self.console_output_checkbox = QCheckBox("Show Console Output")
+        if hasattr(self.main_window, "show_console_output"):
+            self.console_output_checkbox.setChecked(
+                self.main_window.show_console_output
+            )
+        misc_form.addRow("", self.console_output_checkbox)
+
         self.yii_template_combo = QComboBox()
         self.yii_template_combo.addItems(["basic", "advanced"])
         if hasattr(self.main_window, "yii_template"):
@@ -226,6 +233,7 @@ class SettingsTab(QWidget):
         self.docker_checkbox.setMinimumHeight(30)
         self.docker_checkbox.toggled.connect(self.on_docker_toggled)
         self.terminal_checkbox.toggled.connect(self.on_terminal_toggled)
+        self.console_output_checkbox.toggled.connect(self.on_console_output_toggled)
         docker_form.addRow("", self.docker_checkbox)
 
         project_group.setLayout(project_form)
@@ -267,9 +275,11 @@ class SettingsTab(QWidget):
         self.main_window.theme_combo = self.theme_combo
         self.main_window.terminal_checkbox = self.terminal_checkbox
         self.main_window.open_browser_checkbox = self.open_browser_checkbox
+        self.main_window.console_output_checkbox = self.console_output_checkbox
 
         self.on_docker_toggled(self.docker_checkbox.isChecked())
         self.on_terminal_toggled(self.terminal_checkbox.isChecked())
+        self.on_console_output_toggled(self.console_output_checkbox.isChecked())
         current_fw = self.framework_combo.currentText()
         self.on_framework_changed(current_fw)
         self.main_window.database_tab.on_framework_changed(current_fw)
@@ -304,6 +314,9 @@ class SettingsTab(QWidget):
             self.main_window.mark_settings_dirty
         )
         self.open_browser_checkbox.toggled.connect(
+            self.main_window.mark_settings_dirty
+        )
+        self.console_output_checkbox.toggled.connect(
             self.main_window.mark_settings_dirty
         )
         self.project_name_edit.textChanged.connect(self.main_window.mark_settings_dirty)
@@ -466,6 +479,11 @@ class SettingsTab(QWidget):
             self.main_window.tabs.setTabEnabled(
                 self.main_window.terminal_index, checked
             )
+
+    def on_console_output_toggled(self, checked: bool) -> None:
+        if hasattr(self.main_window, "output_view"):
+            self.main_window.show_console_output = checked
+            self.main_window._update_responsive_layout()
 
     def add_project(self) -> None:
         directory = QFileDialog.getExistingDirectory(

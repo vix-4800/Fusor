@@ -292,6 +292,7 @@ class MainWindow(QMainWindow):
         self.theme_combo: QComboBox | None = None
         self.terminal_checkbox: QCheckBox | None = None
         self.open_browser_checkbox: QCheckBox | None = None
+        self.console_output_checkbox: QCheckBox | None = None
         self.log_view: QTextEdit | None = None
 
         self.tabs = QTabWidget()
@@ -356,6 +357,7 @@ class MainWindow(QMainWindow):
         self.enable_terminal = False
         self.auto_refresh_secs = 5
         self.open_browser = False
+        self.show_console_output = False
         self.load_config()
         apply_theme(self, self.theme)
 
@@ -571,6 +573,9 @@ class MainWindow(QMainWindow):
         self.open_browser = bool(
             settings.get("open_browser", data.get("open_browser", self.open_browser))
         )
+        self.show_console_output = bool(
+            data.get("show_console_output", self.show_console_output)
+        )
 
         self.theme = data.get("theme", self.theme)
 
@@ -630,7 +635,7 @@ class MainWindow(QMainWindow):
         """Adjust UI elements based on the current window size."""
         width = self.width()
 
-        show_output = width >= 700
+        show_output = width >= 700 and self.show_console_output
         self.output_view.setVisible(show_output)
         self.clear_output_button.setVisible(show_output)
 
@@ -685,9 +690,8 @@ class MainWindow(QMainWindow):
         self.max_log_lines = int(
             cast(Any, settings.get("max_log_lines", self.max_log_lines))
         )
-        self.enable_terminal = bool(
-            settings.get("enable_terminal", self.enable_terminal)
-        )
+        self.enable_terminal = bool(settings.get("enable_terminal", self.enable_terminal))
+        self.show_console_output = bool(data.get("show_console_output", self.show_console_output))
 
         if self.framework_combo is not None:
             self.framework_combo.setCurrentText(self.framework_choice)
@@ -733,6 +737,8 @@ class MainWindow(QMainWindow):
             self.terminal_checkbox.setChecked(self.enable_terminal)
         if self.open_browser_checkbox is not None:
             self.open_browser_checkbox.setChecked(self.open_browser)
+        if self.console_output_checkbox is not None:
+            self.console_output_checkbox.setChecked(self.show_console_output)
         if hasattr(self, "logs_tab"):
             self.logs_tab.update_timer_interval(self.auto_refresh_secs)
         if hasattr(self, "terminal_index"):
@@ -1064,6 +1070,11 @@ class MainWindow(QMainWindow):
             if self.terminal_checkbox is not None
             else self.enable_terminal
         )
+        show_console_output = (
+            self.console_output_checkbox.isChecked()
+            if self.console_output_checkbox is not None
+            else self.show_console_output
+        )
         open_browser = (
             self.open_browser_checkbox.isChecked()
             if self.open_browser_checkbox is not None
@@ -1138,6 +1149,7 @@ class MainWindow(QMainWindow):
         self.theme = theme
         self.enable_terminal = enable_terminal
         self.open_browser = bool(open_browser)
+        self.show_console_output = bool(show_console_output)
         self.max_log_lines = int(getattr(self, "max_log_lines", DEFAULT_MAX_LOG_LINES))
 
         data = load_config()
@@ -1168,7 +1180,9 @@ class MainWindow(QMainWindow):
                 updated_projects.append(proj)
                 found = True
             else:
-                updated_projects.append(p.copy())
+                temp = p.copy()
+                temp.pop("show_console_output", None)
+                updated_projects.append(temp)
         if not found:
             updated_projects.append(
                 {
@@ -1198,6 +1212,7 @@ class MainWindow(QMainWindow):
                 "projects": self.projects,
                 "current_project": project_path,
                 "theme": self.theme,
+                "show_console_output": self.show_console_output,
             }
         )
         try:

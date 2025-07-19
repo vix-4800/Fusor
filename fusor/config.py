@@ -39,6 +39,7 @@ DEFAULT_CONFIG = {
     "projects": [],  # list[dict]
     "current_project": "",
     "theme": "dark",
+    "show_console_output": False,
     # Window geometry (width, height) and position (x, y)
     "window_size": [1024, 768],
     "window_position": [100, 100],
@@ -68,6 +69,15 @@ def load_config():
                         proj_dict[k] = v
                 projects.append(proj_dict)
         data["projects"] = projects
+
+        # migrate old console output setting from projects
+        if "show_console_output" not in data:
+            for proj in data["projects"]:
+                if "show_console_output" in proj:
+                    data["show_console_output"] = bool(proj["show_console_output"])
+                    break
+        for proj in data["projects"]:
+            proj.pop("show_console_output", None)
 
         # migrate old flat settings into current project entry
         current = data.get("current_project") or data.get("project_path")
