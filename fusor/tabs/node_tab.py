@@ -34,13 +34,11 @@ class NodeTab(QWidget):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(12)
 
-        self.npm_install_btn = self._btn("npm install", self.npm_install, icon="system-run")
-        self.npm_dev_btn = self._btn("npm run dev", self.npm_run_dev, icon="system-run")
-        self.npm_build_btn = self._btn("npm run build", self.npm_run_build, icon="system-run")
+        self.npm_install_btn = self._btn(
+            "npm install", self.npm_install, icon="system-run"
+        )
 
         layout.addWidget(self.npm_install_btn)
-        layout.addWidget(self.npm_dev_btn)
-        layout.addWidget(self.npm_build_btn)
 
         self.npm_scripts_group = QGroupBox("NPM Scripts")
         self.npm_scripts_layout = QVBoxLayout()
@@ -63,11 +61,6 @@ class NodeTab(QWidget):
     def npm_install(self) -> None:
         self.main_window.run_command(["npm", "install"])
 
-    def npm_run_dev(self) -> None:
-        self.main_window.run_command(["npm", "run", "dev"])
-
-    def npm_run_build(self) -> None:
-        self.main_window.run_command(["npm", "run", "build"])
 
     def update_npm_scripts(self) -> None:
         """Load npm scripts from package.json and create buttons."""

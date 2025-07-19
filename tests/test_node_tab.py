@@ -19,14 +19,8 @@ def test_buttons_run_commands(qtbot):
     qtbot.addWidget(tab)
 
     qtbot.mouseClick(tab.npm_install_btn, Qt.MouseButton.LeftButton)
-    qtbot.mouseClick(tab.npm_dev_btn, Qt.MouseButton.LeftButton)
-    qtbot.mouseClick(tab.npm_build_btn, Qt.MouseButton.LeftButton)
 
-    assert main.commands == [
-        ["npm", "install"],
-        ["npm", "run", "dev"],
-        ["npm", "run", "build"],
-    ]
+    assert main.commands == [["npm", "install"]]
 
 
 def test_update_npm_scripts_adds_buttons(tmp_path, qtbot):
@@ -61,3 +55,36 @@ def test_script_button_runs_command(tmp_path, qtbot, monkeypatch):
     qtbot.mouseClick(btn, Qt.MouseButton.LeftButton)
 
     assert captured == [["npm", "run", "start"]]
+
+
+def test_dev_and_build_scripts_added(tmp_path, qtbot):
+    pkg = {"scripts": {"dev": "vite", "build": "vite build"}}
+    (tmp_path / "package.json").write_text(json.dumps(pkg))
+
+    main = DummyMainWindow()
+    main.project_path = str(tmp_path)
+    tab = NodeTab(main)
+    qtbot.addWidget(tab)
+    tab.update_npm_scripts()
+
+    texts = [btn.text() for btn in tab._script_buttons]
+    assert texts.count("npm run dev") == 1
+    assert texts.count("npm run build") == 1
+
+
+def test_dev_and_build_buttons_run_commands(tmp_path, qtbot):
+    pkg = {"scripts": {"dev": "vite", "build": "vite build"}}
+    (tmp_path / "package.json").write_text(json.dumps(pkg))
+
+    main = DummyMainWindow()
+    main.project_path = str(tmp_path)
+    tab = NodeTab(main)
+    qtbot.addWidget(tab)
+    tab.update_npm_scripts()
+
+    dev_btn = next(btn for btn in tab._script_buttons if btn.text() == "npm run dev")
+    build_btn = next(btn for btn in tab._script_buttons if btn.text() == "npm run build")
+    qtbot.mouseClick(dev_btn, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(build_btn, Qt.MouseButton.LeftButton)
+
+    assert main.commands == [["npm", "run", "dev"], ["npm", "run", "build"]]
