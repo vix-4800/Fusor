@@ -50,6 +50,14 @@ class TestMainWindow:
         closed = []
         monkeypatch.setattr(main_window, "close", lambda: closed.append(True), raising=True)
 
+        shown = []
+
+        class DummyDlg:
+            def exec(self):
+                shown.append(True)
+
+        monkeypatch.setattr(mw_module, "WelcomeDialog", lambda *a, **k: DummyDlg(), raising=True)
+
         def forbid(*_a, **_kw):
             raise AssertionError("unexpected FS access")
 
@@ -58,7 +66,8 @@ class TestMainWindow:
 
         main_window.refresh_logs()
 
-        assert closed == [True]
+        assert closed == []
+        assert shown == [True]
         assert main_window.log_view.text is None
 
     def test_start_project_uses_configured_php(self, tmp_path: Path, main_window, monkeypatch):
