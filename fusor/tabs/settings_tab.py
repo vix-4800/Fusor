@@ -103,17 +103,25 @@ class SettingsTab(QWidget):
         self.server_port_edit.setValue(self.main_window.server_port)
         php_form.addRow("Server Port:", self.server_port_edit)
 
-        self.compose_files_edit = QLineEdit(";".join(self.main_window.compose_files))
-        self.compose_browse_btn = QPushButton("Browse")
-        self.compose_browse_btn.setIcon(get_icon("document-open"))
-        self.compose_browse_btn.setFixedHeight(30)
-        self.compose_browse_btn.clicked.connect(self.browse_compose_files)
-        compose_row = QHBoxLayout()
-        compose_row.addWidget(self.compose_files_edit)
-        compose_row.addWidget(self.compose_browse_btn)
-        self.compose_row = self._wrap(compose_row)
+        self.compose_file_edits: list[QLineEdit] = []
+        self.compose_files_layout = QVBoxLayout()
+
+        files = getattr(self.main_window, "compose_files", [])
+        if not files:
+            files = [""]
+        for f in files:
+            self._add_compose_file_field(f)
+
+        self.compose_files_container = self._wrap(self.compose_files_layout)
         self.compose_label = QLabel("Compose Files:")
-        docker_form.addRow(self.compose_label, self.compose_row)
+        docker_form.addRow(self.compose_label, self.compose_files_container)
+
+        add_compose_btn = QPushButton("Add Compose File")
+        add_compose_btn.setIcon(get_icon("list-add"))
+        add_compose_btn.setFixedHeight(30)
+        add_compose_btn.clicked.connect(lambda: self._add_compose_file_field(""))
+        self.add_compose_btn = add_compose_btn
+        docker_form.addRow("", self._wrap(add_compose_btn))
 
         self.compose_profile_edit = QLineEdit(self.main_window.compose_profile)
         docker_form.addRow("Compose Profile:", self.compose_profile_edit)
@@ -296,6 +304,59 @@ class SettingsTab(QWidget):
             container.setLayout(layout)
         return container
 
+    def _add_compose_file_field(self, value: str) -> None:
+        edit = QLineEdit(value)
+        browse = QPushButton("Browse")
+        browse.setIcon(get_icon("document-open"))
+        browse.setFixedHeight(30)
+        browse.clicked.connect(lambda: self.browse_compose_file(edit))
+        remove = QPushButton("Remove")
+        remove.setIcon(get_icon("list-remove"))
+        remove.setFixedHeight(30)
+
+        row = QHBoxLayout()
+        row.addWidget(edit)
+        row.addWidget(browse)
+        row.addWidget(remove)
+        container = QWidget()
+        container.setLayout(row)
+        self.compose_files_layout.addWidget(container)
+        self.compose_file_edits.append(edit)
+        self._compose_file_rows = getattr(self, "_compose_file_rows", [])
+        self._compose_file_rows.append(container)
+        remove.clicked.connect(lambda: self._remove_compose_file_field(container, edit))
+        edit.textChanged.connect(self.main_window.mark_settings_dirty)
+        if len(self.compose_file_edits) == 1:
+            self.compose_files_edit = edit
+            self.main_window.compose_files_edit = edit
+
+    def _remove_compose_file_field(self, widget: QWidget, edit: QLineEdit) -> None:
+        self.compose_files_layout.removeWidget(widget)
+        widget.deleteLater()
+        if edit in self.compose_file_edits:
+            self.compose_file_edits.remove(edit)
+        if hasattr(self, "_compose_file_rows") and widget in self._compose_file_rows:
+            self._compose_file_rows.remove(widget)
+        if not self.compose_file_edits:
+            self._add_compose_file_field("")
+        self.compose_files_edit = self.compose_file_edits[0]
+        self.main_window.compose_files_edit = self.compose_files_edit
+        self.main_window.mark_settings_dirty()
+
+    def set_compose_files(self, files: list[str]) -> None:
+        for widget in list(getattr(self, "_compose_file_rows", [])):
+            self.compose_files_layout.removeWidget(widget)
+            widget.deleteLater()
+        self.compose_file_edits.clear()
+        self._compose_file_rows = []
+        if not files:
+            files = [""]
+        for f in files:
+            self._add_compose_file_field(f)
+        if self.compose_file_edits:
+            self.compose_files_edit = self.compose_file_edits[0]
+            self.main_window.compose_files_edit = self.compose_files_edit
+
     def _add_log_path_field(self, value: str) -> None:
         edit = QLineEdit(value)
         browse = QPushButton("Browse")
@@ -354,10 +415,9 @@ class SettingsTab(QWidget):
         self.php_browse_btn.setEnabled(not checked)
         self.php_service_edit.setEnabled(checked)
         self.server_port_edit.setEnabled(not checked)
-        self.compose_files_edit.setEnabled(checked)
-        self.compose_browse_btn.setEnabled(checked)
-        self.compose_row.setEnabled(checked)
+        self.compose_files_container.setEnabled(checked)
         self.compose_label.setEnabled(checked)
+        self.add_compose_btn.setEnabled(checked)
         self.compose_profile_edit.setEnabled(checked)
         if hasattr(self.main_window, "docker_index"):
             self.main_window.tabs.setTabVisible(self.main_window.docker_index, checked)
@@ -452,14 +512,14 @@ class SettingsTab(QWidget):
         if file:
             self.php_path_edit.setText(file)
 
-    def browse_compose_files(self):
-        files, _ = QFileDialog.getOpenFileNames(
+    def browse_compose_file(self, edit: QLineEdit):
+        file, _ = QFileDialog.getOpenFileName(
             self,
-            "Select Compose Files",
-            self.compose_files_edit.text() or self.main_window.project_path,
+            "Select Compose File",
+            edit.text() or self.main_window.project_path,
         )
-        if files:
-            self.compose_files_edit.setText(";".join(files))
+        if file:
+            edit.setText(file)
 
     def browse_log_path(self, edit: QLineEdit):
         default = edit.text()

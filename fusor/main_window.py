@@ -544,7 +544,9 @@ class MainWindow(QMainWindow):
             if self.git_remote and self.git_remote not in remotes:
                 self.remote_combo.addItem(self.git_remote)
             self.remote_combo.setCurrentText(self.git_remote)
-        if hasattr(self, "compose_files_edit"):
+        if hasattr(self, "settings_tab") and hasattr(self.settings_tab, "set_compose_files"):
+            self.settings_tab.set_compose_files(self.compose_files)
+        elif hasattr(self, "compose_files_edit"):
             self.compose_files_edit.setText(";".join(self.compose_files))
         if hasattr(self, "compose_profile_edit"):
             self.compose_profile_edit.setText(self.compose_profile)
@@ -806,11 +808,15 @@ class MainWindow(QMainWindow):
             if hasattr(self, "remote_combo")
             else self.git_remote
         )
-        compose_text = (
-            self.compose_files_edit.text()
-            if hasattr(self, "compose_files_edit")
-            else ";".join(self.compose_files)
-        )
+        if hasattr(self, "settings_tab") and hasattr(self.settings_tab, "compose_file_edits"):
+            compose_files = [e.text().strip() for e in self.settings_tab.compose_file_edits if e.text().strip()]
+        else:
+            compose_text = (
+                self.compose_files_edit.text()
+                if hasattr(self, "compose_files_edit")
+                else ";".join(self.compose_files)
+            )
+            compose_files = [p.strip() for p in compose_text.split(";") if p.strip()]
         compose_profile = (
             self.compose_profile_edit.text()
             if hasattr(self, "compose_profile_edit")
@@ -887,7 +893,7 @@ class MainWindow(QMainWindow):
         self.yii_template = yii_template
         self.log_paths = paths
         self.git_remote = git_remote
-        self.compose_files = [p.strip() for p in compose_text.split(";") if p.strip()]
+        self.compose_files = compose_files
         self.compose_profile = compose_profile.strip()
         self.auto_refresh_secs = int(auto_refresh_secs)
         self.theme = theme

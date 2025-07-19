@@ -940,7 +940,9 @@ class TestMainWindow:
         main_window.project_combo.setCurrentText("/tmp")
         main_window.project_path = "/tmp"
         main_window.docker_checkbox.setChecked(True)
-        main_window.compose_files_edit.setText(" a.yml ; b.yml ;  ")
+        main_window.settings_tab.add_compose_btn.click()
+        main_window.settings_tab.compose_file_edits[0].setText(" a.yml ")
+        main_window.settings_tab.compose_file_edits[1].setText(" b.yml  ")
 
         monkeypatch.setattr(os.path, "isdir", lambda p: True, raising=True)
         saved = {}
