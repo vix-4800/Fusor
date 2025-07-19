@@ -558,6 +558,29 @@ class TestMainWindow:
         assert not main_window.settings_tab.log_dirs_container.isHidden()
         assert not main_window.settings_tab.log_dir_label.isHidden()
 
+    def test_logs_tab_visibility(self, main_window, qtbot):
+        assert main_window.tabs.isTabVisible(main_window.logs_index)
+        assert main_window.tabs.isTabEnabled(main_window.logs_index)
+
+        main_window.framework_combo.setCurrentText("None")
+        qtbot.wait(10)
+        assert not main_window.tabs.isTabVisible(main_window.logs_index)
+        assert not main_window.tabs.isTabEnabled(main_window.logs_index)
+
+        main_window.framework_combo.setCurrentText("Laravel")
+        qtbot.wait(10)
+        assert main_window.tabs.isTabVisible(main_window.logs_index)
+        assert main_window.tabs.isTabEnabled(main_window.logs_index)
+
+    def test_logs_group_visibility(self, main_window, qtbot):
+        main_window.framework_combo.setCurrentText("None")
+        qtbot.wait(10)
+        assert main_window.settings_tab.logs_group.isHidden()
+
+        main_window.framework_combo.setCurrentText("Symfony")
+        qtbot.wait(10)
+        assert not main_window.settings_tab.logs_group.isHidden()
+
     def test_default_log_dirs_per_framework(self, main_window, qtbot):
         main_window.framework_combo.setCurrentText("Laravel")
         qtbot.wait(10)

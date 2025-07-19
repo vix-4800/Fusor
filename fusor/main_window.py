@@ -376,7 +376,7 @@ class MainWindow(QMainWindow):
         self.docker_index = self.tabs.addTab(self.docker_tab, "Docker")
 
         self.logs_tab = LogsTab(self)
-        self.tabs.addTab(self.logs_tab, "Logs")
+        self.logs_index = self.tabs.addTab(self.logs_tab, "Logs")
 
         self.terminal_tab = TerminalTab(self)
         self.terminal_index = self.tabs.addTab(self.terminal_tab, "Terminal")
@@ -401,6 +401,10 @@ class MainWindow(QMainWindow):
         show_yii = self.framework_choice == "Yii"
         self.tabs.setTabVisible(self.yii_index, show_yii)
         self.tabs.setTabEnabled(self.yii_index, show_yii)
+
+        log_visible = self.framework_choice in ["Laravel", "Symfony", "Yii"]
+        self.tabs.setTabVisible(self.logs_index, log_visible)
+        self.tabs.setTabEnabled(self.logs_index, log_visible)
 
         # terminal tab availability
         self.tabs.setTabVisible(self.terminal_index, self.enable_terminal)

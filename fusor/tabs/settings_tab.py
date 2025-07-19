@@ -175,6 +175,7 @@ class SettingsTab(QWidget):
         self.log_dirs_container = self._wrap(self.log_dirs_layout)
         self.log_dir_label = QLabel("Log Directories:")
         logs_group = QGroupBox("Logs")
+        self.logs_group = logs_group
         logs_form = QFormLayout()
         logs_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
         logs_form.addRow(self.log_dir_label, self.log_dirs_container)
@@ -575,6 +576,8 @@ class SettingsTab(QWidget):
         self.log_dirs_container.setVisible(log_visible)
         self.log_dir_label.setVisible(log_visible)
         self.add_log_btn.setVisible(log_visible)
+        if hasattr(self, "logs_group"):
+            self.logs_group.setVisible(log_visible)
         if log_visible:
             template = self.yii_template_combo.currentText()
             paths = self.main_window.default_log_dirs(text, template)
@@ -599,6 +602,10 @@ class SettingsTab(QWidget):
                 show = text == fw
                 self.main_window.tabs.setTabVisible(idx, show)
                 self.main_window.tabs.setTabEnabled(idx, show)
+
+        if hasattr(self.main_window, "logs_index"):
+            self.main_window.tabs.setTabVisible(self.main_window.logs_index, log_visible)
+            self.main_window.tabs.setTabEnabled(self.main_window.logs_index, log_visible)
 
     def on_yii_template_changed(self, text: str) -> None:
         if self.framework_combo.currentText() != "Yii":
