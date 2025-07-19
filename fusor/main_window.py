@@ -308,8 +308,7 @@ class MainWindow(QMainWindow):
         self.compose_files: list[str] = []
         self.compose_profile = ""
         self.yii_template = "basic"
-        self.log_path = str(Path("storage") / "logs" / "laravel.log")
-        self.log_paths: list[str] = [self.log_path]
+        self.log_paths: list[str] = []
         self.git_remote = ""
         self.max_log_lines = DEFAULT_MAX_LOG_LINES
         self.auto_refresh_secs = 5
@@ -435,10 +434,13 @@ class MainWindow(QMainWindow):
         )
         self.log_paths = settings.get("log_paths")
         if not self.log_paths:
-            self.log_paths = [
-                settings.get("log_path", data.get("log_path", self.log_path))
-            ]
-        self.log_path = self.log_paths[0]
+            legacy = settings.get("log_path", data.get("log_path"))
+            if legacy:
+                self.log_paths = [legacy]
+            elif self.framework_choice == "Laravel":
+                self.log_paths = [str(Path("storage") / "logs" / "laravel.log")]
+            else:
+                self.log_paths = []
         self.git_remote = settings.get(
             "git_remote", data.get("git_remote", self.git_remote)
         )
@@ -506,8 +508,15 @@ class MainWindow(QMainWindow):
         self.server_port = settings["server_port"]
         self.use_docker = settings["use_docker"]
         self.yii_template = settings["yii_template"]
-        self.log_paths = settings.get("log_paths") or [settings["log_path"]]
-        self.log_path = self.log_paths[0]
+        self.log_paths = settings.get("log_paths")
+        if not self.log_paths:
+            legacy = settings.get("log_path")
+            if legacy:
+                self.log_paths = [legacy]
+            elif self.framework_choice == "Laravel":
+                self.log_paths = [str(Path("storage") / "logs" / "laravel.log")]
+            else:
+                self.log_paths = []
         self.git_remote = settings["git_remote"]
         self.compose_files = settings["compose_files"]
         self.compose_profile = settings.get("compose_profile", "")
@@ -679,7 +688,7 @@ class MainWindow(QMainWindow):
         framework = self.current_framework()
         log_contents = ""
         if framework == "Laravel":
-            log_files = self.log_paths or [self.log_path]
+            log_files = self.log_paths
             selector = getattr(self.logs_tab, "log_selector", None)
             if selector and selector.currentData():
                 log_files = [selector.currentData()]
@@ -750,8 +759,7 @@ class MainWindow(QMainWindow):
         ):
             paths = [e.text() for e in self.settings_tab.log_path_edits if e.text()]
         else:
-            paths = [self.log_path]
-        log_path = paths[0]
+            paths = list(self.log_paths)
         git_remote = (
             self.remote_combo.currentText()
             if hasattr(self, "remote_combo")
@@ -837,7 +845,6 @@ class MainWindow(QMainWindow):
         self.server_port = server_port
         self.use_docker = use_docker
         self.yii_template = yii_template
-        self.log_path = log_path
         self.log_paths = paths
         self.git_remote = git_remote
         self.compose_files = [p.strip() for p in compose_text.split(";") if p.strip()]
@@ -855,7 +862,6 @@ class MainWindow(QMainWindow):
             "server_port": server_port,
             "use_docker": use_docker,
             "yii_template": yii_template,
-            "log_path": log_path,
             "log_paths": paths,
             "git_remote": git_remote,
             "compose_files": self.compose_files,
@@ -1079,11 +1085,14 @@ class MainWindow(QMainWindow):
 
     def clear_log_file(self):
         """Truncate the configured log file if it exists."""
-        log_file = self.log_path
+        log_file = self.log_paths[0] if self.log_paths else ""
         if hasattr(self, "logs_tab") and hasattr(self.logs_tab, "log_selector"):
             sel = self.logs_tab.log_selector.currentData()
             if sel:
                 log_file = sel
+        if not log_file:
+            self.refresh_logs()
+            return
         log_path = Path(log_file)
         if not log_path.is_absolute():
             log_path = Path(self.project_path) / log_path

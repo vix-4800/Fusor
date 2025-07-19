@@ -15,9 +15,8 @@ DEFAULT_PROJECT_SETTINGS = {
     "server_port": 8000,
     "use_docker": False,
     "yii_template": "basic",
-    "log_path": str(Path("storage") / "logs" / "laravel.log"),
-    # list of log files (first item mirrors ``log_path`` for compatibility)
-    "log_paths": [str(Path("storage") / "logs" / "laravel.log")],
+    # list of log files for the project
+    "log_paths": [],
     "git_remote": "",
     "compose_files": [],
     "compose_profile": "",
@@ -74,6 +73,8 @@ def load_config():
             for k in DEFAULT_PROJECT_SETTINGS:
                 if k in data and k not in settings:
                     settings[k] = data[k]
+            if "log_path" in data and "log_paths" not in settings:
+                settings["log_paths"] = [data["log_path"]]
 
         if "project_path" in data and data["project_path"]:
             path = data["project_path"]

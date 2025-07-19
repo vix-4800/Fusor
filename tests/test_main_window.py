@@ -364,7 +364,6 @@ class TestMainWindow:
         log_file.write_text("log text")
         main_window.project_path = str(tmp_path)
         main_window.log_view = FakeLogView()
-        main_window.log_path = "custom.log"
         main_window.log_paths = ["custom.log"]
         main_window.logs_tab.set_log_paths(main_window.log_paths)
 
@@ -446,7 +445,6 @@ class TestMainWindow:
         log_file.write_text("\n".join(lines))
         main_window.project_path = str(tmp_path)
         main_window.log_view = FakeLogView()
-        main_window.log_path = "large.log"
         main_window.log_paths = ["large.log"]
         main_window.logs_tab.set_log_paths(main_window.log_paths)
         main_window.max_log_lines = 1000
@@ -466,7 +464,6 @@ class TestMainWindow:
         main_window.project_path = str(tmp_path)
         main_window.log_view = FakeLogView()
         main_window.log_paths = [p.name for p in paths]
-        main_window.log_path = paths[0].name
         main_window.logs_tab.set_log_paths(main_window.log_paths)
 
         opened = []
@@ -829,7 +826,8 @@ class TestMainWindow:
         log_file = tmp_path / "app.log"
         log_file.write_text("hello")
         main_window.project_path = str(tmp_path)
-        main_window.log_path = "app.log"
+        main_window.log_paths = ["app.log"]
+        main_window.logs_tab.set_log_paths(main_window.log_paths)
 
         monkeypatch.setattr(
             "PyQt6.QtWidgets.QMessageBox.question",
@@ -846,7 +844,8 @@ class TestMainWindow:
         log_file = tmp_path / "app.log"
         log_file.write_text("hello")
         main_window.project_path = str(tmp_path)
-        main_window.log_path = "app.log"
+        main_window.log_paths = ["app.log"]
+        main_window.logs_tab.set_log_paths(main_window.log_paths)
 
         monkeypatch.setattr(
             "PyQt6.QtWidgets.QMessageBox.question",

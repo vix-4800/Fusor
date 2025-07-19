@@ -142,7 +142,10 @@ class SettingsTab(QWidget):
         self.log_path_edits: list[QLineEdit] = []
         self.log_paths_layout = QVBoxLayout()
 
-        for path in getattr(self.main_window, "log_paths", [self.main_window.log_path]):
+        paths = getattr(self.main_window, "log_paths", [])
+        if not paths:
+            paths = [""]
+        for path in paths:
             self._add_log_path_field(path)
 
         self.log_paths_container = self._wrap(self.log_paths_layout)
@@ -306,6 +309,8 @@ class SettingsTab(QWidget):
             widget.deleteLater()
         self.log_path_edits.clear()
         self._log_path_rows = []
+        if not paths:
+            paths = [""]
         for p in paths:
             self._add_log_path_field(p)
         if self.log_path_edits:
@@ -394,10 +399,13 @@ class SettingsTab(QWidget):
             self.compose_files_edit.setText(";".join(files))
 
     def browse_log_path(self, edit: QLineEdit):
+        default = edit.text()
+        if not default and getattr(self.main_window, "log_paths", []):
+            default = self.main_window.log_paths[0]
         file, _ = QFileDialog.getOpenFileName(
             self,
             "Select Log File",
-            edit.text() or self.main_window.log_path,
+            default,
         )
         if file:
             edit.setText(file)
