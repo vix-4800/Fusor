@@ -395,7 +395,10 @@ class MainWindow(QMainWindow):
         if (
             self.framework_combo is not None
             and self.framework_choice
-            in [self.framework_combo.itemText(i) for i in range(self.framework_combo.count())]
+            in [
+                self.framework_combo.itemText(i)
+                for i in range(self.framework_combo.count())
+            ]
         ):
             self.framework_combo.setCurrentText(self.framework_choice)
 
@@ -548,10 +551,14 @@ class MainWindow(QMainWindow):
                 self.log_paths = self.default_log_paths(self.framework_choice)
         self.git_remote = cast(str, settings["git_remote"])
         comps = settings.get("compose_files")
-        self.compose_files = list(cast(list[str], comps)) if isinstance(comps, list) else []
+        self.compose_files = (
+            list(cast(list[str], comps)) if isinstance(comps, list) else []
+        )
         self.compose_profile = cast(str, settings.get("compose_profile", ""))
         self.auto_refresh_secs = int(cast(Any, settings["auto_refresh_secs"]))
-        self.max_log_lines = int(cast(Any, settings.get("max_log_lines", self.max_log_lines)))
+        self.max_log_lines = int(
+            cast(Any, settings.get("max_log_lines", self.max_log_lines))
+        )
 
         if self.framework_combo is not None:
             self.framework_combo.setCurrentText(self.framework_choice)

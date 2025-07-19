@@ -21,7 +21,7 @@ from PyQt6.QtCore import Qt
 from ..icons import get_icon
 from ..config import load_config, save_config
 from .. import main_window as mw_module
-from typing import Callable, Union
+from typing import Union
 
 
 class SettingsTab(QWidget):

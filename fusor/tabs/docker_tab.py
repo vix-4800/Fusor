@@ -38,7 +38,9 @@ class DockerTab(QWidget):
 
         layout.addStretch(1)
 
-    def _btn(self, text: str, slot: Callable[[], None], icon: str | None = None) -> QPushButton:
+    def _btn(
+        self, text: str, slot: Callable[[], None], icon: str | None = None
+    ) -> QPushButton:
         btn = QPushButton(text)
         if icon:
             btn.setIcon(get_icon(icon))

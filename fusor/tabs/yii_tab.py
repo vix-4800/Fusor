@@ -59,7 +59,9 @@ class YiiTab(QWidget):
 
         self.on_framework_changed(self.main_window.framework_choice)
 
-    def _btn(self, text: str, slot: Callable[[], None], icon: str | None = None) -> QPushButton:
+    def _btn(
+        self, text: str, slot: Callable[[], None], icon: str | None = None
+    ) -> QPushButton:
         btn = QPushButton(text)
         if icon:
             btn.setIcon(get_icon(icon))

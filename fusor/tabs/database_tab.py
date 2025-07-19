@@ -64,7 +64,9 @@ class DatabaseTab(QWidget):
         """Database tab has no framework specific controls."""
         pass
 
-    def _btn(self, text: str, slot: Callable[[], None], icon: str | None = None) -> QPushButton:
+    def _btn(
+        self, text: str, slot: Callable[[], None], icon: str | None = None
+    ) -> QPushButton:
         btn = QPushButton(text)
         if icon:
             btn.setIcon(get_icon(icon))
