@@ -9,6 +9,7 @@ class DummyMainWindow:
         self.framework_choice = "None"
         self.php_path = "php"
         self.php_service = "php"
+        self.db_service = "db"
         self.server_port = 8000
         self.compose_files = []
         self.compose_profile = ""
