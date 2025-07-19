@@ -437,8 +437,12 @@ class SettingsTab(QWidget):
 
     def on_terminal_toggled(self, checked: bool) -> None:
         if hasattr(self.main_window, "terminal_index"):
-            self.main_window.tabs.setTabVisible(self.main_window.terminal_index, checked)
-            self.main_window.tabs.setTabEnabled(self.main_window.terminal_index, checked)
+            self.main_window.tabs.setTabVisible(
+                self.main_window.terminal_index, checked
+            )
+            self.main_window.tabs.setTabEnabled(
+                self.main_window.terminal_index, checked
+            )
 
     def add_project(self) -> None:
         directory = QFileDialog.getExistingDirectory(

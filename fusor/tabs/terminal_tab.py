@@ -72,7 +72,10 @@ class TerminalTab(QWidget):
     # actions
     # ------------------------------------------------------------------
     def start_shell(self) -> None:
-        if self.process is not None and self.process.state() == QProcess.ProcessState.Running:
+        if (
+            self.process is not None
+            and self.process.state() == QProcess.ProcessState.Running
+        ):
             return
         self.process = QProcess(self)
         self.process.readyReadStandardOutput.connect(self._handle_output)
