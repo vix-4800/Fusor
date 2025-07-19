@@ -119,6 +119,12 @@ class ProjectTab(QWidget):
         composer_group.setLayout(composer_layout)
         layout.addWidget(composer_group)
 
+        # --- Composer Scripts ---
+        self.composer_scripts_group = QGroupBox("Composer Scripts")
+        self.composer_scripts_layout = QVBoxLayout()
+        self.composer_scripts_group.setLayout(self.composer_scripts_layout)
+        layout.addWidget(self.composer_scripts_group)
+
         layout.addStretch(1)
 
         self.update_php_tools()
@@ -178,6 +184,7 @@ class ProjectTab(QWidget):
     def update_php_tools(self) -> None:
         """Enable or disable PHP tool buttons based on composer.json."""
         packages: set[str] = set()
+        scripts: list[str] = []
         path = self.main_window.project_path
         if path:
             composer = Path(path) / "composer.json"
@@ -188,6 +195,9 @@ class ProjectTab(QWidget):
                     pkgs = data.get(key, {})
                     if isinstance(pkgs, dict):
                         packages.update(pkgs.keys())
+                scr = data.get("scripts", {})
+                if isinstance(scr, dict):
+                    scripts = list(scr.keys())
             except OSError:
                 pass
 
@@ -198,3 +208,24 @@ class ProjectTab(QWidget):
         }
         for pkg, btn in mapping.items():
             btn.setEnabled(pkg in packages)
+
+        # --- Composer scripts ---
+        for btn in getattr(self, "_script_buttons", []):
+            self.composer_scripts_layout.removeWidget(btn)
+            btn.deleteLater()
+        self._script_buttons = []
+
+        for name in scripts:
+            btn = self._btn(
+                f"composer run {name}",
+                lambda _=False, n=name: self.main_window.run_command([
+                    "composer",
+                    "run",
+                    n,
+                ]),
+                icon="system-run",
+            )
+            self.composer_scripts_layout.addWidget(btn)
+            self._script_buttons.append(btn)
+
+        self.composer_scripts_group.setVisible(bool(scripts))
