@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
     QScrollArea,
 )
 from PyQt6.QtCore import QTimer, Qt
-from PyQt6.QtGui import QTextCursor
+from PyQt6.QtGui import QTextCursor, QTextCharFormat, QColor
 from pathlib import Path, PurePath
 from ..icons import get_icon
 from ..utils import expand_log_paths
@@ -97,6 +97,16 @@ class LogsTab(QWidget):
         self.log_view.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
+        # Colorize logs when text changes
+        self._colorizing = False
+        self._level_colors = {
+            "DEBUG": Qt.GlobalColor.darkGray,
+            "INFO": Qt.GlobalColor.black,
+            "WARNING": Qt.GlobalColor.darkYellow,
+            "ERROR": Qt.GlobalColor.red,
+            "CRITICAL": Qt.GlobalColor.magenta,
+        }
+        self.log_view.textChanged.connect(self._on_log_text_changed)
         outer_layout.addWidget(self.log_view)
 
         # --- Controls Group ---
@@ -254,6 +264,33 @@ class LogsTab(QWidget):
         else:
             p = Path(p)
         self.main_window.open_file(str(p))
+
+    def _on_log_text_changed(self) -> None:
+        if self._colorizing:
+            return
+        self._colorizing = True
+        try:
+            text = self.log_view.toPlainText()
+            cursor = self.log_view.textCursor()
+            cursor.beginEditBlock()
+            pos = 0
+            for line in text.splitlines():
+                fmt = QTextCharFormat()
+                for lvl, color in self._level_colors.items():
+                    if lvl in line:
+                        fmt.setForeground(QColor(color))
+                        break
+                cursor.setPosition(pos)
+                cursor.movePosition(
+                    QTextCursor.MoveOperation.Right,
+                    QTextCursor.MoveMode.KeepAnchor,
+                    len(line),
+                )
+                cursor.mergeCharFormat(fmt)
+                pos += len(line) + 1
+            cursor.endEditBlock()
+        finally:
+            self._colorizing = False
 
     def update_responsive_layout(self, width: int) -> None:
         """Adjust layout visibility based on parent window width."""

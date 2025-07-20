@@ -1,4 +1,5 @@
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QTextCursor, QColor
 import os
 import sys
 import subprocess
@@ -317,3 +318,35 @@ def test_refresh_logs_level_all_shows_everything(tmp_path, qtbot, monkeypatch):
 
     result = win.log_view.toPlainText().splitlines()
     assert result == lines
+
+
+def test_refresh_logs_colors_levels(tmp_path, qtbot, monkeypatch):
+    lines = [
+        "DEBUG debug msg",
+        "INFO info msg",
+        "WARNING warn msg",
+        "ERROR error msg",
+        "CRITICAL crit msg",
+    ]
+
+    win, _ = _make_window_with_log(tmp_path, qtbot, monkeypatch, lines)
+    win.refresh_logs()
+    qtbot.wait(10)
+
+    cursor = win.log_view.textCursor()
+    cursor.movePosition(QTextCursor.MoveOperation.Start)
+    colors = []
+    for _ in lines:
+        cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, 1)
+        colors.append(cursor.charFormat().foreground().color().name())
+        cursor.clearSelection()
+        cursor.movePosition(QTextCursor.MoveOperation.NextBlock)
+
+    expected = [
+        QColor(Qt.GlobalColor.darkGray).name(),
+        QColor(Qt.GlobalColor.black).name(),
+        QColor(Qt.GlobalColor.darkYellow).name(),
+        QColor(Qt.GlobalColor.red).name(),
+        QColor(Qt.GlobalColor.magenta).name(),
+    ]
+    assert colors == expected
