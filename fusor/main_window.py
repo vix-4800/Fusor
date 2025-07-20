@@ -268,6 +268,7 @@ def apply_theme(widget: QMainWindow, theme: str) -> None:
 
 class MainWindow(QMainWindow):
     notify_signal = pyqtSignal(str, str)
+
     def __init__(self):
         super().__init__()
         self.notify_signal.connect(self._show_notification)

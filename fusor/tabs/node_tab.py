@@ -61,7 +61,6 @@ class NodeTab(QWidget):
     def npm_install(self) -> None:
         self.main_window.run_command(["npm", "install"])
 
-
     def update_npm_scripts(self) -> None:
         """Load npm scripts from package.json and create buttons."""
         scripts: list[str] = []

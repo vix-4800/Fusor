@@ -16,4 +16,3 @@ def get_notification_icon() -> QIcon:
         px.fill(Qt.GlobalColor.transparent)
         icon = QIcon(px)
     return icon
-
