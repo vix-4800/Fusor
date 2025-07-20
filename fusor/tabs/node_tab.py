@@ -11,6 +11,7 @@ from pathlib import Path
 import json
 
 from ..icons import get_icon
+from functools import partial
 
 
 class NodeTab(QWidget):
@@ -84,11 +85,7 @@ class NodeTab(QWidget):
         for name in scripts:
             btn = self._btn(
                 f"npm run {name}",
-                lambda _=False, n=name: self.main_window.run_command([
-                    "npm",
-                    "run",
-                    n,
-                ]),
+                partial(self.main_window.run_command, ["npm", "run", name]),
                 icon="system-run",
             )
             self.npm_scripts_layout.addWidget(btn)
