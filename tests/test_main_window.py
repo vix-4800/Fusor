@@ -1221,3 +1221,32 @@ class TestMainWindow:
 
         main_window.stop_project()
         assert (APP_NAME, "Project stopped") in notified
+
+    def test_status_label_updates_on_start_stop(self, tmp_path: Path, main_window, monkeypatch):
+        class DummyProc:
+            stdout: list[str] = []
+
+            def poll(self):
+                return None
+
+            def wait(self, timeout=5):
+                pass
+
+            def kill(self):
+                pass
+
+        monkeypatch.setattr(subprocess, "Popen", lambda *a, **k: DummyProc(), raising=True)
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+        monkeypatch.setattr(os, "killpg", lambda *a, **k: None, raising=False)
+
+        main_window.project_path = str(tmp_path)
+        (tmp_path / "public").mkdir()
+        main_window.framework_choice = "None"
+
+        assert main_window.status_label.text() == "Stopped"
+
+        main_window.start_project()
+        assert main_window.status_label.text() == "Running"
+
+        main_window.stop_project()
+        assert main_window.status_label.text() == "Stopped"

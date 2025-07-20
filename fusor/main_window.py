@@ -19,6 +19,7 @@ from PyQt6.QtWidgets import (
     QFileDialog,
     QInputDialog,
     QSystemTrayIcon,
+    QLabel,
 )
 from PyQt6.QtCore import QTimer, pyqtSignal
 from typing import TYPE_CHECKING, Any, cast
@@ -303,6 +304,8 @@ class MainWindow(QMainWindow):
 
         header_layout = QHBoxLayout()
         header_layout.addStretch()
+        self.status_label = QLabel("Stopped")
+        header_layout.addWidget(self.status_label)
         self.help_button = QPushButton("")
         self.help_button.setIcon(get_icon("help-about"))
         self.help_button.clicked.connect(self.show_about_dialog)
@@ -1351,6 +1354,7 @@ class MainWindow(QMainWindow):
             self.run_command(["docker", "compose", "up", "-d"])
             self.project_running = True
             self.update_run_buttons()
+            self.status_label.setText("Running")
             self.notify("Project started")
             return
 
@@ -1401,6 +1405,7 @@ class MainWindow(QMainWindow):
             self.executor.submit(stream)
             self.project_running = True
             self.update_run_buttons()
+            self.status_label.setText("Running")
             if self.open_browser:
                 webbrowser.open(f"http://localhost:{self.server_port}")
             self.notify("Project started")
@@ -1414,6 +1419,7 @@ class MainWindow(QMainWindow):
             self.run_command(["docker", "compose", "down"])
             self.project_running = False
             self.update_run_buttons()
+            self.status_label.setText("Stopped")
             self.notify("Project stopped")
             return
 
@@ -1442,6 +1448,7 @@ class MainWindow(QMainWindow):
             print("Project is not running")
         self.project_running = False
         self.update_run_buttons()
+        self.status_label.setText("Stopped")
         self.notify("Project stopped")
 
     def closeEvent(self, event: "QCloseEvent | None") -> None:
