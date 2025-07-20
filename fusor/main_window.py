@@ -308,6 +308,7 @@ class MainWindow(QMainWindow):
         self.status_label = QLabel("Stopped")
         header_layout.addWidget(self.status_label)
         self.help_button = QPushButton("")
+        self.help_button.setFixedSize(36, 36)
         self.help_button.setIcon(get_icon("help-about"))
         self.help_button.clicked.connect(self.show_about_dialog)
         header_layout.addWidget(self.help_button)
