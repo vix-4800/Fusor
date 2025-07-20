@@ -84,7 +84,7 @@ class NodeTab(QWidget):
 
         for name in scripts:
             btn = self._btn(
-                f"npm run {name}",
+                name.capitalize().replace('-', ' '),
                 partial(self.main_window.run_command, ["npm", "run", name]),
                 icon="system-run",
             )

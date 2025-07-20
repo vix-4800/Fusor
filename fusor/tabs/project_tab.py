@@ -217,7 +217,7 @@ class ProjectTab(QWidget):
 
         for name in scripts:
             btn = self._btn(
-                f"composer run {name}",
+                name.capitalize().replace('-', ' '),
                 lambda _=False, n=name: self.main_window.run_command([
                     "composer",
                     "run",
