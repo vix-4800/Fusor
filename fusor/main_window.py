@@ -274,7 +274,7 @@ class MainWindow(QMainWindow):
         self.notify_signal.connect(self._show_notification)
         self.setWindowTitle(f"{APP_NAME} – PHP QA Toolbox")
         self.resize(1024, 768)
-        self.setMinimumSize(400, 300)
+        self.setMinimumSize(425, 300)
         self.theme = "dark"
 
         # Widgets populated by SettingsTab and LogsTab

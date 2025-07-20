@@ -68,10 +68,12 @@ class SettingsTab(QWidget):
         remove_btn.clicked.connect(self.remove_project)
         self.remove_btn = remove_btn
         project_row = QHBoxLayout()
-        project_row.addWidget(self.project_combo)
+        project_combo_label = QLabel("Project:")
+        project_row.addWidget(project_combo_label)
+        project_row.addWidget(self.project_combo, stretch=1)
         project_row.addWidget(add_btn)
         project_row.addWidget(remove_btn)
-        project_form.addRow("Project:", self._wrap(project_row))
+        project_form.addRow(project_row)
 
         self.project_name_edit = QLineEdit()
         name = ""
@@ -89,12 +91,14 @@ class SettingsTab(QWidget):
         self.php_browse_btn.setFixedWidth(30)
         self.php_browse_btn.clicked.connect(self.browse_php_path)
         php_path_row = QHBoxLayout()
+        php_path_row_label = QLabel("PHP Executable:")
+        php_path_row.addWidget(php_path_row_label)
         php_path_row.addWidget(self.php_path_edit)
         php_path_row.addWidget(self.php_browse_btn)
         php_group = QGroupBox("PHP")
         php_form = QFormLayout()
         php_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
-        php_form.addRow("PHP Executable:", self._wrap(php_path_row))
+        php_form.addRow(php_path_row)
 
         self.php_service_edit = QLineEdit(self.main_window.php_service)
         self.db_service_edit = QLineEdit(self.main_window.db_service)
