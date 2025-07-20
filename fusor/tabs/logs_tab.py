@@ -72,13 +72,13 @@ class LogsTab(QWidget):
         )
         self.search_btn.clicked.connect(self.search_logs)
 
-        self.prev_btn = QPushButton("Previous")
+        self.prev_btn = QPushButton("")
         self.prev_btn.setIcon(get_icon("go-previous"))
         self.prev_btn.setMinimumHeight(36)
         self.prev_btn.setEnabled(False)
         self.prev_btn.clicked.connect(lambda: self.cycle_match(-1))
 
-        self.next_btn = QPushButton("Next")
+        self.next_btn = QPushButton("")
         self.next_btn.setIcon(get_icon("go-next"))
         self.next_btn.setMinimumHeight(36)
         self.next_btn.setEnabled(False)

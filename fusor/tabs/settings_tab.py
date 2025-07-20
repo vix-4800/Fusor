@@ -56,13 +56,15 @@ class SettingsTab(QWidget):
             self.project_combo.setCurrentIndex(idx)
         self.project_combo.currentIndexChanged.connect(self._on_project_changed)
 
-        add_btn = QPushButton("Add")
+        add_btn = QPushButton("")
         add_btn.setIcon(get_icon("list-add"))
         add_btn.setFixedHeight(30)
+        add_btn.setFixedWidth(30)
         add_btn.clicked.connect(self.add_project)
-        remove_btn = QPushButton("Remove")
+        remove_btn = QPushButton("")
         remove_btn.setIcon(get_icon("list-remove"))
         remove_btn.setFixedHeight(30)
+        remove_btn.setFixedWidth(30)
         remove_btn.clicked.connect(self.remove_project)
         self.remove_btn = remove_btn
         project_row = QHBoxLayout()
@@ -81,9 +83,10 @@ class SettingsTab(QWidget):
         project_form.addRow("Project Name:", self.project_name_edit)
 
         self.php_path_edit = QLineEdit(self.main_window.php_path)
-        self.php_browse_btn = QPushButton("Browse")
+        self.php_browse_btn = QPushButton("")
         self.php_browse_btn.setIcon(get_icon("document-open"))
         self.php_browse_btn.setFixedHeight(30)
+        self.php_browse_btn.setFixedWidth(30)
         self.php_browse_btn.clicked.connect(self.browse_php_path)
         php_path_row = QHBoxLayout()
         php_path_row.addWidget(self.php_path_edit)
@@ -352,13 +355,15 @@ class SettingsTab(QWidget):
 
     def _add_compose_file_field(self, value: str) -> None:
         edit = QLineEdit(value)
-        browse = QPushButton("Browse")
+        browse = QPushButton("")
         browse.setIcon(get_icon("document-open"))
         browse.setFixedHeight(30)
+        browse.setFixedWidth(30)
         browse.clicked.connect(lambda: self.browse_compose_file(edit))
-        remove = QPushButton("Remove")
+        remove = QPushButton("")
         remove.setIcon(get_icon("list-remove"))
         remove.setFixedHeight(30)
+        remove.setFixedWidth(30)
 
         row = QHBoxLayout()
         row.addWidget(edit)
@@ -405,13 +410,15 @@ class SettingsTab(QWidget):
 
     def _add_log_dir_field(self, value: str) -> None:
         edit = QLineEdit(value)
-        browse = QPushButton("Browse")
+        browse = QPushButton("")
         browse.setIcon(get_icon("document-open"))
         browse.setFixedHeight(30)
+        browse.setFixedWidth(30)
         browse.clicked.connect(lambda: self.browse_log_dir(edit))
-        remove = QPushButton("Remove")
+        remove = QPushButton("")
         remove.setIcon(get_icon("list-remove"))
         remove.setFixedHeight(30)
+        remove.setFixedWidth(30)
 
         row = QHBoxLayout()
         row.addWidget(edit)
