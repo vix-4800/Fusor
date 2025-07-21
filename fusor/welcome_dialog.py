@@ -100,10 +100,12 @@ class WelcomeDialog(QDialog):
         if getattr(self.main_window, "framework_combo", None):
             self.main_window.framework_combo.setCurrentText(fw)
 
-        self.main_window.run_command(cmd)
-        self.main_window.set_current_project(str(dest))
-        self.main_window.save_settings()
-        self.accept()
+        def finalize() -> None:
+            self.main_window.set_current_project(str(dest))
+            self.main_window.save_settings()
+            self.accept()
+
+        self.main_window.run_command(cmd, callback=finalize)
 
     def clone_project(self) -> None:
         url, ok = QInputDialog.getText(self, "Clone from Git", "Repository URL:")
