@@ -948,14 +948,14 @@ class TestMainWindow:
         win.tabs.setCurrentIndex(win.git_index)
         qtbot.wait(10)
 
-        assert calls == [True]
+        assert calls == []
 
         win.tabs.setCurrentIndex(win.settings_index)
         qtbot.wait(10)
         win.tabs.setCurrentIndex(win.git_index)
         qtbot.wait(10)
 
-        assert calls == [True, True]
+        assert calls == []
         win.close()
 
 

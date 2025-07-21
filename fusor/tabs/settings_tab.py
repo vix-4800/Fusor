@@ -142,7 +142,8 @@ class SettingsTab(QWidget):
             self.remote_combo.addItems(remotes)
         if self.main_window.git_remote in remotes:
             self.remote_combo.setCurrentText(self.main_window.git_remote)
-        project_form.addRow("Git Remote:", self.remote_combo)
+        self.remote_label = QLabel("Git Remote:")
+        project_form.addRow(self.remote_label, self.remote_combo)
 
         self.framework_combo = QComboBox()
         self.framework_combo.addItems(["Laravel", "Yii", "Symfony", "None"])
@@ -330,6 +331,8 @@ class SettingsTab(QWidget):
         self.docker_project_path_edit.textChanged.connect(
             self.main_window.mark_settings_dirty
         )
+
+        self.update_git_visibility(getattr(self.main_window, "is_git_repo", False))
 
     def _on_project_changed(self, _index: int) -> None:
         path = self.project_combo.currentData()
@@ -648,3 +651,7 @@ class SettingsTab(QWidget):
         self.main_window.log_dirs = paths
         if hasattr(self.main_window, "logs_tab"):
             self.main_window.logs_tab.set_log_dirs(paths)
+
+    def update_git_visibility(self, is_repo: bool) -> None:
+        self.remote_combo.setVisible(is_repo)
+        self.remote_label.setVisible(is_repo)

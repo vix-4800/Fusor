@@ -359,6 +359,7 @@ class MainWindow(QMainWindow):
         self.yii_template = "basic"
         self.log_dirs: list[str] = []
         self.git_remote = ""
+        self.is_git_repo = False
         self.max_log_lines = DEFAULT_MAX_LOG_LINES
         self.enable_terminal = False
         self.auto_refresh_secs = 5
@@ -452,7 +453,10 @@ class MainWindow(QMainWindow):
             self.framework_combo.setCurrentText(self.framework_choice)
 
         if self.project_path:
-            self.git_tab.load_branches()
+            if self.is_git_repo:
+                self.git_tab.load_branches()
+            if hasattr(self.git_tab, "update_visibility"):
+                self.git_tab.update_visibility()
         else:
             if not self.projects:
                 QTimer.singleShot(0, self.show_welcome_dialog)
@@ -499,6 +503,7 @@ class MainWindow(QMainWindow):
         self.project_path = data.get("current_project", self.project_path)
         if not self.project_path and self.projects:
             self.project_path = self.projects[0]["path"]
+        self.is_git_repo = bool(self.project_path) and os.path.isdir(os.path.join(self.project_path, ".git"))
 
         proj: dict[str, Any] | None = next(
             (p for p in data.get("projects", []) if p.get("path") == self.project_path),
@@ -664,6 +669,7 @@ class MainWindow(QMainWindow):
     def apply_project_settings(self) -> None:
         """Load settings for the current project and update widgets."""
         data = load_config()
+        self.is_git_repo = bool(self.project_path) and os.path.isdir(os.path.join(self.project_path, ".git"))
         proj = next((p for p in data.get("projects", []) if p.get("path") == self.project_path), None)
         settings = DEFAULT_PROJECT_SETTINGS.copy()
         settings.update(data.get("project_settings", {}).get(self.project_path, {}))
@@ -815,6 +821,7 @@ class MainWindow(QMainWindow):
         if not path:
             return
         self.project_path = path
+        self.is_git_repo = os.path.isdir(os.path.join(path, ".git"))
         if self.log_view is not None:
             self.log_view.setPlainText("")
         proj = next((p for p in self.projects if p.get("path") == path), None)
@@ -838,7 +845,14 @@ class MainWindow(QMainWindow):
         if self.project_name_edit is not None:
             self.project_name_edit.setText(proj.get("name", Path(path).name))
         if hasattr(self, "git_tab"):
-            self.git_tab.load_branches()
+            if self.is_git_repo:
+                self.git_tab.load_branches()
+            if hasattr(self.git_tab, "update_visibility"):
+                self.git_tab.update_visibility()
+        if hasattr(self, "settings_tab") and hasattr(self.settings_tab, "update_git_visibility"):
+            self.settings_tab.update_git_visibility(self.is_git_repo)
+        if hasattr(self, "settings_tab") and hasattr(self.settings_tab, "update_git_visibility"):
+            self.settings_tab.update_git_visibility(self.is_git_repo)
 
         if hasattr(self, "terminal_index"):
             self.tabs.setTabVisible(self.terminal_index, self.enable_terminal)
@@ -1178,6 +1192,7 @@ class MainWindow(QMainWindow):
                 return
 
         self.project_path = project_path
+        self.is_git_repo = os.path.isdir(os.path.join(project_path, ".git"))
         project_name = Path(project_path).name
         if self.project_name_edit is not None:
             text = self.project_name_edit.text().strip()
@@ -1293,7 +1308,10 @@ class MainWindow(QMainWindow):
                 self.logs_tab.set_log_dirs(self.log_dirs)
 
         if hasattr(self, "git_tab"):
-            self.git_tab.load_branches()
+            if self.is_git_repo:
+                self.git_tab.load_branches()
+            if hasattr(self.git_tab, "update_visibility"):
+                self.git_tab.update_visibility()
 
     def artisan(self, *args: str) -> None:
         if not self.ensure_project_path():
@@ -1507,7 +1525,10 @@ class MainWindow(QMainWindow):
 
     def on_tab_changed(self, index: int) -> None:
         if index == getattr(self, "git_index", -1):
-            self.git_tab.load_branches()
+            if self.is_git_repo:
+                self.git_tab.load_branches()
+            if hasattr(self.git_tab, "update_visibility"):
+                self.git_tab.update_visibility()
 
     def clear_output(self) -> None:
         self.output_view.clear()
