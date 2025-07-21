@@ -24,7 +24,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import QTimer, pyqtSignal, Qt
 from PyQt6.QtGui import QShortcut, QKeySequence
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Callable, cast
 from .utils import expand_log_paths
 
 if TYPE_CHECKING:
@@ -796,7 +796,12 @@ class MainWindow(QMainWindow):
         if hasattr(self, "node_tab") and hasattr(self.node_tab, "update_npm_scripts"):
             self.node_tab.update_npm_scripts()
 
-    def run_command(self, command: list[str], service: str | None = None) -> None:
+    def run_command(
+        self,
+        command: list[str],
+        service: str | None = None,
+        callback: Callable[[], None] | None = None,
+    ) -> concurrent.futures.Future:
         if self.use_docker:
             if len(command) >= 2 and command[0] == "docker" and command[1] == "compose":
                 command = self._compose_prefix() + command[2:]
@@ -824,9 +829,12 @@ class MainWindow(QMainWindow):
             except FileNotFoundError:
                 print(f"Command not found: {command[0]}")
                 self.notify(f"Command not found: {command[0]}")
+            finally:
+                if callback is not None:
+                    QTimer.singleShot(0, callback)
 
         print(f"$ {' '.join(command)}")
-        self.executor.submit(task)
+        return self.executor.submit(task)
 
     def ensure_project_path(self) -> bool:
         if not self.project_path:

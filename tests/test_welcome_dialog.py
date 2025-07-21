@@ -17,8 +17,10 @@ class DummyMainWindow(QWidget):
     def save_settings(self):
         self.saved = True
 
-    def run_command(self, cmd):
+    def run_command(self, cmd, callback=None):
         self.cmd = cmd
+        if callback:
+            callback()
 
 
 def test_create_project_laravel(monkeypatch, qtbot, tmp_path):
