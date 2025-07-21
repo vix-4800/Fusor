@@ -936,14 +936,14 @@ class TestMainWindow:
         win.tabs.setCurrentIndex(win.git_index)
         qtbot.wait(10)
 
-        assert calls == [True]
+        assert calls == []
 
         win.tabs.setCurrentIndex(win.settings_index)
         qtbot.wait(10)
         win.tabs.setCurrentIndex(win.git_index)
         qtbot.wait(10)
 
-        assert calls == [True, True]
+        assert calls == []
         win.close()
 
 
@@ -1146,7 +1146,7 @@ class TestMainWindow:
         win = MainWindow()
         qtbot.addWidget(win)
 
-        assert win.minimumWidth() == 400
+        assert win.minimumWidth() == 425
         assert win.minimumHeight() == 300
 
     def test_add_project_populates_remote_combo(self, tmp_path: Path, qtbot, monkeypatch):

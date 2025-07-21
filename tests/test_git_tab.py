@@ -8,6 +8,7 @@ class DummyMainWindow:
     def __init__(self, path="/repo"):
         self.project_path = path
         self.ensure_called = 0
+        self.is_git_repo = True
 
     def ensure_project_path(self):
         self.ensure_called += 1

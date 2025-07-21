@@ -56,6 +56,7 @@ class GitTab(QWidget):
         branch_layout.addWidget(checkout_btn)
         branch_group.setLayout(branch_layout)
         outer_layout.addWidget(branch_group)
+        self.branch_group = branch_group
 
         # --- Create branch ---
         create_group = QGroupBox("Create Branch")
@@ -70,6 +71,7 @@ class GitTab(QWidget):
         create_layout.addWidget(create_btn)
         create_group.setLayout(create_layout)
         outer_layout.addWidget(create_group)
+        self.create_group = create_group
 
         # --- Commit Changes ---
         commit_group = QGroupBox("Commit Changes")
@@ -84,6 +86,7 @@ class GitTab(QWidget):
         commit_layout.addWidget(commit_btn)
         commit_group.setLayout(commit_layout)
         outer_layout.addWidget(commit_group)
+        self.commit_group = commit_group
 
         # --- Git actions ---
         actions_group = QGroupBox("Git Commands")
@@ -136,8 +139,14 @@ class GitTab(QWidget):
 
         actions_group.setLayout(actions_layout)
         outer_layout.addWidget(actions_group)
+        self.actions_group = actions_group
+
+        self.init_btn = self._btn("Init Repository", self.init_repo, icon="list-add")
+        outer_layout.addWidget(self.init_btn)
 
         outer_layout.addStretch(1)
+
+        self.update_visibility()
 
     def _btn(
         self, label: str, slot: Callable[..., object], icon: str | None = None
@@ -341,3 +350,17 @@ class GitTab(QWidget):
             )
         else:
             self.current_branch_label.setText(self.current_branch)
+
+    def init_repo(self) -> None:
+        """Initialize a new git repository in the current project."""
+        res = self.run_git_command("init")
+        if res and res.returncode == 0:
+            self.main_window.is_git_repo = True
+            self.update_visibility()
+            self.load_branches()
+
+    def update_visibility(self) -> None:
+        is_repo = getattr(self.main_window, "is_git_repo", False)
+        for grp in [self.branch_group, self.create_group, self.commit_group, self.actions_group]:
+            grp.setVisible(is_repo)
+        self.init_btn.setVisible(not is_repo)

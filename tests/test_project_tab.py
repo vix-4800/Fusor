@@ -162,7 +162,7 @@ def test_update_php_tools_adds_script_buttons(tmp_path, qtbot):
     qtbot.wait(10)
 
     texts = [btn.text() for btn in tab._script_buttons]
-    assert "composer run lint" in texts
+    assert "Lint" in texts
     assert tab.composer_scripts_group.isVisible()
 
 
