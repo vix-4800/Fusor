@@ -282,10 +282,12 @@ def apply_theme(widget: QMainWindow, theme: str) -> None:
 
 class MainWindow(QMainWindow):
     notify_signal = pyqtSignal(str, str)
+    call_later = pyqtSignal(object)
 
     def __init__(self):
         super().__init__()
         self.notify_signal.connect(self._show_notification)
+        self.call_later.connect(lambda f: f())
         self.setWindowTitle(f"{APP_NAME} – PHP QA Toolbox")
         self.resize(1024, 768)
         self.setMinimumSize(425, 300)
@@ -902,7 +904,8 @@ class MainWindow(QMainWindow):
                 self.notify(f"Command not found: {command[0]}")
             finally:
                 if callback is not None:
-                    QTimer.singleShot(0, callback)
+                    # ensure callback runs on the UI thread
+                    self.call_later.emit(callback)
 
         print(f"$ {' '.join(command)}")
         return self.executor.submit(task)
