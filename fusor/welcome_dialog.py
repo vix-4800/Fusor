@@ -100,9 +100,14 @@ class WelcomeDialog(QDialog):
         if getattr(self.main_window, "framework_combo", None):
             self.main_window.framework_combo.setCurrentText(fw)
 
+        self.setDisabled(True)
+        self.main_window.setDisabled(True)
+
         def finalize() -> None:
             self.main_window.set_current_project(str(dest))
             self.main_window.save_settings()
+            self.main_window.setDisabled(False)
+            self.setDisabled(False)
             self.accept()
 
         self.main_window.run_command(cmd, callback=finalize)
