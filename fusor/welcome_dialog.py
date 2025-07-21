@@ -48,14 +48,28 @@ class WelcomeDialog(QDialog):
             self.accept()
 
     def create_project(self) -> None:
+        name, ok = QInputDialog.getText(
+            self, "Create Project", "Project Name:"
+        )
+        if not ok or not name:
+            return
+
         dest_base = QFileDialog.getExistingDirectory(self, "Select Destination")
         if not dest_base:
             return
 
-        name, ok = QInputDialog.getText(
-            self, "Create Project", "Project Directory Name:"
+        frameworks = ["Laravel", "Symfony", "Yii", "None"]
+        fw_choice = getattr(self.main_window, "framework_choice", "Laravel")
+        fw_index = frameworks.index(fw_choice) if fw_choice in frameworks else 0
+        fw, ok = QInputDialog.getItem(
+            self,
+            "Create Project",
+            "Framework:",
+            frameworks,
+            fw_index,
+            editable=False,
         )
-        if not ok or not name:
+        if not ok or not fw:
             return
 
         dest = Path(dest_base) / name
@@ -63,42 +77,30 @@ class WelcomeDialog(QDialog):
             QMessageBox.warning(self, "Create Project", "Destination already exists")
             return
 
-        fw = getattr(self.main_window, "framework_choice", "Laravel")
         if fw == "Laravel":
             cmd = ["composer", "create-project", "laravel/laravel", str(dest)]
+            cwd = dest_base
         elif fw == "Symfony":
             cmd = ["composer", "create-project", "symfony/skeleton", str(dest)]
+            cwd = dest_base
         elif fw == "Yii":
             template = getattr(self.main_window, "yii_template", "basic")
             pkg = (
-                "yiisoft/yii2-app-basic"
-                if template == "basic"
-                else "yiisoft/yii2-app-advanced"
+                "yiisoft/yii2-app-basic" if template == "basic" else "yiisoft/yii2-app-advanced"
             )
             cmd = ["composer", "create-project", pkg, str(dest)]
+            cwd = dest_base
         else:
             dest.mkdir(parents=True, exist_ok=True)
             cmd = ["composer", "init", "-n"]
+            cwd = str(dest)
 
-        try:
-            res = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                cwd=dest if cmd[1] == "init" else None,
-            )
-        except FileNotFoundError:
-            QMessageBox.warning(self, "Create Project", "composer executable not found")
-            return
+        self.main_window.project_path = cwd
+        self.main_window.framework_choice = fw
+        if getattr(self.main_window, "framework_combo", None):
+            self.main_window.framework_combo.setCurrentText(fw)
 
-        if res.returncode != 0:
-            QMessageBox.warning(
-                self,
-                "Create Project",
-                res.stderr or "Failed to create project",
-            )
-            return
-
+        self.main_window.run_command(cmd)
         self.main_window.set_current_project(str(dest))
         self.main_window.save_settings()
         self.accept()
