@@ -4,7 +4,7 @@
 
 **Fusor** is a cross-platform desktop app built with PyQt6 that helps you manage PHP-based projects without touching the terminal. It’s designed for QA engineers, testers, junior developers, and anyone who wants to execute common project tasks with a click.
 
-![Main window with tabs](docs/screenshot.jpg)
+![Main window with tabs](docs/screenshot.png)
 
 ---
 
