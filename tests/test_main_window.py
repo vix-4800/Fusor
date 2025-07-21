@@ -4,6 +4,7 @@ import subprocess
 import shutil
 from pathlib import Path
 import webbrowser
+import socket
 
 import pytest
 from PyQt6.QtCore import QTimer, Qt
@@ -1122,6 +1123,48 @@ class TestMainWindow:
         main_window.start_project()
 
         assert opened == [f"http://localhost:{main_window.server_port}"]
+
+    def test_start_project_warns_when_port_in_use(self, tmp_path: Path, main_window, monkeypatch):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("localhost", 0))
+        port = sock.getsockname()[1]
+
+        main_window.project_path = str(tmp_path)
+        (tmp_path / "public").mkdir()
+
+        main_window.framework_choice = "None"
+        if hasattr(main_window, "framework_combo"):
+            main_window.framework_combo.setCurrentText("None")
+
+        main_window.server_port = port
+
+        warnings = []
+        monkeypatch.setattr(
+            "PyQt6.QtWidgets.QMessageBox.warning",
+            lambda *a, **k: warnings.append(True),
+            raising=True,
+        )
+
+        called = []
+
+        def fake_popen(cmd, **_kw):
+            called.append(True)
+            class DummyProcess:
+                def poll(self):
+                    return None
+                stdout: list[str] = []
+            return DummyProcess()
+
+        monkeypatch.setattr(subprocess, "Popen", fake_popen, raising=True)
+        monkeypatch.setattr(main_window.executor, "submit", lambda fn: fn(), raising=True)
+
+        main_window.server_process = None
+        main_window.start_project()
+        sock.close()
+
+        assert warnings == [True]
+        assert called == []
+        assert main_window.server_process is None
 
     def test_output_hidden_on_small_window(self, qtbot, monkeypatch):
         monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
