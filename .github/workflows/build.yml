@@ -23,7 +23,7 @@ jobs:
         run: |
           pyinstaller --noconfirm --onefile --windowed main.py
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fusor-windows
           path: dist/main.exe
@@ -55,7 +55,7 @@ jobs:
         run: |
           pyinstaller --noconfirm --onefile main.py
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fusor-linux
           path: dist/main
