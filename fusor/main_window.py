@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import (
     QLabel,
 )
 from PyQt6.QtCore import QTimer, pyqtSignal, Qt
-from PyQt6.QtGui import QShortcut, QKeySequence
+from PyQt6.QtGui import QShortcut, QKeySequence, QAction
 from typing import TYPE_CHECKING, Any, cast
 from .utils import expand_log_paths
 
@@ -336,10 +336,11 @@ class MainWindow(QMainWindow):
         self.project_running = False
         self.settings_dirty = False
         self._tray_icon: QSystemTrayIcon | None = None
-        self._tray_menu = None
-        self._tray_show_action = None
-        self._tray_start_action = None
+        self._tray_menu: QMenu | None = None
+        self._tray_show_action: QAction | None = None
+        self._tray_start_action: QAction | None = None
         self.tray_enabled = False
+        self.tray_checkbox: QCheckBox | None = None
 
         # Global shortcut to save settings
         self._save_shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
@@ -702,15 +703,17 @@ class MainWindow(QMainWindow):
                 tray_icon = get_notification_icon()
             icon = QSystemTrayIcon(tray_icon, self)
             menu = QMenu()
-            self._tray_show_action = menu.addAction("Hide")
-            self._tray_show_action.triggered.connect(self.toggle_window_visibility)
-            self._tray_start_action = menu.addAction("Start Project")
-            self._tray_start_action.triggered.connect(self._on_tray_start_stop)
-            quit_action = menu.addAction("Quit")
+            show_action = cast(QAction, menu.addAction("Hide"))
+            show_action.triggered.connect(self.toggle_window_visibility)
+            start_action = cast(QAction, menu.addAction("Start Project"))
+            start_action.triggered.connect(self._on_tray_start_stop)
+            quit_action = cast(QAction, menu.addAction("Quit"))
             quit_action.triggered.connect(self.close)
             icon.setContextMenu(menu)
             self._tray_icon = icon
             self._tray_menu = menu
+            self._tray_show_action = show_action
+            self._tray_start_action = start_action
         self._update_tray_menu()
         self._tray_icon.show()
 
