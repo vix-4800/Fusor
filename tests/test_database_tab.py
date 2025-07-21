@@ -58,6 +58,33 @@ def test_restore_button_runs_command(monkeypatch, qtbot):
     assert main.commands == [(["mysql", "/tmp/d.sql"], "db")]
 
 
+def test_postgres_dump_and_restore(monkeypatch, qtbot):
+    main = DummyMainWindow()
+    tab = DatabaseTab(main)
+    qtbot.addWidget(tab)
+
+    tab.db_combo.setCurrentText("PostgreSQL")
+
+    monkeypatch.setattr(
+        "PyQt6.QtWidgets.QFileDialog.getSaveFileName",
+        lambda *a, **k: ("/tmp/p.sql", ""),
+        raising=True,
+    )
+    qtbot.mouseClick(tab.dump_btn, Qt.MouseButton.LeftButton)
+
+    monkeypatch.setattr(
+        "PyQt6.QtWidgets.QFileDialog.getOpenFileName",
+        lambda *a, **k: ("/tmp/p.sql", ""),
+        raising=True,
+    )
+    qtbot.mouseClick(tab.restore_btn, Qt.MouseButton.LeftButton)
+
+    assert main.commands == [
+        (["pg_dump", "-f", "/tmp/p.sql"], "db"),
+        (["psql", "-f", "/tmp/p.sql"], "db"),
+    ]
+
+
 def test_service_name_passed(monkeypatch, qtbot):
     main = DummyMainWindow()
     main.db_service = "maria"
