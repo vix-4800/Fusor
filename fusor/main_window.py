@@ -20,10 +20,11 @@ from PyQt6.QtWidgets import (
     QFileDialog,
     QInputDialog,
     QSystemTrayIcon,
+    QMenu,
     QLabel,
 )
 from PyQt6.QtCore import QTimer, pyqtSignal, Qt
-from PyQt6.QtGui import QShortcut, QKeySequence
+from PyQt6.QtGui import QShortcut, QKeySequence, QAction
 from typing import TYPE_CHECKING, Any, Callable, cast
 from .utils import expand_log_paths
 
@@ -347,6 +348,11 @@ class MainWindow(QMainWindow):
         self.project_running = False
         self.settings_dirty = False
         self._tray_icon: QSystemTrayIcon | None = None
+        self._tray_menu: QMenu | None = None
+        self._tray_show_action: QAction | None = None
+        self._tray_start_action: QAction | None = None
+        self.tray_enabled = False
+        self.tray_checkbox: QCheckBox | None = None
 
         # Global shortcut to save settings
         self._save_shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
@@ -505,6 +511,16 @@ class MainWindow(QMainWindow):
         super().resizeEvent(event)
         self._update_responsive_layout()
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        if self.tray_enabled:
+            self._init_tray_icon()
+
+    def hideEvent(self, event):
+        super().hideEvent(event)
+        if self.tray_enabled:
+            self._update_tray_menu()
+
     def load_config(self):
         data = load_config()
         self.projects = []
@@ -601,6 +617,7 @@ class MainWindow(QMainWindow):
         self.show_console_output = bool(
             data.get("show_console_output", self.show_console_output)
         )
+        self.tray_enabled = bool(data.get("enable_tray", self.tray_enabled))
 
         self.theme = data.get("theme", self.theme)
 
@@ -654,7 +671,8 @@ class MainWindow(QMainWindow):
 
         icon.show()
         icon.showMessage(title, message)
-        QTimer.singleShot(100, icon.hide)
+        if not self.tray_enabled:
+            QTimer.singleShot(100, icon.hide)
 
     def update_run_buttons(self) -> None:
         """Enable or disable start and stop buttons based on running state."""
@@ -683,6 +701,57 @@ class MainWindow(QMainWindow):
             self.git_tab, "update_responsive_layout"
         ):
             self.git_tab.update_responsive_layout(width)
+
+    # ------------------------------------------------------------------
+    # System tray icon helpers
+    # ------------------------------------------------------------------
+
+    def _init_tray_icon(self) -> None:
+        if self._tray_icon is None:
+            tray_icon = self.windowIcon()
+            if tray_icon.isNull():
+                from .icons import get_notification_icon
+
+                tray_icon = get_notification_icon()
+            icon = QSystemTrayIcon(tray_icon, self)
+            menu = QMenu()
+            show_action = cast(QAction, menu.addAction("Hide"))
+            show_action.triggered.connect(self.toggle_window_visibility)
+            start_action = cast(QAction, menu.addAction("Start Project"))
+            start_action.triggered.connect(self._on_tray_start_stop)
+            quit_action = cast(QAction, menu.addAction("Quit"))
+            quit_action.triggered.connect(self.close)
+            icon.setContextMenu(menu)
+            self._tray_icon = icon
+            self._tray_menu = menu
+            self._tray_show_action = show_action
+            self._tray_start_action = start_action
+        self._update_tray_menu()
+        self._tray_icon.show()
+
+    def _update_tray_menu(self) -> None:
+        if not self._tray_icon or not self._tray_menu:
+            return
+        if self._tray_show_action:
+            text = "Hide" if self.isVisible() else "Show"
+            self._tray_show_action.setText(text)
+        if self._tray_start_action:
+            text = "Stop Project" if self.project_running else "Start Project"
+            self._tray_start_action.setText(text)
+
+    def _on_tray_start_stop(self) -> None:
+        if self.project_running:
+            self.stop_project()
+        else:
+            self.start_project()
+        self._update_tray_menu()
+
+    def toggle_window_visibility(self) -> None:
+        if self.isVisible():
+            self.hide()
+        else:
+            self.show()
+        self._update_tray_menu()
 
     def apply_project_settings(self) -> None:
         """Load settings for the current project and update widgets."""
@@ -1183,6 +1252,11 @@ class MainWindow(QMainWindow):
             if self.open_browser_checkbox is not None
             else self.open_browser
         )
+        tray_enabled = (
+            self.tray_checkbox.isChecked()
+            if self.tray_checkbox is not None
+            else self.tray_enabled
+        )
 
         if (
             not project_path
@@ -1254,6 +1328,7 @@ class MainWindow(QMainWindow):
         self.enable_terminal = enable_terminal
         self.open_browser = bool(open_browser)
         self.show_console_output = bool(show_console_output)
+        self.tray_enabled = bool(tray_enabled)
         self.max_log_lines = int(getattr(self, "max_log_lines", DEFAULT_MAX_LOG_LINES))
 
         data = load_config()
@@ -1317,6 +1392,7 @@ class MainWindow(QMainWindow):
                 "current_project": project_path,
                 "theme": self.theme,
                 "show_console_output": self.show_console_output,
+                "enable_tray": self.tray_enabled,
             }
         )
         try:
@@ -1327,6 +1403,10 @@ class MainWindow(QMainWindow):
         apply_theme(self, self.theme)
         print("Settings saved!")
         self.mark_settings_saved()
+        if self.tray_enabled:
+            self._init_tray_icon()
+        elif self._tray_icon is not None:
+            self._tray_icon.hide()
 
         if hasattr(self, "logs_tab"):
             self.logs_tab.update_timer_interval(self.auto_refresh_secs)
@@ -1480,6 +1560,8 @@ class MainWindow(QMainWindow):
             if self.open_browser:
                 webbrowser.open(f"http://localhost:{self.server_port}")
             self.notify("Project started")
+            if self.tray_enabled:
+                self._update_tray_menu()
         except FileNotFoundError:
             print(f"Command not found: {command[0]}")
 
@@ -1521,6 +1603,8 @@ class MainWindow(QMainWindow):
         self.update_run_buttons()
         self.status_label.setText("Stopped")
         self.notify("Project stopped")
+        if self.tray_enabled:
+            self._update_tray_menu()
 
     def closeEvent(self, event: "QCloseEvent | None") -> None:
         if self.server_process and self.server_process.poll() is None:
@@ -1549,6 +1633,8 @@ class MainWindow(QMainWindow):
             save_config(data)
         except OSError as e:
             print(f"Failed to write config: {e}")
+        if self._tray_icon is not None:
+            self._tray_icon.hide()
         super().closeEvent(event)
 
     def show_about_dialog(self) -> None:
