@@ -544,6 +544,7 @@ class MainWindow(QMainWindow):
             None,
         )
         settings: dict[str, Any] = DEFAULT_PROJECT_SETTINGS.copy()
+        settings["framework"] = self.framework_choice
         settings.update(data.get("project_settings", {}).get(self.project_path, {}))
         if isinstance(proj, dict):
             temp = proj.copy()
@@ -759,6 +760,7 @@ class MainWindow(QMainWindow):
         self.is_git_repo = bool(self.project_path) and os.path.isdir(os.path.join(self.project_path, ".git"))
         proj = next((p for p in data.get("projects", []) if p.get("path") == self.project_path), None)
         settings = DEFAULT_PROJECT_SETTINGS.copy()
+        settings["framework"] = self.framework_choice
         settings.update(data.get("project_settings", {}).get(self.project_path, {}))
         if isinstance(proj, dict):
             temp = proj.copy()

@@ -292,6 +292,14 @@ class TestMainWindow:
         assert main_window.tabs.isTabVisible(main_window.node_index)
         assert main_window.tabs.isTabEnabled(main_window.node_index)
 
+    def test_set_current_project_preserves_framework_choice(self, tmp_path: Path, main_window, qtbot):
+        main_window.framework_choice = "Symfony"
+        main_window.framework_combo.setCurrentText("Symfony")
+        main_window.set_current_project(str(tmp_path))
+        qtbot.wait(10)
+        assert main_window.framework_choice == "Symfony"
+        assert main_window.framework_combo.currentText() == "Symfony"
+
     def test_composer_install_button_runs_command(self, main_window, qtbot, monkeypatch):
         captured = []
         monkeypatch.setattr(main_window, "run_command", lambda cmd: captured.append(cmd), raising=True)
