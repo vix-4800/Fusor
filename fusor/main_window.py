@@ -1607,6 +1607,11 @@ class MainWindow(QMainWindow):
             self._update_tray_menu()
 
     def closeEvent(self, event: "QCloseEvent | None") -> None:
+        if event is not None and event.spontaneous() and self.tray_enabled:
+            event.ignore()
+            self.hide()
+            self._update_tray_menu()
+            return
         if self.server_process and self.server_process.poll() is None:
             try:
                 if os.name == "nt":
