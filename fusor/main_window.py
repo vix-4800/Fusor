@@ -7,6 +7,7 @@ import concurrent.futures
 import builtins
 import shutil
 import webbrowser
+import socket
 from PyQt6.QtWidgets import (
     QMainWindow,
     QTabWidget,
@@ -61,6 +62,17 @@ from .tabs.settings_tab import SettingsTab
 
 # allow tests to monkeypatch file operations easily
 open = builtins.open
+
+
+def _port_in_use(port: int) -> bool:
+    """Return True if ``port`` is already bound on localhost."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind(("localhost", port))
+        except OSError:
+            return True
+    return False
+
 
 DARK_STYLESHEET = """
     QMainWindow {
@@ -1406,6 +1418,14 @@ class MainWindow(QMainWindow):
             return
 
         if not self.ensure_project_path():
+            return
+
+        if _port_in_use(self.server_port):
+            QMessageBox.warning(
+                self,
+                APP_NAME,
+                f"Port {self.server_port} is already in use.",
+            )
             return
 
         if self.current_framework() == "Laravel":
