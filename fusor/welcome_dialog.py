@@ -26,6 +26,7 @@ class WelcomeDialog(QDialog):
         super().__init__(main_window)
         self.main_window = main_window
         self.setWindowTitle(f"Welcome to {APP_NAME}")
+        self.setMinimumWidth(275)
         self.progress_dialog: Optional[QProgressDialog] = None
 
         layout = QVBoxLayout(self)
@@ -107,6 +108,7 @@ class WelcomeDialog(QDialog):
         self.setDisabled(True)
         self.main_window.setDisabled(True)
         dlg = QProgressDialog("Creating project...", None, 0, 0, self)
+        dlg.setMinimumWidth(275)
         dlg.setWindowTitle("Please Wait")
         dlg.setWindowModality(Qt.WindowModality.WindowModal)
         dlg.setMinimumDuration(0)
