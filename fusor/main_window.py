@@ -21,7 +21,8 @@ from PyQt6.QtWidgets import (
     QSystemTrayIcon,
     QLabel,
 )
-from PyQt6.QtCore import QTimer, pyqtSignal
+from PyQt6.QtCore import QTimer, pyqtSignal, Qt
+from PyQt6.QtGui import QShortcut, QKeySequence
 from typing import TYPE_CHECKING, Any, cast
 from .utils import expand_log_paths
 
@@ -334,6 +335,11 @@ class MainWindow(QMainWindow):
         self.project_running = False
         self.settings_dirty = False
         self._tray_icon: QSystemTrayIcon | None = None
+
+        # Global shortcut to save settings
+        self._save_shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
+        self._save_shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
+        self._save_shortcut.activated.connect(self.save_settings)
 
         # Redirect stdout to the output view only
         self._stdout_logger = QTextEditLogger(

@@ -1262,3 +1262,15 @@ class TestMainWindow:
 
         main_window.stop_project()
         assert main_window.status_label.text() == "Stopped"
+
+    def test_ctrl_s_saves_settings(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+
+        assert win._save_shortcut.key().toString() == "Ctrl+S"
+        assert win._save_shortcut.context() == Qt.ShortcutContext.ApplicationShortcut
+        win.close()

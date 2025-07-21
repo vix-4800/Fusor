@@ -27,6 +27,7 @@ Fusor aims to **simplify routine PHP project operations** via a user-friendly vi
 -   Git, database, and migration helpers
 -   Basic Node/NPM commands with automatic buttons for package scripts
 -   Configurable log viewer with auto-refresh
+-   **Ctrl+S** shortcut to quickly save settings
 -   Isolated settings stored in `~/.fusor_config.json`
 
 ---
