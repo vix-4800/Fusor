@@ -11,7 +11,10 @@ from PyQt6.QtWidgets import (
     QFileDialog,
     QInputDialog,
     QMessageBox,
+    QProgressDialog,
 )
+from PyQt6.QtCore import Qt
+from typing import Optional
 
 from . import APP_NAME
 
@@ -23,6 +26,7 @@ class WelcomeDialog(QDialog):
         super().__init__(main_window)
         self.main_window = main_window
         self.setWindowTitle(f"Welcome to {APP_NAME}")
+        self.progress_dialog: Optional[QProgressDialog] = None
 
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("Select a project to get started:"))
@@ -102,8 +106,19 @@ class WelcomeDialog(QDialog):
 
         self.setDisabled(True)
         self.main_window.setDisabled(True)
+        dlg = QProgressDialog("Creating project...", None, 0, 0, self)
+        dlg.setWindowTitle("Please Wait")
+        dlg.setWindowModality(Qt.WindowModality.WindowModal)
+        dlg.setMinimumDuration(0)
+        dlg.setAutoClose(False)
+        dlg.show()
+        self.progress_dialog = dlg
 
         def finalize() -> None:
+            if self.progress_dialog is not None:
+                self.progress_dialog.hide()
+                self.progress_dialog.deleteLater()
+                self.progress_dialog = None
             self.main_window.set_current_project(str(dest))
             self.main_window.save_settings()
             self.main_window.setDisabled(False)
