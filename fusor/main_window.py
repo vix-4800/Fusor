@@ -365,6 +365,7 @@ class MainWindow(QMainWindow):
         self.open_browser = False
         self.show_console_output = False
         self.load_config()
+        self.use_node = self.project_uses_node(self.project_path)
         apply_theme(self, self.theme)
 
         # initialize tabs
@@ -391,6 +392,8 @@ class MainWindow(QMainWindow):
 
         self.node_tab = NodeTab(self)
         self.node_index = self.tabs.addTab(self.node_tab, "Node")
+        self.tabs.setTabVisible(self.node_index, self.use_node)
+        self.tabs.setTabEnabled(self.node_index, self.use_node)
 
         self.logs_tab = LogsTab(self)
         self.logs_index = self.tabs.addTab(self.logs_tab, "Logs")
@@ -753,6 +756,10 @@ class MainWindow(QMainWindow):
             self.tabs.setTabEnabled(self.env_index, show_env)
             if show_env and hasattr(self, "env_tab"):
                 self.env_tab.load_env()
+        if hasattr(self, "node_index"):
+            self.use_node = self.project_uses_node()
+            self.tabs.setTabVisible(self.node_index, self.use_node)
+            self.tabs.setTabEnabled(self.node_index, self.use_node)
 
         self.mark_settings_saved()
 
@@ -841,6 +848,10 @@ class MainWindow(QMainWindow):
             self.tabs.setTabEnabled(self.env_index, True)
             if hasattr(self, "env_tab"):
                 self.env_tab.load_env()
+        if hasattr(self, "node_index"):
+            self.use_node = self.project_uses_node(path)
+            self.tabs.setTabVisible(self.node_index, self.use_node)
+            self.tabs.setTabEnabled(self.node_index, self.use_node)
 
         self.apply_project_settings()
 
@@ -905,6 +916,13 @@ class MainWindow(QMainWindow):
                 ]
             return [str(Path("runtime") / "log")]
         return []
+
+    def project_uses_node(self, path: str | None = None) -> bool:
+        """Return True if the project contains package.json or node_modules."""
+        if not (path or self.project_path):
+            return False
+        base = Path(path or self.project_path)
+        return (base / "package.json").is_file() or (base / "node_modules").is_dir()
 
     def _tail_file(self, path: Path, lines: int) -> str:
         """Return the last ``lines`` lines from ``path``."""

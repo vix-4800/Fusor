@@ -279,6 +279,18 @@ class TestMainWindow:
         assert not main_window.tabs.isTabVisible(main_window.symfony_index)
         assert not main_window.tabs.isTabEnabled(main_window.symfony_index)
 
+    def test_node_tab_visibility(self, tmp_path: Path, main_window, qtbot):
+        main_window.set_current_project(str(tmp_path))
+        qtbot.wait(10)
+        assert not main_window.tabs.isTabVisible(main_window.node_index)
+        assert not main_window.tabs.isTabEnabled(main_window.node_index)
+
+        (tmp_path / "package.json").write_text("{}")
+        main_window.set_current_project(str(tmp_path))
+        qtbot.wait(10)
+        assert main_window.tabs.isTabVisible(main_window.node_index)
+        assert main_window.tabs.isTabEnabled(main_window.node_index)
+
     def test_composer_install_button_runs_command(self, main_window, qtbot, monkeypatch):
         captured = []
         monkeypatch.setattr(main_window, "run_command", lambda cmd: captured.append(cmd), raising=True)
@@ -1146,7 +1158,7 @@ class TestMainWindow:
         win = MainWindow()
         qtbot.addWidget(win)
 
-        assert win.minimumWidth() == 400
+        assert win.minimumWidth() == 425
         assert win.minimumHeight() == 300
 
     def test_add_project_populates_remote_combo(self, tmp_path: Path, qtbot, monkeypatch):

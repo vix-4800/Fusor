@@ -36,7 +36,7 @@ def test_update_npm_scripts_adds_buttons(tmp_path, qtbot):
     qtbot.wait(10)
 
     texts = [btn.text() for btn in tab._script_buttons]
-    assert "npm run start" in texts
+    assert "Start" in texts
     assert tab.npm_scripts_group.isVisible()
 
 
@@ -68,8 +68,8 @@ def test_dev_and_build_scripts_added(tmp_path, qtbot):
     tab.update_npm_scripts()
 
     texts = [btn.text() for btn in tab._script_buttons]
-    assert texts.count("npm run dev") == 1
-    assert texts.count("npm run build") == 1
+    assert texts.count("Dev") == 1
+    assert texts.count("Build") == 1
 
 
 def test_dev_and_build_buttons_run_commands(tmp_path, qtbot):
@@ -82,8 +82,8 @@ def test_dev_and_build_buttons_run_commands(tmp_path, qtbot):
     qtbot.addWidget(tab)
     tab.update_npm_scripts()
 
-    dev_btn = next(btn for btn in tab._script_buttons if btn.text() == "npm run dev")
-    build_btn = next(btn for btn in tab._script_buttons if btn.text() == "npm run build")
+    dev_btn = next(btn for btn in tab._script_buttons if btn.text() == "Dev")
+    build_btn = next(btn for btn in tab._script_buttons if btn.text() == "Build")
     qtbot.mouseClick(dev_btn, Qt.MouseButton.LeftButton)
     qtbot.mouseClick(build_btn, Qt.MouseButton.LeftButton)
 
