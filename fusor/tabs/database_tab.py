@@ -6,6 +6,9 @@ from PyQt6.QtWidgets import (
     QGroupBox,
     QFileDialog,
     QScrollArea,
+    QComboBox,
+    QLabel,
+    QHBoxLayout,
 )
 from typing import Callable
 
@@ -34,6 +37,14 @@ class DatabaseTab(QWidget):
         tools_group = QGroupBox("SQL Tools")
         tools_layout = QVBoxLayout()
         tools_layout.setSpacing(10)
+
+        combo_row = QHBoxLayout()
+        combo_label = QLabel("Database:")
+        self.db_combo = QComboBox()
+        self.db_combo.addItems(["MySQL/MariaDB", "PostgreSQL"])
+        combo_row.addWidget(combo_label)
+        combo_row.addWidget(self.db_combo)
+        tools_layout.addLayout(combo_row)
 
         self.dbeaver_btn = self._btn(
             "Open in DBeaver",
@@ -83,15 +94,19 @@ class DatabaseTab(QWidget):
             self, "Save SQL Dump", filter="SQL Files (*.sql)"
         )
         if path:
-            self.main_window.run_command([
-                "mysqldump",
-                "--result-file",
-                path,
-            ], service=self.main_window.db_service)
+            if self.db_combo.currentText() == "PostgreSQL":
+                cmd = ["pg_dump", "-f", path]
+            else:
+                cmd = ["mysqldump", "--result-file", path]
+            self.main_window.run_command(cmd, service=self.main_window.db_service)
 
     def restore_dump(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
             self, "Select SQL Dump", filter="SQL Files (*.sql)"
         )
         if path:
-            self.main_window.run_command(["mysql", path], service=self.main_window.db_service)
+            if self.db_combo.currentText() == "PostgreSQL":
+                cmd = ["psql", "-f", path]
+            else:
+                cmd = ["mysql", path]
+            self.main_window.run_command(cmd, service=self.main_window.db_service)
