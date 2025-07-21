@@ -63,6 +63,7 @@ from .tabs.settings_tab import SettingsTab
 # allow tests to monkeypatch file operations easily
 open = builtins.open
 
+
 def _port_in_use(port: int) -> bool:
     """Return True if ``port`` is already bound on localhost."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -71,6 +72,7 @@ def _port_in_use(port: int) -> bool:
         except OSError:
             return True
     return False
+
 
 DARK_STYLESHEET = """
     QMainWindow {
