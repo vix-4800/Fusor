@@ -1451,3 +1451,27 @@ class TestMainWindow:
         assert not win.project_running
         assert act.text() == "Start Project"
         win.close()
+
+    def test_close_button_minimizes_window(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.tray_enabled = True
+        win.show()
+
+        called = []
+
+        class DummyEvent:
+            def spontaneous(self):
+                return True
+
+            def ignore(self):
+                called.append("ignored")
+
+        win.closeEvent(DummyEvent())
+        assert called == ["ignored"]
+        assert not win.isVisible()
+
