@@ -1274,3 +1274,137 @@ class TestMainWindow:
         assert win._save_shortcut.key().toString() == "Ctrl+S"
         assert win._save_shortcut.context() == Qt.ShortcutContext.ApplicationShortcut
         win.close()
+
+    def test_tray_icon_created_with_actions(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {"enable_tray": True}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        class DummyTray:
+            def __init__(self, *a, **k):
+                self._menu = None
+
+            def setContextMenu(self, menu):
+                self._menu = menu
+
+            def contextMenu(self):
+                return self._menu
+
+            def show(self):
+                pass
+
+            def hide(self):
+                pass
+
+            def showMessage(self, *a, **k):
+                pass
+
+        monkeypatch.setattr(mw_module, "QSystemTrayIcon", DummyTray, raising=False)
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        assert isinstance(win._tray_icon, DummyTray)
+        actions = [a.text() for a in win._tray_icon.contextMenu().actions()]
+        assert actions == ["Hide", "Start Project", "Quit"]
+        win.close()
+
+    def test_tray_icon_show_hide_action(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {"enable_tray": True}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        class DummyTray:
+            def __init__(self, *a, **k):
+                self._menu = None
+
+            def setContextMenu(self, menu):
+                self._menu = menu
+
+            def contextMenu(self):
+                return self._menu
+
+            def show(self):
+                pass
+
+            def hide(self):
+                pass
+
+            def showMessage(self, *a, **k):
+                pass
+
+        monkeypatch.setattr(mw_module, "QSystemTrayIcon", DummyTray, raising=False)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        menu = win._tray_icon.contextMenu()
+        show_action = menu.actions()[0]
+        show_action.trigger()
+        qtbot.wait(10)
+        assert not win.isVisible()
+        assert show_action.text() == "Show"
+        show_action.trigger()
+        qtbot.wait(10)
+        assert win.isVisible()
+        assert show_action.text() == "Hide"
+        win.close()
+
+    def test_tray_icon_start_stop_action(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {"enable_tray": True}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        class DummyTray:
+            def __init__(self, *a, **k):
+                self._menu = None
+
+            def setContextMenu(self, menu):
+                self._menu = menu
+
+            def contextMenu(self):
+                return self._menu
+
+            def show(self):
+                pass
+
+            def hide(self):
+                pass
+
+            def showMessage(self, *a, **k):
+                pass
+
+        monkeypatch.setattr(mw_module, "QSystemTrayIcon", DummyTray, raising=False)
+
+        start_called = []
+        stop_called = []
+
+        def fake_start(self):
+            start_called.append(True)
+            self.project_running = True
+
+        def fake_stop(self):
+            stop_called.append(True)
+            self.project_running = False
+
+        monkeypatch.setattr(MainWindow, "start_project", fake_start, raising=True)
+        monkeypatch.setattr(MainWindow, "stop_project", fake_stop, raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        menu = win._tray_icon.contextMenu()
+        act = menu.actions()[1]
+        act.trigger()
+        qtbot.wait(10)
+        assert start_called == [True]
+        assert win.project_running
+        assert act.text() == "Stop Project"
+        act.trigger()
+        qtbot.wait(10)
+        assert stop_called == [True]
+        assert not win.project_running
+        assert act.text() == "Start Project"
+        win.close()
