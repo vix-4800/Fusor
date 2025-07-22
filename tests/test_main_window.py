@@ -292,6 +292,18 @@ class TestMainWindow:
         assert main_window.tabs.isTabVisible(main_window.node_index)
         assert main_window.tabs.isTabEnabled(main_window.node_index)
 
+    def test_composer_tab_visibility(self, tmp_path: Path, main_window, qtbot):
+        main_window.set_current_project(str(tmp_path))
+        qtbot.wait(10)
+        assert not main_window.tabs.isTabVisible(main_window.composer_index)
+        assert not main_window.tabs.isTabEnabled(main_window.composer_index)
+
+        (tmp_path / "composer.json").write_text("{}")
+        main_window.set_current_project(str(tmp_path))
+        qtbot.wait(10)
+        assert main_window.tabs.isTabVisible(main_window.composer_index)
+        assert main_window.tabs.isTabEnabled(main_window.composer_index)
+
     def test_set_current_project_preserves_framework_choice(self, tmp_path: Path, main_window, qtbot):
         main_window.framework_choice = "Symfony"
         main_window.framework_combo.setCurrentText("Symfony")
@@ -300,16 +312,20 @@ class TestMainWindow:
         assert main_window.framework_choice == "Symfony"
         assert main_window.framework_combo.currentText() == "Symfony"
 
-    def test_composer_install_button_runs_command(self, main_window, qtbot, monkeypatch):
+    def test_composer_install_button_runs_command(self, tmp_path: Path, main_window, qtbot, monkeypatch):
         captured = []
         monkeypatch.setattr(main_window, "run_command", lambda cmd: captured.append(cmd), raising=True)
-        qtbot.mouseClick(main_window.project_tab.composer_install_btn, Qt.MouseButton.LeftButton)
+        (tmp_path / "composer.json").write_text("{}")
+        main_window.set_current_project(str(tmp_path))
+        qtbot.mouseClick(main_window.composer_tab.install_btn, Qt.MouseButton.LeftButton)
         assert captured == [["composer", "install"]]
 
-    def test_composer_update_button_runs_command(self, main_window, qtbot, monkeypatch):
+    def test_composer_update_button_runs_command(self, tmp_path: Path, main_window, qtbot, monkeypatch):
         captured = []
         monkeypatch.setattr(main_window, "run_command", lambda cmd: captured.append(cmd), raising=True)
-        qtbot.mouseClick(main_window.project_tab.composer_update_btn, Qt.MouseButton.LeftButton)
+        (tmp_path / "composer.json").write_text("{}")
+        main_window.set_current_project(str(tmp_path))
+        qtbot.mouseClick(main_window.composer_tab.update_btn, Qt.MouseButton.LeftButton)
         assert captured == [["composer", "update"]]
 
     def test_run_command_uses_php_service_with_docker(self, main_window, monkeypatch):
