@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
     QHBoxLayout,
     QFileDialog,
+    QInputDialog,
     QCheckBox,
     QVBoxLayout,
     QGroupBox,
@@ -64,13 +65,19 @@ class SettingsTab(QWidget):
         remove_btn.setIcon(get_icon("list-remove"))
         remove_btn.setFixedSize(36, 36)
         remove_btn.clicked.connect(self.remove_project)
+        rename_btn = QPushButton("")
+        rename_btn.setIcon(get_icon("edit-rename"))
+        rename_btn.setFixedSize(36, 36)
+        rename_btn.clicked.connect(self.rename_project)
         self.remove_btn = remove_btn
+        self.rename_btn = rename_btn
         project_row = QHBoxLayout()
         project_combo_label = QLabel("Project:")
         project_row.addWidget(project_combo_label)
         project_row.addWidget(self.project_combo, stretch=1)
         project_row.addWidget(add_btn)
         project_row.addWidget(remove_btn)
+        project_row.addWidget(rename_btn)
         project_form.addRow(project_row)
 
         self.project_name_edit = QLineEdit()
@@ -592,6 +599,26 @@ class SettingsTab(QWidget):
             if hasattr(self.main_window, "env_index"):
                 self.main_window.tabs.setTabVisible(self.main_window.env_index, False)
                 self.main_window.tabs.setTabEnabled(self.main_window.env_index, False)
+
+    def rename_project(self) -> None:
+        index = self.project_combo.currentIndex()
+        if index < 0:
+            return
+        current_name = self.project_combo.itemText(index)
+        new_name, ok = QInputDialog.getText(
+            self, "Rename Project", "Project Name:", text=current_name
+        )
+        if not ok or not new_name.strip():
+            return
+        new_name = new_name.strip()
+        self.project_combo.setItemText(index, new_name)
+        self.project_name_edit.setText(new_name)
+        path = self.project_combo.itemData(index)
+        for p in self.main_window.projects:
+            if p.get("path") == path:
+                p["name"] = new_name
+                break
+        self.main_window.save_settings()
 
     def browse_php_path(self) -> None:
         file, _ = QFileDialog.getOpenFileName(

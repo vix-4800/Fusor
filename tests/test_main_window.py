@@ -738,6 +738,35 @@ class TestMainWindow:
         assert shown
         win.close()
 
+    def test_rename_project_updates_config(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(
+            mw_module,
+            "load_config",
+            lambda: {"projects": [{"path": "/one", "name": "one"}], "current_project": "/one"},
+            raising=True,
+        )
+        saved = {}
+        monkeypatch.setattr(mw_module, "save_config", lambda data: saved.update(data), raising=True)
+        monkeypatch.setattr(os.path, "isdir", lambda p: True, raising=True)
+        monkeypatch.setattr(os.path, "isfile", lambda p: True, raising=True)
+        monkeypatch.setattr(
+            "PyQt6.QtWidgets.QInputDialog.getText",
+            lambda *a, **k: ("renamed", True),
+            raising=True,
+        )
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        qtbot.mouseClick(win.settings_tab.rename_btn, Qt.MouseButton.LeftButton)
+
+        assert win.project_combo.itemText(0) == "renamed"
+        assert saved["projects"][0]["name"] == "renamed"
+        assert saved["current_project"] == "/one"
+        win.close()
+
     def test_exit_when_welcome_dialog_closed_without_project(self, main_window, monkeypatch):
         closed = []
         monkeypatch.setattr(main_window, "close", lambda: closed.append(True), raising=True)
