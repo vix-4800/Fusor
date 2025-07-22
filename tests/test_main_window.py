@@ -1512,3 +1512,41 @@ class TestMainWindow:
         assert called == ["ignored"]
         assert not win.isVisible()
 
+    def test_tray_quit_closes_window(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {"enable_tray": True}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        class DummyTray:
+            def __init__(self, *a, **k):
+                self._menu = None
+
+            def setContextMenu(self, menu):
+                self._menu = menu
+
+            def contextMenu(self):
+                return self._menu
+
+            def show(self):
+                pass
+
+            def hide(self):
+                pass
+
+            def showMessage(self, *a, **k):
+                pass
+
+        monkeypatch.setattr(mw_module, "QSystemTrayIcon", DummyTray, raising=False)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        called = []
+        monkeypatch.setattr(MainWindow, "close", lambda self: called.append(True), raising=True)
+
+        win._on_tray_quit()
+
+        assert called == [True]
+        assert not win.tray_enabled
+

@@ -723,7 +723,7 @@ class MainWindow(QMainWindow):
             start_action = cast(QAction, menu.addAction("Start Project"))
             start_action.triggered.connect(self._on_tray_start_stop)
             quit_action = cast(QAction, menu.addAction("Quit"))
-            quit_action.triggered.connect(self.close)
+            quit_action.triggered.connect(self._on_tray_quit)
             icon.setContextMenu(menu)
             self._tray_icon = icon
             self._tray_menu = menu
@@ -748,6 +748,13 @@ class MainWindow(QMainWindow):
         else:
             self.start_project()
         self._update_tray_menu()
+
+    def _on_tray_quit(self) -> None:
+        """Handle tray Quit action by disabling the tray and closing."""
+        if self.tray_checkbox is not None:
+            self.tray_checkbox.setChecked(False)
+        self.tray_enabled = False
+        self.close()
 
     def toggle_window_visibility(self) -> None:
         if self.isVisible():
