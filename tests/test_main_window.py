@@ -1087,8 +1087,8 @@ class TestMainWindow:
     def test_save_settings_updates_project_name(self, main_window, monkeypatch):
         main_window.project_combo.addItem("/tmp", "/tmp")
         main_window.project_combo.setCurrentIndex(0)
+        main_window.project_combo.setItemText(0, "MyProj")
         main_window.project_path = "/tmp"
-        main_window.project_name_edit.setText("MyProj")
         main_window.php_path_edit.setText("php")
         main_window.docker_checkbox.setChecked(False)
         main_window.server_port_edit.setValue(8000)
