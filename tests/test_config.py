@@ -25,7 +25,6 @@ def test_save_then_load(tmp_path, monkeypatch):
         ],
         "current_project": "/two",
         "theme": "light",
-        "follow_system_theme": False,
         "window_size": [800, 600],
         "window_position": [10, 20],
     }
@@ -33,7 +32,6 @@ def test_save_then_load(tmp_path, monkeypatch):
     loaded = config.load_config()
     data.setdefault("show_console_output", False)
     data.setdefault("enable_tray", False)
-    data.setdefault("follow_system_theme", False)
     assert loaded == data
 
 def test_load_missing_file(tmp_path, monkeypatch):

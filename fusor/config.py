@@ -38,7 +38,6 @@ DEFAULT_CONFIG = {
     "projects": [],  # list[dict]
     "current_project": "",
     "theme": "dark",
-    "follow_system_theme": False,
     "show_console_output": False,
     "enable_tray": False,
     # Window geometry (width, height) and position (x, y)

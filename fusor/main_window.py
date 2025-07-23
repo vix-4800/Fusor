@@ -305,10 +305,10 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{APP_NAME} – PHP QA Toolbox")
         self.resize(1024, 768)
         self.setMinimumSize(425, 300)
-        self.theme = "dark"
         self.theme_choice = "dark"
-        self.follow_system_theme = False
         self.os_theme = get_system_theme()
+        self.follow_system_theme = False
+        self.theme = "dark"
 
         # Widgets populated by SettingsTab and LogsTab
         self.project_combo: QComboBox | None = None
@@ -649,9 +649,7 @@ class MainWindow(QMainWindow):
         self.tray_enabled = bool(data.get("enable_tray", self.tray_enabled))
 
         self.theme_choice = data.get("theme", self.theme_choice)
-        self.follow_system_theme = bool(
-            data.get("follow_system_theme", self.follow_system_theme)
-        )
+        self.follow_system_theme = self.theme_choice == "system"
         self.theme = self.os_theme if self.follow_system_theme else self.theme_choice
 
         self.max_log_lines = int(
@@ -682,13 +680,12 @@ class MainWindow(QMainWindow):
             self.settings_dirty = True
             self.update_settings_tab_title()
 
-    def on_follow_system_theme_toggled(self, checked: bool) -> None:
-        self.follow_system_theme = checked
-        if checked:
+    def on_theme_combo_changed(self, text: str) -> None:
+        self.theme_choice = text.lower()
+        self.follow_system_theme = self.theme_choice == "system"
+        if self.follow_system_theme:
             apply_theme(self, self.os_theme)
             self.theme = self.os_theme
-            if self.theme_combo is not None:
-                self.theme_combo.setCurrentText(self.os_theme.capitalize())
         else:
             apply_theme(self, self.theme_choice)
             self.theme = self.theme_choice
@@ -1380,6 +1377,7 @@ class MainWindow(QMainWindow):
         self.docker_project_path = docker_project_path.strip() or self.docker_project_path
         self.auto_refresh_secs = int(auto_refresh_secs)
         self.theme_choice = theme_choice
+        self.follow_system_theme = self.theme_choice == "system"
         if not self.follow_system_theme:
             self.theme = self.theme_choice
         self.enable_terminal = enable_terminal
@@ -1448,7 +1446,6 @@ class MainWindow(QMainWindow):
                 "projects": self.projects,
                 "current_project": project_path,
                 "theme": self.theme_choice,
-                "follow_system_theme": self.follow_system_theme,
                 "show_console_output": self.show_console_output,
                 "enable_tray": self.tray_enabled,
             }
