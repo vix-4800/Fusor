@@ -304,6 +304,18 @@ class TestMainWindow:
         assert main_window.tabs.isTabVisible(main_window.composer_index)
         assert main_window.tabs.isTabEnabled(main_window.composer_index)
 
+    def test_makefile_tab_visibility(self, tmp_path: Path, main_window, qtbot):
+        main_window.set_current_project(str(tmp_path))
+        qtbot.wait(10)
+        assert not main_window.tabs.isTabVisible(main_window.make_index)
+        assert not main_window.tabs.isTabEnabled(main_window.make_index)
+
+        (tmp_path / "Makefile").write_text("test:\n\t@echo hi\n")
+        main_window.set_current_project(str(tmp_path))
+        qtbot.wait(10)
+        assert main_window.tabs.isTabVisible(main_window.make_index)
+        assert main_window.tabs.isTabEnabled(main_window.make_index)
+
     def test_set_current_project_preserves_framework_choice(self, tmp_path: Path, main_window, qtbot):
         main_window.framework_choice = "Symfony"
         main_window.framework_combo.setCurrentText("Symfony")
@@ -1103,8 +1115,8 @@ class TestMainWindow:
     def test_save_settings_updates_project_name(self, main_window, monkeypatch):
         main_window.project_combo.addItem("/tmp", "/tmp")
         main_window.project_combo.setCurrentIndex(0)
+        main_window.project_combo.setItemText(0, "MyProj")
         main_window.project_path = "/tmp"
-        main_window.project_name_edit.setText("MyProj")
         main_window.php_path_edit.setText("php")
         main_window.docker_checkbox.setChecked(False)
         main_window.server_port_edit.setValue(8000)
@@ -1527,4 +1539,42 @@ class TestMainWindow:
         win.closeEvent(DummyEvent())
         assert called == ["ignored"]
         assert not win.isVisible()
+
+    def test_tray_quit_closes_window(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {"enable_tray": True}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        class DummyTray:
+            def __init__(self, *a, **k):
+                self._menu = None
+
+            def setContextMenu(self, menu):
+                self._menu = menu
+
+            def contextMenu(self):
+                return self._menu
+
+            def show(self):
+                pass
+
+            def hide(self):
+                pass
+
+            def showMessage(self, *a, **k):
+                pass
+
+        monkeypatch.setattr(mw_module, "QSystemTrayIcon", DummyTray, raising=False)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        called = []
+        monkeypatch.setattr(MainWindow, "close", lambda self: called.append(True), raising=True)
+
+        win._on_tray_quit()
+
+        assert called == [True]
+        assert not win.tray_enabled
 

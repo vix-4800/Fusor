@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import QTimer, pyqtSignal, Qt
 from PyQt6.QtGui import QShortcut, QKeySequence, QAction
 from typing import TYPE_CHECKING, Any, Callable, cast
-from .utils import expand_log_paths
+from .utils import expand_log_paths, is_git_repo
 
 if TYPE_CHECKING:
     from PyQt6.QtWidgets import (
@@ -56,6 +56,7 @@ from .tabs.symfony_tab import SymfonyTab
 from .tabs.yii_tab import YiiTab
 from .tabs.node_tab import NodeTab
 from .tabs.composer_tab import ComposerTab
+from .tabs.makefile_tab import MakefileTab
 from .tabs.docker_tab import DockerTab
 from .tabs.logs_tab import LogsTab
 from .tabs.terminal_tab import TerminalTab
@@ -296,7 +297,6 @@ class MainWindow(QMainWindow):
 
         # Widgets populated by SettingsTab and LogsTab
         self.project_combo: QComboBox | None = None
-        self.project_name_edit: QLineEdit | None = None
         self.framework_combo: QComboBox | None = None
         self.php_path_edit: QLineEdit | None = None
         self.php_service_edit: QLineEdit | None = None
@@ -395,6 +395,7 @@ class MainWindow(QMainWindow):
         self.load_config()
         self.use_node = self.project_uses_node(self.project_path)
         self.use_composer = self.project_uses_composer(self.project_path)
+        self.has_makefile = self.project_has_makefile(self.project_path)
         apply_theme(self, self.theme)
 
         # initialize tabs
@@ -428,6 +429,11 @@ class MainWindow(QMainWindow):
         self.composer_index = self.tabs.addTab(self.composer_tab, "Composer")
         self.tabs.setTabVisible(self.composer_index, self.use_composer)
         self.tabs.setTabEnabled(self.composer_index, self.use_composer)
+
+        self.make_tab = MakefileTab(self)
+        self.make_index = self.tabs.addTab(self.make_tab, "Make")
+        self.tabs.setTabVisible(self.make_index, self.has_makefile)
+        self.tabs.setTabEnabled(self.make_index, self.has_makefile)
 
         self.logs_tab = LogsTab(self)
         self.logs_index = self.tabs.addTab(self.logs_tab, "Logs")
@@ -546,7 +552,7 @@ class MainWindow(QMainWindow):
         self.project_path = data.get("current_project", self.project_path)
         if not self.project_path and self.projects:
             self.project_path = self.projects[0]["path"]
-        self.is_git_repo = bool(self.project_path) and os.path.isdir(os.path.join(self.project_path, ".git"))
+        self.is_git_repo = bool(self.project_path) and is_git_repo(self.project_path)
 
         proj: dict[str, Any] | None = next(
             (p for p in data.get("projects", []) if p.get("path") == self.project_path),
@@ -730,7 +736,7 @@ class MainWindow(QMainWindow):
             start_action = cast(QAction, menu.addAction("Start Project"))
             start_action.triggered.connect(self._on_tray_start_stop)
             quit_action = cast(QAction, menu.addAction("Quit"))
-            quit_action.triggered.connect(self.close)
+            quit_action.triggered.connect(self._on_tray_quit)
             icon.setContextMenu(menu)
             self._tray_icon = icon
             self._tray_menu = menu
@@ -756,6 +762,13 @@ class MainWindow(QMainWindow):
             self.start_project()
         self._update_tray_menu()
 
+    def _on_tray_quit(self) -> None:
+        """Handle tray Quit action by disabling the tray and closing."""
+        if self.tray_checkbox is not None:
+            self.tray_checkbox.setChecked(False)
+        self.tray_enabled = False
+        self.close()
+
     def toggle_window_visibility(self) -> None:
         if self.isVisible():
             self.hide()
@@ -766,7 +779,7 @@ class MainWindow(QMainWindow):
     def apply_project_settings(self) -> None:
         """Load settings for the current project and update widgets."""
         data = load_config()
-        self.is_git_repo = bool(self.project_path) and os.path.isdir(os.path.join(self.project_path, ".git"))
+        self.is_git_repo = bool(self.project_path) and is_git_repo(self.project_path)
         proj = next((p for p in data.get("projects", []) if p.get("path") == self.project_path), None)
         settings = DEFAULT_PROJECT_SETTINGS.copy()
         settings["framework"] = self.framework_choice
@@ -884,6 +897,9 @@ class MainWindow(QMainWindow):
         if hasattr(self, "composer_tab") and hasattr(self.composer_tab, "update_composer_scripts"):
             self.composer_tab.update_composer_scripts()
 
+        if hasattr(self, "make_tab") and hasattr(self.make_tab, "update_commands"):
+            self.make_tab.update_commands()
+
     def run_command(
         self,
         command: list[str],
@@ -936,7 +952,7 @@ class MainWindow(QMainWindow):
         if not path:
             return
         self.project_path = path
-        self.is_git_repo = os.path.isdir(os.path.join(path, ".git"))
+        self.is_git_repo = is_git_repo(path)
         if self.log_view is not None:
             self.log_view.setPlainText("")
         proj = next((p for p in self.projects if p.get("path") == path), None)
@@ -957,8 +973,6 @@ class MainWindow(QMainWindow):
             else:
                 self.project_combo.setCurrentText(proj["name"])
             self.project_combo.blockSignals(False)
-        if self.project_name_edit is not None:
-            self.project_name_edit.setText(proj.get("name", Path(path).name))
         if hasattr(self, "git_tab"):
             if self.is_git_repo:
                 self.git_tab.load_branches()
@@ -986,6 +1000,13 @@ class MainWindow(QMainWindow):
             self.use_composer = self.project_uses_composer(path)
             self.tabs.setTabVisible(self.composer_index, self.use_composer)
             self.tabs.setTabEnabled(self.composer_index, self.use_composer)
+
+        if hasattr(self, "make_index"):
+            self.has_makefile = self.project_has_makefile(path)
+            self.tabs.setTabVisible(self.make_index, self.has_makefile)
+            self.tabs.setTabEnabled(self.make_index, self.has_makefile)
+            if self.has_makefile and hasattr(self.make_tab, "update_commands"):
+                self.make_tab.update_commands()
 
         self.apply_project_settings()
 
@@ -1064,6 +1085,12 @@ class MainWindow(QMainWindow):
             return False
         base = Path(path or self.project_path)
         return (base / "composer.json").is_file() or (base / "vendor").is_dir()
+
+    def project_has_makefile(self, path: str | None = None) -> bool:
+        """Return True if the project contains a Makefile."""
+        if not (path or self.project_path):
+            return False
+        return Path(path or self.project_path, "Makefile").is_file()
 
     def _tail_file(self, path: Path, lines: int) -> str:
         """Return the last ``lines`` lines from ``path``."""
@@ -1324,12 +1351,14 @@ class MainWindow(QMainWindow):
                 return
 
         self.project_path = project_path
-        self.is_git_repo = os.path.isdir(os.path.join(project_path, ".git"))
+        self.is_git_repo = is_git_repo(project_path)
         project_name = Path(project_path).name
-        if self.project_name_edit is not None:
-            text = self.project_name_edit.text().strip()
-            if text:
-                project_name = text
+        if self.project_combo is not None:
+            idx = self.project_combo.findData(project_path)
+            if idx >= 0:
+                text = self.project_combo.itemText(idx).strip()
+                if text:
+                    project_name = text
         existing = next(
             (p for p in self.projects if p.get("path") == project_path), None
         )
