@@ -26,6 +26,7 @@ Fusor aims to **simplify routine PHP project operations** via a user-friendly vi
 -   Optional **Docker mode** for containerized workflows
 -   Git, database, and migration helpers
 -   Basic Node/NPM commands with automatic buttons for package scripts
+-   Detects **Makefiles** and provides buttons for each target
 -   Configurable log viewer with auto-refresh
 -   **Ctrl+S** shortcut to quickly save settings
 -   Isolated settings stored in `~/.fusor_config.json`
@@ -44,6 +45,7 @@ Fusor aims to **simplify routine PHP project operations** via a user-friendly vi
 | **Yii**      | Common Yii console commands _(visible when framework is Yii)_                                  |
 | **Docker**   | Build, pull, restart services, inspect containers _(visible only in Docker mode)_              |
 | **Node**     | Run npm install and package scripts (e.g., dev, build)                                         |
+| **Make**     | Run make targets detected from the project's Makefile _(visible when Makefile present)_ |
 | **Logs**     | View logs with optional auto-refresh and open log files in your default application            |
 | **.env**     | Edit the project's environment file                                                            |
 | **Terminal** | Embedded terminal for custom commands                                                          |

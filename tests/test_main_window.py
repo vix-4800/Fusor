@@ -292,6 +292,18 @@ class TestMainWindow:
         assert main_window.tabs.isTabVisible(main_window.node_index)
         assert main_window.tabs.isTabEnabled(main_window.node_index)
 
+    def test_makefile_tab_visibility(self, tmp_path: Path, main_window, qtbot):
+        main_window.set_current_project(str(tmp_path))
+        qtbot.wait(10)
+        assert not main_window.tabs.isTabVisible(main_window.make_index)
+        assert not main_window.tabs.isTabEnabled(main_window.make_index)
+
+        (tmp_path / "Makefile").write_text("test:\n\t@echo hi\n")
+        main_window.set_current_project(str(tmp_path))
+        qtbot.wait(10)
+        assert main_window.tabs.isTabVisible(main_window.make_index)
+        assert main_window.tabs.isTabEnabled(main_window.make_index)
+
     def test_set_current_project_preserves_framework_choice(self, tmp_path: Path, main_window, qtbot):
         main_window.framework_choice = "Symfony"
         main_window.framework_combo.setCurrentText("Symfony")

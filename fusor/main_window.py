@@ -55,6 +55,7 @@ from .tabs.laravel_tab import LaravelTab
 from .tabs.symfony_tab import SymfonyTab
 from .tabs.yii_tab import YiiTab
 from .tabs.node_tab import NodeTab
+from .tabs.makefile_tab import MakefileTab
 from .tabs.docker_tab import DockerTab
 from .tabs.logs_tab import LogsTab
 from .tabs.terminal_tab import TerminalTab
@@ -392,6 +393,7 @@ class MainWindow(QMainWindow):
         self.show_console_output = False
         self.load_config()
         self.use_node = self.project_uses_node(self.project_path)
+        self.has_makefile = self.project_has_makefile(self.project_path)
         apply_theme(self, self.theme)
 
         # initialize tabs
@@ -420,6 +422,11 @@ class MainWindow(QMainWindow):
         self.node_index = self.tabs.addTab(self.node_tab, "Node")
         self.tabs.setTabVisible(self.node_index, self.use_node)
         self.tabs.setTabEnabled(self.node_index, self.use_node)
+
+        self.make_tab = MakefileTab(self)
+        self.make_index = self.tabs.addTab(self.make_tab, "Make")
+        self.tabs.setTabVisible(self.make_index, self.has_makefile)
+        self.tabs.setTabEnabled(self.make_index, self.has_makefile)
 
         self.logs_tab = LogsTab(self)
         self.logs_index = self.tabs.addTab(self.logs_tab, "Logs")
@@ -875,6 +882,9 @@ class MainWindow(QMainWindow):
         if hasattr(self, "node_tab") and hasattr(self.node_tab, "update_npm_scripts"):
             self.node_tab.update_npm_scripts()
 
+        if hasattr(self, "make_tab") and hasattr(self.make_tab, "update_commands"):
+            self.make_tab.update_commands()
+
     def run_command(
         self,
         command: list[str],
@@ -971,6 +981,13 @@ class MainWindow(QMainWindow):
             self.tabs.setTabVisible(self.node_index, self.use_node)
             self.tabs.setTabEnabled(self.node_index, self.use_node)
 
+        if hasattr(self, "make_index"):
+            self.has_makefile = self.project_has_makefile(path)
+            self.tabs.setTabVisible(self.make_index, self.has_makefile)
+            self.tabs.setTabEnabled(self.make_index, self.has_makefile)
+            if self.has_makefile and hasattr(self.make_tab, "update_commands"):
+                self.make_tab.update_commands()
+
         self.apply_project_settings()
 
     def add_project(self) -> None:
@@ -1041,6 +1058,12 @@ class MainWindow(QMainWindow):
             return False
         base = Path(path or self.project_path)
         return (base / "package.json").is_file() or (base / "node_modules").is_dir()
+
+    def project_has_makefile(self, path: str | None = None) -> bool:
+        """Return True if the project contains a Makefile."""
+        if not (path or self.project_path):
+            return False
+        return Path(path or self.project_path, "Makefile").is_file()
 
     def _tail_file(self, path: Path, lines: int) -> str:
         """Return the last ``lines`` lines from ``path``."""
