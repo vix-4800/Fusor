@@ -1020,6 +1020,48 @@ class TestMainWindow:
         assert win.styleSheet() == mw_module.LIGHT_STYLESHEET
         win.close()
 
+    def test_follow_system_theme_on_startup(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(
+            mw_module,
+            "load_config",
+            lambda: {"follow_system_theme": True, "theme": "light"},
+            raising=True,
+        )
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "get_system_theme", lambda: "dark", raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        assert win.theme == "dark"
+        assert win.styleSheet() == mw_module.DARK_STYLESHEET
+        win.close()
+
+    def test_follow_system_theme_updates_on_change(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(
+            mw_module,
+            "load_config",
+            lambda: {"follow_system_theme": True},
+            raising=True,
+        )
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "get_system_theme", lambda: "light", raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+        assert win.styleSheet() == mw_module.LIGHT_STYLESHEET
+
+        win._on_system_theme_changed(Qt.ColorScheme.Dark)
+        qtbot.wait(10)
+
+        assert win.theme == "dark"
+        assert win.styleSheet() == mw_module.DARK_STYLESHEET
+        win.close()
+
     def test_save_settings_persists_theme(self, main_window, monkeypatch):
         main_window.project_combo.addItem("/tmp")
         main_window.project_combo.setCurrentText("/tmp")

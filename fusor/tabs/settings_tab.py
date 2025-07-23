@@ -208,6 +208,11 @@ class SettingsTab(QWidget):
             self.theme_combo.setCurrentText("Light")
         misc_form.addRow("Theme:", self.theme_combo)
 
+        self.follow_system_checkbox = QCheckBox("Follow system theme")
+        if hasattr(self.main_window, "follow_system_theme"):
+            self.follow_system_checkbox.setChecked(self.main_window.follow_system_theme)
+        misc_form.addRow("", self.follow_system_checkbox)
+
         self.terminal_checkbox = QCheckBox("Enable Terminal Tab")
         self.terminal_checkbox.setChecked(self.main_window.enable_terminal)
         self.terminal_checkbox.setMinimumHeight(30)
@@ -242,6 +247,9 @@ class SettingsTab(QWidget):
         self.docker_checkbox.setChecked(self.main_window.use_docker)
         self.docker_checkbox.setMinimumHeight(30)
         self.docker_checkbox.toggled.connect(self.on_docker_toggled)
+        self.follow_system_checkbox.toggled.connect(
+            self.main_window.on_follow_system_theme_toggled
+        )
         self.terminal_checkbox.toggled.connect(self.on_terminal_toggled)
         self.console_output_checkbox.toggled.connect(self.on_console_output_toggled)
         self.tray_checkbox.toggled.connect(self.on_tray_toggled)
@@ -284,6 +292,7 @@ class SettingsTab(QWidget):
         self.main_window.docker_project_path_edit = self.docker_project_path_edit
         self.main_window.refresh_spin = self.refresh_spin
         self.main_window.theme_combo = self.theme_combo
+        self.main_window.follow_system_checkbox = self.follow_system_checkbox
         self.main_window.terminal_checkbox = self.terminal_checkbox
         self.main_window.open_browser_checkbox = self.open_browser_checkbox
         self.main_window.console_output_checkbox = self.console_output_checkbox
@@ -321,6 +330,9 @@ class SettingsTab(QWidget):
         self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
         self.refresh_spin.valueChanged.connect(self.main_window.mark_settings_dirty)
         self.theme_combo.currentTextChanged.connect(
+            self.main_window.mark_settings_dirty
+        )
+        self.follow_system_checkbox.toggled.connect(
             self.main_window.mark_settings_dirty
         )
         self.terminal_checkbox.toggled.connect(

@@ -26,6 +26,10 @@ class DummyMainWindow:
         self.git_tab = type("G", (), {"get_remotes": lambda self: []})()
         self.database_tab = type("D", (), {"on_framework_changed": lambda self, t: None})()
         self.mark_settings_dirty = lambda *a, **k: None
+        self.follow_system_theme = False
+
+    def on_follow_system_theme_toggled(self, checked: bool) -> None:
+        self.follow_system_theme = checked
 
     def default_log_dirs(self, framework: str, template: str | None = None):
         return []
