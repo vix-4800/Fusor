@@ -83,4 +83,3 @@ class MakefileTab(QWidget):
             self._layout.addWidget(btn)
             self._buttons.append(btn)
         self.setVisible(bool(targets))
-

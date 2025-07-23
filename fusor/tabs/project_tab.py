@@ -102,7 +102,6 @@ class ProjectTab(QWidget):
         self.php_tools_group.setLayout(php_layout)
         layout.addWidget(self.php_tools_group)
 
-
         layout.addStretch(1)
 
         self.update_php_tools()
@@ -182,4 +181,3 @@ class ProjectTab(QWidget):
         }
         for pkg, btn in mapping.items():
             btn.setEnabled(pkg in packages)
-

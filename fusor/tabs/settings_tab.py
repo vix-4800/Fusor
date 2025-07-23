@@ -80,7 +80,6 @@ class SettingsTab(QWidget):
         project_row.addWidget(rename_btn)
         project_form.addRow(project_row)
 
-
         self.php_path_edit = QLineEdit(self.main_window.php_path)
         self.php_browse_btn = QPushButton("")
         self.php_browse_btn.setIcon(get_icon("document-open"))

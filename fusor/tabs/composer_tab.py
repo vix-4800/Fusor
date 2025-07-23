@@ -100,4 +100,3 @@ class ComposerTab(QWidget):
             self._script_buttons.append(btn)
 
         self.scripts_group.setVisible(bool(scripts))
-

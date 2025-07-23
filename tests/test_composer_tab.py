@@ -1,8 +1,6 @@
 import json
 from PyQt6.QtCore import Qt
 
-import json
-from PyQt6.QtCore import Qt
 
 from fusor.tabs.composer_tab import ComposerTab
 
