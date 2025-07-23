@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import QTimer, pyqtSignal, Qt
 from PyQt6.QtGui import QShortcut, QKeySequence, QAction
 from typing import TYPE_CHECKING, Any, Callable, cast
-from .utils import expand_log_paths
+from .utils import expand_log_paths, is_git_repo
 
 if TYPE_CHECKING:
     from PyQt6.QtWidgets import (
@@ -545,7 +545,7 @@ class MainWindow(QMainWindow):
         self.project_path = data.get("current_project", self.project_path)
         if not self.project_path and self.projects:
             self.project_path = self.projects[0]["path"]
-        self.is_git_repo = bool(self.project_path) and os.path.isdir(os.path.join(self.project_path, ".git"))
+        self.is_git_repo = bool(self.project_path) and is_git_repo(self.project_path)
 
         proj: dict[str, Any] | None = next(
             (p for p in data.get("projects", []) if p.get("path") == self.project_path),
@@ -772,7 +772,7 @@ class MainWindow(QMainWindow):
     def apply_project_settings(self) -> None:
         """Load settings for the current project and update widgets."""
         data = load_config()
-        self.is_git_repo = bool(self.project_path) and os.path.isdir(os.path.join(self.project_path, ".git"))
+        self.is_git_repo = bool(self.project_path) and is_git_repo(self.project_path)
         proj = next((p for p in data.get("projects", []) if p.get("path") == self.project_path), None)
         settings = DEFAULT_PROJECT_SETTINGS.copy()
         settings["framework"] = self.framework_choice
@@ -937,7 +937,7 @@ class MainWindow(QMainWindow):
         if not path:
             return
         self.project_path = path
-        self.is_git_repo = os.path.isdir(os.path.join(path, ".git"))
+        self.is_git_repo = is_git_repo(path)
         if self.log_view is not None:
             self.log_view.setPlainText("")
         proj = next((p for p in self.projects if p.get("path") == path), None)
@@ -1324,7 +1324,7 @@ class MainWindow(QMainWindow):
                 return
 
         self.project_path = project_path
-        self.is_git_repo = os.path.isdir(os.path.join(project_path, ".git"))
+        self.is_git_repo = is_git_repo(project_path)
         project_name = Path(project_path).name
         if self.project_combo is not None:
             idx = self.project_combo.findData(project_path)
