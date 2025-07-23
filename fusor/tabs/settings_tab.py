@@ -201,9 +201,12 @@ class SettingsTab(QWidget):
         misc_form.addRow("Auto refresh (seconds):", self.refresh_spin)
 
         self.theme_combo = QComboBox()
-        self.theme_combo.addItems(["Dark", "Light"])
-        if getattr(self.main_window, "theme", "dark") == "light":
+        self.theme_combo.addItems(["Dark", "Light", "System"])
+        current = getattr(self.main_window, "theme_choice", "dark")
+        if current == "light":
             self.theme_combo.setCurrentText("Light")
+        elif current == "system":
+            self.theme_combo.setCurrentText("System")
         misc_form.addRow("Theme:", self.theme_combo)
 
         self.terminal_checkbox = QCheckBox("Enable Terminal Tab")
@@ -318,7 +321,7 @@ class SettingsTab(QWidget):
         self.docker_checkbox.toggled.connect(self.main_window.mark_settings_dirty)
         self.refresh_spin.valueChanged.connect(self.main_window.mark_settings_dirty)
         self.theme_combo.currentTextChanged.connect(
-            self.main_window.mark_settings_dirty
+            self.main_window.on_theme_combo_changed
         )
         self.terminal_checkbox.toggled.connect(
             self.main_window.mark_settings_dirty

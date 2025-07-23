@@ -10,6 +10,7 @@ import webbrowser
 import socket
 from PyQt6.QtWidgets import (
     QMainWindow,
+    QApplication,
     QTabWidget,
     QWidget,
     QVBoxLayout,
@@ -278,6 +279,19 @@ LIGHT_STYLESHEET = """
 THEME_STYLES = {"dark": DARK_STYLESHEET, "light": LIGHT_STYLESHEET}
 
 
+def get_system_theme() -> str:
+    """Return the operating system color scheme as ``dark`` or ``light``."""
+    app = QApplication.instance()
+    if app is None:
+        return "dark"
+    scheme = app.styleHints().colorScheme()
+    if scheme == Qt.ColorScheme.Dark:
+        return "dark"
+    if scheme == Qt.ColorScheme.Light:
+        return "light"
+    return "dark"
+
+
 def apply_theme(widget: QMainWindow, theme: str) -> None:
     widget.setStyleSheet(THEME_STYLES.get(theme, DARK_STYLESHEET))
 
@@ -293,6 +307,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{APP_NAME} – PHP QA Toolbox")
         self.resize(1024, 768)
         self.setMinimumSize(425, 300)
+        self.theme_choice = "dark"
+        self.os_theme = get_system_theme()
+        self.follow_system_theme = False
         self.theme = "dark"
 
         # Widgets populated by SettingsTab and LogsTab
@@ -396,7 +413,16 @@ class MainWindow(QMainWindow):
         self.use_node = self.project_uses_node(self.project_path)
         self.use_composer = self.project_uses_composer(self.project_path)
         self.has_makefile = self.project_has_makefile(self.project_path)
-        apply_theme(self, self.theme)
+        if self.follow_system_theme:
+            apply_theme(self, self.os_theme)
+            self.theme = self.os_theme
+        else:
+            apply_theme(self, self.theme_choice)
+            self.theme = self.theme_choice
+
+        app = QApplication.instance()
+        if app is not None:
+            app.styleHints().colorSchemeChanged.connect(self._on_system_theme_changed)
 
         # initialize tabs
         self.project_tab = ProjectTab(self)
@@ -635,7 +661,9 @@ class MainWindow(QMainWindow):
         )
         self.tray_enabled = bool(data.get("enable_tray", self.tray_enabled))
 
-        self.theme = data.get("theme", self.theme)
+        self.theme_choice = data.get("theme", self.theme_choice)
+        self.follow_system_theme = self.theme_choice == "system"
+        self.theme = self.os_theme if self.follow_system_theme else self.theme_choice
 
         self.max_log_lines = int(
             cast(
@@ -664,6 +692,17 @@ class MainWindow(QMainWindow):
         if not self.settings_dirty:
             self.settings_dirty = True
             self.update_settings_tab_title()
+
+    def on_theme_combo_changed(self, text: str) -> None:
+        self.theme_choice = text.lower()
+        self.follow_system_theme = self.theme_choice == "system"
+        if self.follow_system_theme:
+            apply_theme(self, self.os_theme)
+            self.theme = self.os_theme
+        else:
+            apply_theme(self, self.theme_choice)
+            self.theme = self.theme_choice
+        self.mark_settings_dirty()
 
     def mark_settings_saved(self):
         if self.settings_dirty:
@@ -717,6 +756,14 @@ class MainWindow(QMainWindow):
             self.git_tab, "update_responsive_layout"
         ):
             self.git_tab.update_responsive_layout(width)
+
+    def _on_system_theme_changed(self, scheme: Qt.ColorScheme) -> None:
+        self.os_theme = "dark" if scheme == Qt.ColorScheme.Dark else "light"
+        if self.follow_system_theme:
+            apply_theme(self, self.os_theme)
+            self.theme = self.os_theme
+            if self.theme_combo is not None:
+                self.theme_combo.setCurrentText(self.os_theme.capitalize())
 
     # ------------------------------------------------------------------
     # System tray icon helpers
@@ -1291,10 +1338,10 @@ class MainWindow(QMainWindow):
             if self.refresh_spin is not None
             else self.auto_refresh_secs
         )
-        theme = (
+        theme_choice = (
             self.theme_combo.currentText().lower()
             if self.theme_combo is not None
-            else self.theme
+            else self.theme_choice
         )
         enable_terminal = (
             self.terminal_checkbox.isChecked()
@@ -1385,7 +1432,10 @@ class MainWindow(QMainWindow):
         self.compose_profile = compose_profile.strip()
         self.docker_project_path = docker_project_path.strip() or self.docker_project_path
         self.auto_refresh_secs = int(auto_refresh_secs)
-        self.theme = theme
+        self.theme_choice = theme_choice
+        self.follow_system_theme = self.theme_choice == "system"
+        if not self.follow_system_theme:
+            self.theme = self.theme_choice
         self.enable_terminal = enable_terminal
         self.open_browser = bool(open_browser)
         self.show_console_output = bool(show_console_output)
@@ -1451,7 +1501,7 @@ class MainWindow(QMainWindow):
             {
                 "projects": self.projects,
                 "current_project": project_path,
-                "theme": self.theme,
+                "theme": self.theme_choice,
                 "show_console_output": self.show_console_output,
                 "enable_tray": self.tray_enabled,
             }
@@ -1461,7 +1511,12 @@ class MainWindow(QMainWindow):
         except OSError as e:
             print(f"Failed to write config: {e}")
 
-        apply_theme(self, self.theme)
+        if self.follow_system_theme:
+            apply_theme(self, self.os_theme)
+            self.theme = self.os_theme
+        else:
+            apply_theme(self, self.theme_choice)
+            self.theme = self.theme_choice
         print("Settings saved!")
         self.mark_settings_saved()
         if self.tray_enabled:

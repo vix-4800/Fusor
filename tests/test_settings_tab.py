@@ -27,6 +27,9 @@ class DummyMainWindow:
         self.database_tab = type("D", (), {"on_framework_changed": lambda self, t: None})()
         self.mark_settings_dirty = lambda *a, **k: None
 
+    def on_theme_combo_changed(self, text: str) -> None:
+        pass
+
     def default_log_dirs(self, framework: str, template: str | None = None):
         return []
 
