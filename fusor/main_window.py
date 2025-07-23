@@ -295,7 +295,6 @@ class MainWindow(QMainWindow):
 
         # Widgets populated by SettingsTab and LogsTab
         self.project_combo: QComboBox | None = None
-        self.project_name_edit: QLineEdit | None = None
         self.framework_combo: QComboBox | None = None
         self.php_path_edit: QLineEdit | None = None
         self.php_service_edit: QLineEdit | None = None
@@ -949,8 +948,6 @@ class MainWindow(QMainWindow):
             else:
                 self.project_combo.setCurrentText(proj["name"])
             self.project_combo.blockSignals(False)
-        if self.project_name_edit is not None:
-            self.project_name_edit.setText(proj.get("name", Path(path).name))
         if hasattr(self, "git_tab"):
             if self.is_git_repo:
                 self.git_tab.load_branches()
@@ -1306,10 +1303,12 @@ class MainWindow(QMainWindow):
         self.project_path = project_path
         self.is_git_repo = os.path.isdir(os.path.join(project_path, ".git"))
         project_name = Path(project_path).name
-        if self.project_name_edit is not None:
-            text = self.project_name_edit.text().strip()
-            if text:
-                project_name = text
+        if self.project_combo is not None:
+            idx = self.project_combo.findData(project_path)
+            if idx >= 0:
+                text = self.project_combo.itemText(idx).strip()
+                if text:
+                    project_name = text
         existing = next(
             (p for p in self.projects if p.get("path") == project_path), None
         )

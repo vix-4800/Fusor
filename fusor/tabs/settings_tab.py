@@ -80,14 +80,6 @@ class SettingsTab(QWidget):
         project_row.addWidget(rename_btn)
         project_form.addRow(project_row)
 
-        self.project_name_edit = QLineEdit()
-        name = ""
-        for p in self.main_window.projects:
-            if p.get("path") == self.main_window.project_path:
-                name = p.get("name", "")
-                break
-        self.project_name_edit.setText(name)
-        project_form.addRow("Project Name:", self.project_name_edit)
 
         self.php_path_edit = QLineEdit(self.main_window.php_path)
         self.php_browse_btn = QPushButton("")
@@ -276,7 +268,6 @@ class SettingsTab(QWidget):
         outer_layout.addWidget(save_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.main_window.project_combo = self.project_combo
-        self.main_window.project_name_edit = self.project_name_edit
         self.main_window.framework_combo = self.framework_combo
         self.main_window.php_path_edit = self.php_path_edit
         self.main_window.php_service_edit = self.php_service_edit
@@ -342,7 +333,6 @@ class SettingsTab(QWidget):
         self.tray_checkbox.toggled.connect(
             self.main_window.mark_settings_dirty
         )
-        self.project_name_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.compose_profile_edit.textChanged.connect(
             self.main_window.mark_settings_dirty
         )
@@ -355,14 +345,6 @@ class SettingsTab(QWidget):
     def _on_project_changed(self, _index: int) -> None:
         path = self.project_combo.currentData()
         self.main_window.set_current_project(path)
-        name = ""
-        for p in self.main_window.projects:
-            if p.get("path") == path:
-                name = p.get("name", os.path.basename(path))
-                break
-        self.project_name_edit.blockSignals(True)
-        self.project_name_edit.setText(name)
-        self.project_name_edit.blockSignals(False)
 
     def _wrap(self, child: Union[QLayout, QWidget]) -> QWidget:
         """Return a QWidget containing the given layout or widget."""
@@ -612,7 +594,6 @@ class SettingsTab(QWidget):
             return
         new_name = new_name.strip()
         self.project_combo.setItemText(index, new_name)
-        self.project_name_edit.setText(new_name)
         path = self.project_combo.itemData(index)
         for p in self.main_window.projects:
             if p.get("path") == path:
