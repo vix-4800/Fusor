@@ -11,6 +11,7 @@ from pathlib import Path
 import json
 
 from ..icons import get_icon
+from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 
 
 class ComposerTab(QWidget):
@@ -31,8 +32,8 @@ class ComposerTab(QWidget):
         scroll.setWidget(container)
 
         layout = QVBoxLayout(container)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(12)
+        layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
+        layout.setSpacing(DEFAULT_SPACING)
 
         self.install_btn = self._btn(
             "Composer install", self.composer_install, icon="package-install"
@@ -53,11 +54,7 @@ class ComposerTab(QWidget):
         self.update_composer_scripts()
 
     def _btn(self, text: str, slot: Callable[[], None], icon: str | None = None) -> QPushButton:
-        btn = QPushButton(text)
-        if icon:
-            btn.setIcon(get_icon(icon))
-        btn.setMinimumHeight(36)
-        btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        btn = create_button(text, icon)
         btn.clicked.connect(slot)
         return btn
 

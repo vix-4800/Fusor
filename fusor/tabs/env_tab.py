@@ -1,6 +1,7 @@
 import builtins
 from pathlib import Path
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPlainTextEdit, QPushButton
+from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 
 # allow easy monkeypatching
 open = builtins.open
@@ -14,13 +15,13 @@ class EnvTab(QWidget):
         self.main_window = main_window
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(12)
+        layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
+        layout.setSpacing(DEFAULT_SPACING)
 
         self.editor = QPlainTextEdit()
         layout.addWidget(self.editor)
 
-        self.save_btn = QPushButton("Save")
+        self.save_btn = create_button("Save")
         self.save_btn.clicked.connect(self.save_env)
         layout.addWidget(self.save_btn)
 

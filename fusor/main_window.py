@@ -48,6 +48,7 @@ from .config import (
 )
 from .qtextedit_logger import QTextEditLogger
 from .welcome_dialog import WelcomeDialog
+from .ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 
 from .tabs.project_tab import ProjectTab
 from .tabs.git_tab import GitTab
@@ -341,9 +342,7 @@ class MainWindow(QMainWindow):
         header_layout.addStretch()
         self.status_label = QLabel("Stopped")
         header_layout.addWidget(self.status_label)
-        self.help_button = QPushButton("")
-        self.help_button.setFixedSize(36, 36)
-        self.help_button.setIcon(get_icon("help-about"))
+        self.help_button = create_button("", "help-about", fixed=True)
         self.help_button.clicked.connect(self.show_about_dialog)
         header_layout.addWidget(self.help_button)
         main_layout.addLayout(header_layout)
