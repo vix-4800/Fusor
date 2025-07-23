@@ -815,6 +815,9 @@ class MainWindow(QMainWindow):
             self.tray_checkbox.setChecked(False)
         self.tray_enabled = False
         self.close()
+        app = QApplication.instance()
+        if app is not None:
+            app.quit()
 
     def toggle_window_visibility(self) -> None:
         if self.isVisible():
