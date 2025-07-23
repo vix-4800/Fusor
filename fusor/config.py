@@ -39,7 +39,7 @@ DEFAULT_CONFIG = {
     "current_project": "",
     "theme": "dark",
     "show_console_output": False,
-    "enable_tray": False,
+    "enable_tray": True,
     # Window geometry (width, height) and position (x, y)
     "window_size": [1024, 768],
     "window_position": [100, 100],

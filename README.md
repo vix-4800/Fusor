@@ -26,6 +26,7 @@ Fusor aims to **simplify routine PHP project operations** via a user-friendly vi
 -   Optional **Docker mode** for containerized workflows
 -   Git, database, and migration helpers
 -   Basic Node/NPM commands with automatic buttons for package scripts
+-   Detects **Makefiles** and provides buttons for each target
 -   Configurable log viewer with auto-refresh
 -   **Ctrl+S** shortcut to quickly save settings
 -   Isolated settings stored in `~/.fusor_config.json`
@@ -36,14 +37,16 @@ Fusor aims to **simplify routine PHP project operations** via a user-friendly vi
 
 | Tab          | Description                                                                                    |
 | ------------ | ---------------------------------------------------------------------------------------------- |
-| **Project**  | Start/stop server, Composer install/update, PHP tools (PHPUnit, Rector, CS-Fixer)              |
+| **Project**  | Start/stop server and PHP tools (PHPUnit, Rector, CS-Fixer)                                    |
 | **Git**      | Switch branches, view status or diff, pull, hard reset, stash changes                          |
 | **Database** | Dump or restore SQL, run migrations, seed data                                                 |
 | **Laravel**  | Migrate, rollback, fresh seed, and other artisan helpers _(visible when framework is Laravel)_ |
 | **Symfony**  | Clear cache and manage Doctrine migrations _(visible when framework is Symfony)_               |
 | **Yii**      | Common Yii console commands _(visible when framework is Yii)_                                  |
 | **Docker**   | Build, pull, restart services, inspect containers _(visible only in Docker mode)_              |
+| **Composer** | Run composer install/update and scripts                                                        |
 | **Node**     | Run npm install and package scripts (e.g., dev, build)                                         |
+| **Make**     | Run make targets detected from the project's Makefile _(visible when Makefile present)_        |
 | **Logs**     | View logs with optional auto-refresh and open log files in your default application            |
 | **.env**     | Edit the project's environment file                                                            |
 | **Terminal** | Embedded terminal for custom commands                                                          |

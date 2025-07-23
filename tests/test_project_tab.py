@@ -2,7 +2,6 @@ import os
 import sys
 import subprocess
 import json
-from PyQt6.QtCore import Qt
 
 from fusor.tabs.project_tab import ProjectTab
 
@@ -151,31 +150,3 @@ def test_update_php_tools_disable_without_composer(tmp_path, qtbot):
     assert not tab.csfixer_btn.isEnabled()
 
 
-def test_update_php_tools_adds_script_buttons(tmp_path, qtbot):
-    data = {"scripts": {"lint": "phpcs"}}
-    (tmp_path / "composer.json").write_text(json.dumps(data))
-
-    tab, main = make_tab(qtbot)
-    main.project_path = str(tmp_path)
-    tab.update_php_tools()
-    tab.show()
-    qtbot.wait(10)
-
-    texts = [btn.text() for btn in tab._script_buttons]
-    assert "Lint" in texts
-    assert tab.composer_scripts_group.isVisible()
-
-
-def test_script_button_runs_command(tmp_path, qtbot, monkeypatch):
-    data = {"scripts": {"lint": "phpcs"}}
-    (tmp_path / "composer.json").write_text(json.dumps(data))
-
-    tab, main = make_tab(qtbot)
-    main.project_path = str(tmp_path)
-    captured = []
-    monkeypatch.setattr(main, "run_command", lambda cmd: captured.append(cmd), raising=True)
-    tab.update_php_tools()
-    btn = tab._script_buttons[0]
-    qtbot.mouseClick(btn, Qt.MouseButton.LeftButton)
-
-    assert captured == [["composer", "run", "lint"]]

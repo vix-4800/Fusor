@@ -102,29 +102,6 @@ class ProjectTab(QWidget):
         self.php_tools_group.setLayout(php_layout)
         layout.addWidget(self.php_tools_group)
 
-        composer_group = QGroupBox("Composer")
-        composer_layout = QVBoxLayout()
-        self.composer_install_btn = self._btn(
-            "Composer install",
-            lambda: main_window.run_command(["composer", "install"]),
-            icon="package-install",
-        )
-        self.composer_update_btn = self._btn(
-            "Composer update",
-            lambda: main_window.run_command(["composer", "update"]),
-            icon="system-software-update",
-        )
-        composer_layout.addWidget(self.composer_install_btn)
-        composer_layout.addWidget(self.composer_update_btn)
-        composer_group.setLayout(composer_layout)
-        layout.addWidget(composer_group)
-
-        # --- Composer Scripts ---
-        self.composer_scripts_group = QGroupBox("Composer Scripts")
-        self.composer_scripts_layout = QVBoxLayout()
-        self.composer_scripts_group.setLayout(self.composer_scripts_layout)
-        layout.addWidget(self.composer_scripts_group)
-
         layout.addStretch(1)
 
         self.update_php_tools()
@@ -184,7 +161,6 @@ class ProjectTab(QWidget):
     def update_php_tools(self) -> None:
         """Enable or disable PHP tool buttons based on composer.json."""
         packages: set[str] = set()
-        scripts: list[str] = []
         path = self.main_window.project_path
         if path:
             composer = Path(path) / "composer.json"
@@ -195,9 +171,6 @@ class ProjectTab(QWidget):
                     pkgs = data.get(key, {})
                     if isinstance(pkgs, dict):
                         packages.update(pkgs.keys())
-                scr = data.get("scripts", {})
-                if isinstance(scr, dict):
-                    scripts = list(scr.keys())
             except OSError:
                 pass
 
@@ -208,24 +181,3 @@ class ProjectTab(QWidget):
         }
         for pkg, btn in mapping.items():
             btn.setEnabled(pkg in packages)
-
-        # --- Composer scripts ---
-        for btn in getattr(self, "_script_buttons", []):
-            self.composer_scripts_layout.removeWidget(btn)
-            btn.deleteLater()
-        self._script_buttons = []
-
-        for name in scripts:
-            btn = self._btn(
-                name.capitalize().replace('-', ' '),
-                lambda _=False, n=name: self.main_window.run_command([
-                    "composer",
-                    "run",
-                    n,
-                ]),
-                icon="system-run",
-            )
-            self.composer_scripts_layout.addWidget(btn)
-            self._script_buttons.append(btn)
-
-        self.composer_scripts_group.setVisible(bool(scripts))

@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
     QHBoxLayout,
     QFileDialog,
+    QInputDialog,
     QCheckBox,
     QVBoxLayout,
     QGroupBox,
@@ -64,23 +65,20 @@ class SettingsTab(QWidget):
         remove_btn.setIcon(get_icon("list-remove"))
         remove_btn.setFixedSize(36, 36)
         remove_btn.clicked.connect(self.remove_project)
+        rename_btn = QPushButton("")
+        rename_btn.setIcon(get_icon("edit-rename"))
+        rename_btn.setFixedSize(36, 36)
+        rename_btn.clicked.connect(self.rename_project)
         self.remove_btn = remove_btn
+        self.rename_btn = rename_btn
         project_row = QHBoxLayout()
         project_combo_label = QLabel("Project:")
         project_row.addWidget(project_combo_label)
         project_row.addWidget(self.project_combo, stretch=1)
         project_row.addWidget(add_btn)
         project_row.addWidget(remove_btn)
+        project_row.addWidget(rename_btn)
         project_form.addRow(project_row)
-
-        self.project_name_edit = QLineEdit()
-        name = ""
-        for p in self.main_window.projects:
-            if p.get("path") == self.main_window.project_path:
-                name = p.get("name", "")
-                break
-        self.project_name_edit.setText(name)
-        project_form.addRow("Project Name:", self.project_name_edit)
 
         self.php_path_edit = QLineEdit(self.main_window.php_path)
         self.php_browse_btn = QPushButton("")
@@ -272,7 +270,6 @@ class SettingsTab(QWidget):
         outer_layout.addWidget(save_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.main_window.project_combo = self.project_combo
-        self.main_window.project_name_edit = self.project_name_edit
         self.main_window.framework_combo = self.framework_combo
         self.main_window.php_path_edit = self.php_path_edit
         self.main_window.php_service_edit = self.php_service_edit
@@ -338,7 +335,6 @@ class SettingsTab(QWidget):
         self.tray_checkbox.toggled.connect(
             self.main_window.mark_settings_dirty
         )
-        self.project_name_edit.textChanged.connect(self.main_window.mark_settings_dirty)
         self.compose_profile_edit.textChanged.connect(
             self.main_window.mark_settings_dirty
         )
@@ -351,14 +347,6 @@ class SettingsTab(QWidget):
     def _on_project_changed(self, _index: int) -> None:
         path = self.project_combo.currentData()
         self.main_window.set_current_project(path)
-        name = ""
-        for p in self.main_window.projects:
-            if p.get("path") == path:
-                name = p.get("name", os.path.basename(path))
-                break
-        self.project_name_edit.blockSignals(True)
-        self.project_name_edit.setText(name)
-        self.project_name_edit.blockSignals(False)
 
     def _wrap(self, child: Union[QLayout, QWidget]) -> QWidget:
         """Return a QWidget containing the given layout or widget."""
@@ -595,6 +583,25 @@ class SettingsTab(QWidget):
             if hasattr(self.main_window, "env_index"):
                 self.main_window.tabs.setTabVisible(self.main_window.env_index, False)
                 self.main_window.tabs.setTabEnabled(self.main_window.env_index, False)
+
+    def rename_project(self) -> None:
+        index = self.project_combo.currentIndex()
+        if index < 0:
+            return
+        current_name = self.project_combo.itemText(index)
+        new_name, ok = QInputDialog.getText(
+            self, "Rename Project", "Project Name:", text=current_name
+        )
+        if not ok or not new_name.strip():
+            return
+        new_name = new_name.strip()
+        self.project_combo.setItemText(index, new_name)
+        path = self.project_combo.itemData(index)
+        for p in self.main_window.projects:
+            if p.get("path") == path:
+                p["name"] = new_name
+                break
+        self.main_window.save_settings()
 
     def browse_php_path(self) -> None:
         file, _ = QFileDialog.getOpenFileName(
