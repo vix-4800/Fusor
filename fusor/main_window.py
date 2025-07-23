@@ -55,6 +55,7 @@ from .tabs.laravel_tab import LaravelTab
 from .tabs.symfony_tab import SymfonyTab
 from .tabs.yii_tab import YiiTab
 from .tabs.node_tab import NodeTab
+from .tabs.composer_tab import ComposerTab
 from .tabs.makefile_tab import MakefileTab
 from .tabs.docker_tab import DockerTab
 from .tabs.logs_tab import LogsTab
@@ -393,6 +394,7 @@ class MainWindow(QMainWindow):
         self.show_console_output = False
         self.load_config()
         self.use_node = self.project_uses_node(self.project_path)
+        self.use_composer = self.project_uses_composer(self.project_path)
         self.has_makefile = self.project_has_makefile(self.project_path)
         apply_theme(self, self.theme)
 
@@ -422,6 +424,11 @@ class MainWindow(QMainWindow):
         self.node_index = self.tabs.addTab(self.node_tab, "Node")
         self.tabs.setTabVisible(self.node_index, self.use_node)
         self.tabs.setTabEnabled(self.node_index, self.use_node)
+
+        self.composer_tab = ComposerTab(self)
+        self.composer_index = self.tabs.addTab(self.composer_tab, "Composer")
+        self.tabs.setTabVisible(self.composer_index, self.use_composer)
+        self.tabs.setTabEnabled(self.composer_index, self.use_composer)
 
         self.make_tab = MakefileTab(self)
         self.make_index = self.tabs.addTab(self.make_tab, "Make")
@@ -871,6 +878,11 @@ class MainWindow(QMainWindow):
             self.tabs.setTabVisible(self.node_index, self.use_node)
             self.tabs.setTabEnabled(self.node_index, self.use_node)
 
+        if hasattr(self, "composer_index"):
+            self.use_composer = self.project_uses_composer()
+            self.tabs.setTabVisible(self.composer_index, self.use_composer)
+            self.tabs.setTabEnabled(self.composer_index, self.use_composer)
+
         self.mark_settings_saved()
 
         if (
@@ -881,6 +893,9 @@ class MainWindow(QMainWindow):
 
         if hasattr(self, "node_tab") and hasattr(self.node_tab, "update_npm_scripts"):
             self.node_tab.update_npm_scripts()
+
+        if hasattr(self, "composer_tab") and hasattr(self.composer_tab, "update_composer_scripts"):
+            self.composer_tab.update_composer_scripts()
 
         if hasattr(self, "make_tab") and hasattr(self.make_tab, "update_commands"):
             self.make_tab.update_commands()
@@ -981,6 +996,11 @@ class MainWindow(QMainWindow):
             self.tabs.setTabVisible(self.node_index, self.use_node)
             self.tabs.setTabEnabled(self.node_index, self.use_node)
 
+        if hasattr(self, "composer_index"):
+            self.use_composer = self.project_uses_composer(path)
+            self.tabs.setTabVisible(self.composer_index, self.use_composer)
+            self.tabs.setTabEnabled(self.composer_index, self.use_composer)
+
         if hasattr(self, "make_index"):
             self.has_makefile = self.project_has_makefile(path)
             self.tabs.setTabVisible(self.make_index, self.has_makefile)
@@ -1058,6 +1078,13 @@ class MainWindow(QMainWindow):
             return False
         base = Path(path or self.project_path)
         return (base / "package.json").is_file() or (base / "node_modules").is_dir()
+
+    def project_uses_composer(self, path: str | None = None) -> bool:
+        """Return True if the project contains composer.json or vendor."""
+        if not (path or self.project_path):
+            return False
+        base = Path(path or self.project_path)
+        return (base / "composer.json").is_file() or (base / "vendor").is_dir()
 
     def project_has_makefile(self, path: str | None = None) -> bool:
         """Return True if the project contains a Makefile."""
