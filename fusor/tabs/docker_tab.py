@@ -30,12 +30,14 @@ class DockerTab(QWidget):
         self.status_btn = self._btn("Status", self.status, icon="dialog-information")
         self.logs_btn = self._btn("Logs", self.logs, icon="text-x-generic")
         self.restart_btn = self._btn("Restart", self.restart, icon="view-refresh")
+        self.shell_btn = self._btn("Open Shell", self.shell, icon="utilities-terminal")
 
         layout.addWidget(self.build_btn)
         layout.addWidget(self.pull_btn)
         layout.addWidget(self.status_btn)
         layout.addWidget(self.logs_btn)
         layout.addWidget(self.restart_btn)
+        layout.addWidget(self.shell_btn)
 
         layout.addStretch(1)
 
@@ -60,3 +62,8 @@ class DockerTab(QWidget):
 
     def restart(self) -> None:
         self.main_window.run_command(["docker", "compose", "restart"])
+
+    def shell(self) -> None:
+        self.main_window.run_command(
+            ["docker", "compose", "exec", self.main_window.php_service, "sh"]
+        )
