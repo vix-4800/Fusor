@@ -70,6 +70,9 @@ pip install -r requirements.txt
 python -m fusor
 ```
 
+4. Add your project via **Settings** -> **Add Project** or **Clone Project**.
+   When no projects exist, the Welcome dialog will prompt you to add or clone one.
+
 Set the `APP_NAME` environment variable to customize the window title:
 
 ```bash

@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+import subprocess
 from PyQt6.QtWidgets import (
     QWidget,
     QFormLayout,
@@ -10,6 +12,7 @@ from PyQt6.QtWidgets import (
     QFileDialog,
     QInputDialog,
     QCheckBox,
+    QMessageBox,
     QVBoxLayout,
     QGroupBox,
     QLayout,
@@ -62,9 +65,12 @@ class SettingsTab(QWidget):
         add_btn.clicked.connect(self.add_project)
         remove_btn = create_button("", "list-remove", fixed=True)
         remove_btn.clicked.connect(self.remove_project)
+        clone_btn = create_button("", "download", fixed=True)
+        clone_btn.clicked.connect(self.clone_project)
         rename_btn = create_button("", "edit-rename", fixed=True)
         rename_btn.clicked.connect(self.rename_project)
         self.remove_btn = remove_btn
+        self.clone_btn = clone_btn
         self.rename_btn = rename_btn
         project_row = QHBoxLayout()
         project_combo_label = QLabel("Project:")
@@ -72,6 +78,7 @@ class SettingsTab(QWidget):
         project_row.addWidget(self.project_combo, stretch=1)
         project_row.addWidget(add_btn)
         project_row.addWidget(remove_btn)
+        project_row.addWidget(clone_btn)
         project_row.addWidget(rename_btn)
         project_form.addRow(project_row)
 
@@ -583,6 +590,43 @@ class SettingsTab(QWidget):
             if p.get("path") == path:
                 p["name"] = new_name
                 break
+        self.main_window.save_settings()
+
+    def clone_project(self) -> None:
+        url, ok = QInputDialog.getText(self, "Clone from Git", "Repository URL:")
+        if not ok or not url:
+            return
+
+        dest_base = QFileDialog.getExistingDirectory(self, "Select Destination")
+        if not dest_base:
+            return
+
+        name, ok = QInputDialog.getText(
+            self, "Clone from Git", "Project Directory Name:"
+        )
+        if not ok or not name:
+            return
+
+        dest = Path(dest_base) / name
+        if dest.exists():
+            QMessageBox.warning(self, "Clone", "Destination already exists")
+            return
+
+        try:
+            check = subprocess.run([
+                "git",
+                "ls-remote",
+                url,
+            ], capture_output=True, text=True)
+            if check.returncode != 0:
+                QMessageBox.warning(self, "Clone", "Invalid repository URL")
+                return
+        except FileNotFoundError:  # pragma: no cover
+            QMessageBox.warning(self, "Clone", "git executable not found")
+            return
+
+        subprocess.run(["git", "clone", url, str(dest)])
+        self.main_window.set_current_project(str(dest))
         self.main_window.save_settings()
 
     def browse_php_path(self) -> None:
