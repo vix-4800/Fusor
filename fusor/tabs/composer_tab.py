@@ -53,16 +53,28 @@ class ComposerTab(QWidget):
 
         self.update_composer_scripts()
 
-    def _btn(self, text: str, slot: Callable[[], None], icon: str | None = None) -> QPushButton:
+    def _btn(self, text: str, slot: Callable[[bool], None], icon: str | None = None) -> QPushButton:
         btn = create_button(text, icon)
         btn.clicked.connect(slot)
         return btn
 
-    def composer_install(self) -> None:
+    def composer_install(self, _: bool = False) -> None:
         self.main_window.run_command(["composer", "install"])
 
-    def composer_update(self) -> None:
+    def composer_update(self, _: bool = False) -> None:
         self.main_window.run_command(["composer", "update"])
+
+    def _make_script_handler(self, name: str) -> Callable[[bool], None]:
+        """Return a slot that runs the given composer script."""
+
+        def handler(_: bool = False) -> None:
+            self.main_window.run_command([
+                "composer",
+                "run",
+                name,
+            ])
+
+        return handler
 
     def update_composer_scripts(self) -> None:
         scripts: list[str] = []
@@ -86,11 +98,7 @@ class ComposerTab(QWidget):
         for name in scripts:
             btn = self._btn(
                 name.capitalize().replace('-', ' '),
-                lambda _=False, n=name: self.main_window.run_command([
-                    "composer",
-                    "run",
-                    n,
-                ]),
+                self._make_script_handler(name),
                 icon="system-run",
             )
             self.scripts_layout.addWidget(btn)

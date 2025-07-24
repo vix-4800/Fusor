@@ -285,7 +285,10 @@ def get_system_theme() -> str:
     app = QApplication.instance()
     if app is None:
         return "dark"
-    scheme = app.styleHints().colorScheme()
+    hints = cast(QApplication, app).styleHints()
+    if hints is None:
+        return "dark"
+    scheme = hints.colorScheme()
     if scheme == Qt.ColorScheme.Dark:
         return "dark"
     if scheme == Qt.ColorScheme.Light:
@@ -421,7 +424,9 @@ class MainWindow(QMainWindow):
 
         app = QApplication.instance()
         if app is not None:
-            app.styleHints().colorSchemeChanged.connect(self._on_system_theme_changed)
+            hints = cast(QApplication, app).styleHints()
+            if hints is not None:
+                hints.colorSchemeChanged.connect(self._on_system_theme_changed)
 
         # initialize tabs
         self.project_tab = ProjectTab(self)
