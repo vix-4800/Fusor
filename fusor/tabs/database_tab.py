@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
 from typing import Callable
 
 from ..icons import get_icon
+from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 
 
 class DatabaseTab(QWidget):
@@ -30,7 +31,7 @@ class DatabaseTab(QWidget):
         scroll.setWidget(container)
 
         outer_layout = QVBoxLayout(container)
-        outer_layout.setContentsMargins(20, 20, 20, 20)
+        outer_layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
         outer_layout.setSpacing(20)
 
         # --- SQL Tools Group ---
@@ -78,11 +79,7 @@ class DatabaseTab(QWidget):
     def _btn(
         self, text: str, slot: Callable[[], None], icon: str | None = None
     ) -> QPushButton:
-        btn = QPushButton(text)
-        if icon:
-            btn.setIcon(get_icon(icon))
-        btn.setMinimumHeight(36)
-        btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        btn = create_button(text, icon)
         btn.clicked.connect(slot)
         return btn
 

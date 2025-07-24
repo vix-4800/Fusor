@@ -11,6 +11,7 @@ from pathlib import Path
 import json
 
 from ..icons import get_icon
+from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 from functools import partial
 
 
@@ -32,8 +33,8 @@ class NodeTab(QWidget):
         scroll.setWidget(container)
 
         layout = QVBoxLayout(container)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(12)
+        layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
+        layout.setSpacing(DEFAULT_SPACING)
 
         self.npm_install_btn = self._btn(
             "npm install", self.npm_install, icon="system-run"
@@ -51,11 +52,7 @@ class NodeTab(QWidget):
         self.update_npm_scripts()
 
     def _btn(self, text: str, slot: Callable[[], None], icon: str | None = None) -> QPushButton:
-        btn = QPushButton(text)
-        if icon:
-            btn.setIcon(get_icon(icon))
-        btn.setMinimumHeight(36)
-        btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        btn = create_button(text, icon)
         btn.clicked.connect(slot)
         return btn
 

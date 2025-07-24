@@ -16,6 +16,7 @@ from PyQt6.QtGui import QTextCursor, QTextCharFormat, QColor
 from pathlib import Path, PurePath
 from ..icons import get_icon
 from ..utils import expand_log_paths
+from ..ui import create_button, BUTTON_SIZE, CONTENT_MARGIN, DEFAULT_SPACING
 
 
 class LogsTab(QWidget):
@@ -38,7 +39,7 @@ class LogsTab(QWidget):
         scroll.setWidget(container)
 
         outer_layout = QVBoxLayout(container)
-        outer_layout.setContentsMargins(20, 20, 20, 20)
+        outer_layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
         outer_layout.setSpacing(16)
 
         # --- Log Selector ---
@@ -60,27 +61,18 @@ class LogsTab(QWidget):
 
         # --- Search ---
         search_layout = QHBoxLayout()
-        search_layout.setSpacing(12)
+        search_layout.setSpacing(DEFAULT_SPACING)
         self.search_edit = QLineEdit()
         self.search_edit.setPlaceholderText("Search logs...")
 
-        self.search_btn = QPushButton("")
-        self.search_btn.setIcon(get_icon("edit-find"))
-        self.search_btn.setFixedSize(36, 36)
-        self.search_btn.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
+        self.search_btn = create_button("", "edit-find", fixed=True)
         self.search_btn.clicked.connect(self.search_logs)
 
-        self.prev_btn = QPushButton("")
-        self.prev_btn.setIcon(get_icon("go-previous"))
-        self.prev_btn.setFixedSize(36, 36)
+        self.prev_btn = create_button("", "go-previous", fixed=True)
         self.prev_btn.setEnabled(False)
         self.prev_btn.clicked.connect(lambda: self.cycle_match(-1))
 
-        self.next_btn = QPushButton("")
-        self.next_btn.setIcon(get_icon("go-next"))
-        self.next_btn.setFixedSize(36, 36)
+        self.next_btn = create_button("", "go-next", fixed=True)
         self.next_btn.setEnabled(False)
         self.next_btn.clicked.connect(lambda: self.cycle_match(1))
 
@@ -113,37 +105,22 @@ class LogsTab(QWidget):
         control_box = QGroupBox("Controls")
         self.control_box = control_box
         control_layout = QHBoxLayout()
-        control_layout.setSpacing(12)
+        control_layout.setSpacing(DEFAULT_SPACING)
 
-        refresh_btn = QPushButton("Refresh")
-        refresh_btn.setIcon(get_icon("view-refresh"))
-        refresh_btn.setMinimumHeight(36)
+        refresh_btn = create_button("Refresh", "view-refresh")
         refresh_btn.clicked.connect(self.main_window.refresh_logs)
-        refresh_btn.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
         control_layout.addWidget(refresh_btn)
 
-        self.open_btn = QPushButton("Open File")
-        self.open_btn.setIcon(get_icon("document-open"))
-        self.open_btn.setMinimumHeight(36)
+        self.open_btn = create_button("Open File", "document-open")
         self.open_btn.clicked.connect(self.open_selected_log)
-        self.open_btn.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
         control_layout.addWidget(self.open_btn)
 
-        self.clear_btn = QPushButton("")
-        self.clear_btn.setIcon(get_icon("edit-clear"))
-        self.clear_btn.setFixedSize(36, 36)
+        self.clear_btn = create_button("", "edit-clear", fixed=True)
         self.clear_btn.clicked.connect(self.main_window.clear_log_file)
-        self.clear_btn.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
         control_layout.addWidget(self.clear_btn)
 
         self.auto_checkbox = QCheckBox()
-        self.auto_checkbox.setMinimumHeight(36)
+        self.auto_checkbox.setMinimumHeight(BUTTON_SIZE)
         self.auto_checkbox.setChecked(False)
         control_layout.addWidget(
             self.auto_checkbox, alignment=Qt.AlignmentFlag.AlignVCenter

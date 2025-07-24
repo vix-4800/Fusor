@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy, QScrollArea
 from ..icons import get_icon
+from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 from typing import Callable
 
 
@@ -21,31 +22,29 @@ class DockerTab(QWidget):
         scroll.setWidget(container)
 
         layout = QVBoxLayout(container)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(12)
+        layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
+        layout.setSpacing(DEFAULT_SPACING)
 
         self.build_btn = self._btn("Rebuild Images", self.build, icon="system-run")
         self.pull_btn = self._btn("Pull Images", self.pull, icon="go-down")
         self.status_btn = self._btn("Status", self.status, icon="dialog-information")
         self.logs_btn = self._btn("Logs", self.logs, icon="text-x-generic")
         self.restart_btn = self._btn("Restart", self.restart, icon="view-refresh")
+        self.shell_btn = self._btn("Open Shell", self.shell, icon="utilities-terminal")
 
         layout.addWidget(self.build_btn)
         layout.addWidget(self.pull_btn)
         layout.addWidget(self.status_btn)
         layout.addWidget(self.logs_btn)
         layout.addWidget(self.restart_btn)
+        layout.addWidget(self.shell_btn)
 
         layout.addStretch(1)
 
     def _btn(
         self, text: str, slot: Callable[[], None], icon: str | None = None
     ) -> QPushButton:
-        btn = QPushButton(text)
-        if icon:
-            btn.setIcon(get_icon(icon))
-        btn.setMinimumHeight(36)
-        btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        btn = create_button(text, icon)
         btn.clicked.connect(slot)
         return btn
 
@@ -63,3 +62,8 @@ class DockerTab(QWidget):
 
     def restart(self) -> None:
         self.main_window.run_command(["docker", "compose", "restart"])
+
+    def shell(self) -> None:
+        self.main_window.run_command(
+            ["docker", "compose", "exec", self.main_window.php_service, "sh"]
+        )

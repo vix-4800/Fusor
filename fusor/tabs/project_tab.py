@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
     QScrollArea,
 )
 from ..icons import get_icon
+from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 
 
 class ProjectTab(QWidget):
@@ -32,7 +33,7 @@ class ProjectTab(QWidget):
 
         layout = QVBoxLayout(container)
         layout.setSpacing(16)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
 
         server_group = QGroupBox("Server Control")
         server_layout = QHBoxLayout()
@@ -109,11 +110,7 @@ class ProjectTab(QWidget):
     def _btn(
         self, label: str, slot, icon: str | None = None, color: str | None = None
     ) -> QPushButton:
-        btn = QPushButton(label)
-        if icon:
-            btn.setIcon(get_icon(icon))
-        btn.setMinimumHeight(36)
-        btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        btn = create_button(label, icon)
         if color:
             btn.setStyleSheet(f"QPushButton:enabled {{ background-color: {color}; }}")
         btn.clicked.connect(slot)

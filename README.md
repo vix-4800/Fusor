@@ -43,8 +43,8 @@ Fusor aims to **simplify routine PHP project operations** via a user-friendly vi
 | **Laravel**  | Migrate, rollback, fresh seed, and other artisan helpers _(visible when framework is Laravel)_ |
 | **Symfony**  | Clear cache and manage Doctrine migrations _(visible when framework is Symfony)_               |
 | **Yii**      | Common Yii console commands _(visible when framework is Yii)_                                  |
-| **Docker**   | Build, pull, restart services, inspect containers _(visible only in Docker mode)_              |
-| **Composer** | Run composer install/update/outdated and scripts                                                        |
+| **Docker**   | Build, pull, restart services, open shell, inspect containers _(visible only in Docker mode)_  |
+| **Composer** | Run composer install/update/outdated and scripts                                               |
 | **Node**     | Run npm install and package scripts (e.g., dev, build)                                         |
 | **Make**     | Run make targets detected from the project's Makefile _(visible when Makefile present)_        |
 | **Logs**     | View logs with optional auto-refresh and open log files in your default application            |

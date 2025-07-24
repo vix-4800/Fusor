@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QPushButton,
 )
+from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 
 
 class TerminalTab(QWidget):
@@ -21,8 +22,8 @@ class TerminalTab(QWidget):
         self.process: QProcess | None = None
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(12)
+        layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
+        layout.setSpacing(DEFAULT_SPACING)
 
         self.output = QPlainTextEdit()
         self.output.setReadOnly(True)
@@ -33,17 +34,17 @@ class TerminalTab(QWidget):
         self.input_edit.setEnabled(False)
         self.input_edit.returnPressed.connect(self.send_input)
         input_layout.addWidget(self.input_edit)
-        self.send_btn = QPushButton("Send")
+        self.send_btn = create_button("Send")
         self.send_btn.setEnabled(False)
         self.send_btn.clicked.connect(self.send_input)
         input_layout.addWidget(self.send_btn)
         layout.addLayout(input_layout)
 
         btn_layout = QHBoxLayout()
-        self.start_btn = QPushButton("Start Shell")
+        self.start_btn = create_button("Start Shell")
         self.start_btn.clicked.connect(self.start_shell)
         btn_layout.addWidget(self.start_btn)
-        self.stop_btn = QPushButton("Stop")
+        self.stop_btn = create_button("Stop")
         self.stop_btn.setStyleSheet(
             "QPushButton:enabled { background-color: #dc3545; }"
         )
