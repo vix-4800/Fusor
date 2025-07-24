@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy, QScrollArea
 from ..icons import get_icon
+from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 from typing import Callable
 
 
@@ -21,8 +22,8 @@ class DockerTab(QWidget):
         scroll.setWidget(container)
 
         layout = QVBoxLayout(container)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(12)
+        layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
+        layout.setSpacing(DEFAULT_SPACING)
 
         self.build_btn = self._btn("Rebuild Images", self.build, icon="system-run")
         self.pull_btn = self._btn("Pull Images", self.pull, icon="go-down")
@@ -41,11 +42,7 @@ class DockerTab(QWidget):
     def _btn(
         self, text: str, slot: Callable[[], None], icon: str | None = None
     ) -> QPushButton:
-        btn = QPushButton(text)
-        if icon:
-            btn.setIcon(get_icon(icon))
-        btn.setMinimumHeight(36)
-        btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        btn = create_button(text, icon)
         btn.clicked.connect(slot)
         return btn
 
