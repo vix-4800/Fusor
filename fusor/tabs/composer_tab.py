@@ -41,8 +41,12 @@ class ComposerTab(QWidget):
         self.update_btn = self._btn(
             "Composer update", self.composer_update, icon="system-software-update"
         )
+        self.outdated_btn = self._btn(
+            "Composer outdated", self.composer_outdated, icon="view-refresh"
+        )
         layout.addWidget(self.install_btn)
         layout.addWidget(self.update_btn)
+        layout.addWidget(self.outdated_btn)
 
         self.scripts_group = QGroupBox("Composer Scripts")
         self.scripts_layout = QVBoxLayout()
@@ -63,6 +67,9 @@ class ComposerTab(QWidget):
 
     def composer_update(self, _: bool = False) -> None:
         self.main_window.run_command(["composer", "update"])
+
+    def composer_outdated(self, _: bool = False) -> None:
+        self.main_window.run_command(["composer", "outdated"])
 
     def _make_script_handler(self, name: str) -> Callable[[bool], None]:
         """Return a slot that runs the given composer script."""

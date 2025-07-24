@@ -21,8 +21,13 @@ def test_buttons_run_commands(qtbot):
 
     qtbot.mouseClick(tab.install_btn, Qt.MouseButton.LeftButton)
     qtbot.mouseClick(tab.update_btn, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(tab.outdated_btn, Qt.MouseButton.LeftButton)
 
-    assert main.commands == [["composer", "install"], ["composer", "update"]]
+    assert main.commands == [
+        ["composer", "install"],
+        ["composer", "update"],
+        ["composer", "outdated"],
+    ]
 
 
 def test_update_composer_scripts_adds_buttons(tmp_path, qtbot):
