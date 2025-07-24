@@ -10,6 +10,7 @@ from typing import Callable
 import re
 
 from ..icons import get_icon
+from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 from functools import partial
 
 
@@ -49,19 +50,15 @@ class MakefileTab(QWidget):
         scroll.setWidget(container)
 
         self._layout = QVBoxLayout(container)
-        self._layout.setContentsMargins(20, 20, 20, 20)
-        self._layout.setSpacing(12)
+        self._layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
+        self._layout.setSpacing(DEFAULT_SPACING)
 
         self._buttons: list[QPushButton] = []
         self.update_commands()
         self._layout.addStretch(1)
 
     def _btn(self, text: str, slot: Callable[[], None], icon: str | None = None) -> QPushButton:
-        btn = QPushButton(text)
-        if icon:
-            btn.setIcon(get_icon(icon))
-        btn.setMinimumHeight(36)
-        btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        btn = create_button(text, icon)
         btn.clicked.connect(slot)
         return btn
 

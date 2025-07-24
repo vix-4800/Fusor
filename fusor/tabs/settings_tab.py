@@ -25,6 +25,7 @@ from PyQt6.QtCore import Qt
 from ..icons import get_icon
 from ..config import load_config, save_config
 from .. import main_window as mw_module
+from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 from typing import Union
 
 
@@ -44,7 +45,7 @@ class SettingsTab(QWidget):
         scroll.setWidget(container)
 
         outer_layout = QVBoxLayout(container)
-        outer_layout.setContentsMargins(20, 20, 20, 20)
+        outer_layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
         outer_layout.setSpacing(20)
 
         # group: Project
@@ -60,21 +61,13 @@ class SettingsTab(QWidget):
             self.project_combo.setCurrentIndex(idx)
         self.project_combo.currentIndexChanged.connect(self._on_project_changed)
 
-        add_btn = QPushButton("")
-        add_btn.setIcon(get_icon("list-add"))
-        add_btn.setFixedSize(36, 36)
+        add_btn = create_button("", "list-add", fixed=True)
         add_btn.clicked.connect(self.add_project)
-        remove_btn = QPushButton("")
-        remove_btn.setIcon(get_icon("list-remove"))
-        remove_btn.setFixedSize(36, 36)
+        remove_btn = create_button("", "list-remove", fixed=True)
         remove_btn.clicked.connect(self.remove_project)
-        clone_btn = QPushButton("")
-        clone_btn.setIcon(get_icon("download"))
-        clone_btn.setFixedSize(36, 36)
+        clone_btn = create_button("", "download", fixed=True)
         clone_btn.clicked.connect(self.clone_project)
-        rename_btn = QPushButton("")
-        rename_btn.setIcon(get_icon("edit-rename"))
-        rename_btn.setFixedSize(36, 36)
+        rename_btn = create_button("", "edit-rename", fixed=True)
         rename_btn.clicked.connect(self.rename_project)
         self.remove_btn = remove_btn
         self.clone_btn = clone_btn
@@ -90,9 +83,7 @@ class SettingsTab(QWidget):
         project_form.addRow(project_row)
 
         self.php_path_edit = QLineEdit(self.main_window.php_path)
-        self.php_browse_btn = QPushButton("")
-        self.php_browse_btn.setIcon(get_icon("document-open"))
-        self.php_browse_btn.setFixedSize(36, 36)
+        self.php_browse_btn = create_button("", "document-open", fixed=True)
         self.php_browse_btn.clicked.connect(self.browse_php_path)
         php_path_row = QHBoxLayout()
         php_path_row_label = QLabel("PHP Executable:")
@@ -271,10 +262,7 @@ class SettingsTab(QWidget):
         outer_layout.addWidget(logs_group)
         outer_layout.addWidget(misc_group)
 
-        save_btn = QPushButton("Save Settings")
-        save_btn.setIcon(get_icon("document-save"))
-        save_btn.setMinimumHeight(36)
-        save_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        save_btn = create_button("Save Settings", "document-save")
         save_btn.clicked.connect(self.main_window.save_settings)
         outer_layout.addWidget(save_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -370,13 +358,9 @@ class SettingsTab(QWidget):
 
     def _add_compose_file_field(self, value: str) -> None:
         edit = QLineEdit(value)
-        browse = QPushButton("")
-        browse.setIcon(get_icon("document-open"))
-        browse.setFixedSize(36, 36)
+        browse = create_button("", "document-open", fixed=True)
         browse.clicked.connect(lambda: self.browse_compose_file(edit))
-        remove = QPushButton("")
-        remove.setIcon(get_icon("list-remove"))
-        remove.setFixedSize(36, 36)
+        remove = create_button("", "list-remove", fixed=True)
 
         row = QHBoxLayout()
         row.addWidget(edit)
@@ -423,13 +407,9 @@ class SettingsTab(QWidget):
 
     def _add_log_dir_field(self, value: str) -> None:
         edit = QLineEdit(value)
-        browse = QPushButton("")
-        browse.setIcon(get_icon("document-open"))
-        browse.setFixedSize(36, 36)
+        browse = create_button("", "document-open", fixed=True)
         browse.clicked.connect(lambda: self.browse_log_dir(edit))
-        remove = QPushButton("")
-        remove.setIcon(get_icon("list-remove"))
-        remove.setFixedSize(36, 36)
+        remove = create_button("", "list-remove", fixed=True)
 
         row = QHBoxLayout()
         row.addWidget(edit)

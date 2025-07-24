@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
 
 from ..icons import get_icon
 from ..branch_dialog import BranchDialog
+from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 
 import subprocess
 from typing import Callable
@@ -37,7 +38,7 @@ class GitTab(QWidget):
         scroll.setWidget(container)
 
         outer_layout = QVBoxLayout(container)
-        outer_layout.setContentsMargins(20, 20, 20, 20)
+        outer_layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
         outer_layout.setSpacing(16)
 
         # --- Branch section ---
@@ -151,11 +152,7 @@ class GitTab(QWidget):
     def _btn(
         self, label: str, slot: Callable[..., object], icon: str | None = None
     ) -> QPushButton:
-        btn = QPushButton(label)
-        if icon:
-            btn.setIcon(get_icon(icon))
-        btn.setMinimumHeight(36)
-        btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        btn = create_button(label, icon)
         btn.clicked.connect(slot)
         return btn
 

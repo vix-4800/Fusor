@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
 )
 
 from ..icons import get_icon
+from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 from typing import Callable
 
 
@@ -26,7 +27,7 @@ class LaravelTab(QWidget):
         scroll.setWidget(container)
 
         layout = QVBoxLayout(container)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
         layout.setSpacing(20)
 
         # --- Laravel Migrations ---
@@ -74,11 +75,7 @@ class LaravelTab(QWidget):
     def _btn(
         self, text: str, slot: Callable[[], None], icon: str | None = None
     ) -> QPushButton:
-        btn = QPushButton(text)
-        if icon:
-            btn.setIcon(get_icon(icon))
-        btn.setMinimumHeight(36)
-        btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        btn = create_button(text, icon)
         btn.clicked.connect(slot)
         return btn
 

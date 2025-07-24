@@ -6,6 +6,7 @@ from fusor.tabs.docker_tab import DockerTab
 class DummyMainWindow:
     def __init__(self):
         self.commands = []
+        self.php_service = "php"
 
     def run_command(self, cmd):
         self.commands.append(cmd)
@@ -21,6 +22,7 @@ def test_buttons_run_commands(monkeypatch, qtbot):
     qtbot.mouseClick(tab.status_btn, Qt.MouseButton.LeftButton)
     qtbot.mouseClick(tab.logs_btn, Qt.MouseButton.LeftButton)
     qtbot.mouseClick(tab.restart_btn, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(tab.shell_btn, Qt.MouseButton.LeftButton)
 
     assert main.commands == [
         ["docker", "compose", "build"],
@@ -28,4 +30,5 @@ def test_buttons_run_commands(monkeypatch, qtbot):
         ["docker", "compose", "ps"],
         ["docker", "compose", "logs", "--tail", "50"],
         ["docker", "compose", "restart"],
+        ["docker", "compose", "exec", "php", "sh"],
     ]

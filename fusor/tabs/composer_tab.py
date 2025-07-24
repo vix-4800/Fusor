@@ -11,6 +11,7 @@ from pathlib import Path
 import json
 
 from ..icons import get_icon
+from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 
 
 class ComposerTab(QWidget):
@@ -31,8 +32,8 @@ class ComposerTab(QWidget):
         scroll.setWidget(container)
 
         layout = QVBoxLayout(container)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(12)
+        layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
+        layout.setSpacing(DEFAULT_SPACING)
 
         self.install_btn = self._btn(
             "Composer install", self.composer_install, icon="package-install"
@@ -40,8 +41,12 @@ class ComposerTab(QWidget):
         self.update_btn = self._btn(
             "Composer update", self.composer_update, icon="system-software-update"
         )
+        self.outdated_btn = self._btn(
+            "Composer outdated", self.composer_outdated, icon="view-refresh"
+        )
         layout.addWidget(self.install_btn)
         layout.addWidget(self.update_btn)
+        layout.addWidget(self.outdated_btn)
 
         self.scripts_group = QGroupBox("Composer Scripts")
         self.scripts_layout = QVBoxLayout()
@@ -53,11 +58,7 @@ class ComposerTab(QWidget):
         self.update_composer_scripts()
 
     def _btn(self, text: str, slot: Callable[[bool], None], icon: str | None = None) -> QPushButton:
-        btn = QPushButton(text)
-        if icon:
-            btn.setIcon(get_icon(icon))
-        btn.setMinimumHeight(36)
-        btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        btn = create_button(text, icon)
         btn.clicked.connect(slot)
         return btn
 
@@ -66,6 +67,9 @@ class ComposerTab(QWidget):
 
     def composer_update(self, _: bool = False) -> None:
         self.main_window.run_command(["composer", "update"])
+
+    def composer_outdated(self, _: bool = False) -> None:
+        self.main_window.run_command(["composer", "outdated"])
 
     def _make_script_handler(self, name: str) -> Callable[[bool], None]:
         """Return a slot that runs the given composer script."""
