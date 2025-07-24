@@ -7,7 +7,6 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QComboBox,
     QPushButton,
-    QSizePolicy,
     QHBoxLayout,
     QFileDialog,
     QInputDialog,
@@ -25,7 +24,7 @@ from PyQt6.QtCore import Qt
 from ..icons import get_icon
 from ..config import load_config, save_config
 from .. import main_window as mw_module
-from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
+from ..ui import create_button, CONTENT_MARGIN
 from typing import Union
 
 

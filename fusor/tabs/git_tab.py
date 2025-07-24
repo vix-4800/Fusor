@@ -3,7 +3,6 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QPushButton,
-    QSizePolicy,
     QMessageBox,
     QGroupBox,
     QLabel,
@@ -12,9 +11,8 @@ from PyQt6.QtWidgets import (
     QDialog,
 )
 
-from ..icons import get_icon
 from ..branch_dialog import BranchDialog
-from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
+from ..ui import create_button, CONTENT_MARGIN
 
 import subprocess
 from typing import Callable

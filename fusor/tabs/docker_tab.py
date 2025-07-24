@@ -1,5 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy, QScrollArea
-from ..icons import get_icon
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QScrollArea
 from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 from typing import Callable
 

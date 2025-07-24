@@ -2,14 +2,12 @@ from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QPushButton,
-    QSizePolicy,
     QScrollArea,
 )
 from pathlib import Path
 from typing import Callable
 import re
 
-from ..icons import get_icon
 from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 from functools import partial
 

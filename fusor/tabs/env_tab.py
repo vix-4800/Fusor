@@ -1,6 +1,6 @@
 import builtins
 from pathlib import Path
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPlainTextEdit, QPushButton
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPlainTextEdit
 from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 
 # allow easy monkeypatching

@@ -48,7 +48,7 @@ from .config import (
 )
 from .qtextedit_logger import QTextEditLogger
 from .welcome_dialog import WelcomeDialog
-from .ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
+from .ui import create_button
 
 from .tabs.project_tab import ProjectTab
 from .tabs.git_tab import GitTab

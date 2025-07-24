@@ -2,7 +2,6 @@ from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QPushButton,
-    QSizePolicy,
     QGroupBox,
     QFileDialog,
     QScrollArea,
@@ -12,8 +11,7 @@ from PyQt6.QtWidgets import (
 )
 from typing import Callable
 
-from ..icons import get_icon
-from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
+from ..ui import create_button, CONTENT_MARGIN
 
 
 class DatabaseTab(QWidget):

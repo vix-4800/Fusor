@@ -8,7 +8,6 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QPlainTextEdit,
     QLineEdit,
-    QPushButton,
 )
 from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
 

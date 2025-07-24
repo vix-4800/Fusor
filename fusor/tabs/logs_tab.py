@@ -2,7 +2,6 @@ from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QTextEdit,
-    QPushButton,
     QCheckBox,
     QSizePolicy,
     QHBoxLayout,
@@ -14,7 +13,6 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QTextCursor, QTextCharFormat, QColor
 from pathlib import Path, PurePath
-from ..icons import get_icon
 from ..utils import expand_log_paths
 from ..ui import create_button, BUTTON_SIZE, CONTENT_MARGIN, DEFAULT_SPACING
 

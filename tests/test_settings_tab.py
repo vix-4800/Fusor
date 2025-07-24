@@ -1,4 +1,3 @@
-import fusor.main_window  # ensure SettingsTab import works during tests
 from fusor.tabs.settings_tab import SettingsTab
 from PyQt6.QtWidgets import QFileDialog
 

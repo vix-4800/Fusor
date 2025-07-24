@@ -1,4 +1,3 @@
-import fusor.main_window  # ensure SettingsTab can import without circular error
 from fusor.tabs.settings_tab import SettingsTab
 from PyQt6.QtWidgets import QFileDialog, QInputDialog
 from PyQt6.QtCore import Qt
