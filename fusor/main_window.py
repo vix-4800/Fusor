@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QTextEdit,
+    QPushButton,
     QMessageBox,
     QFileDialog,
     QInputDialog,
@@ -36,6 +37,7 @@ if TYPE_CHECKING:
         QCheckBox,
     )
     from PyQt6.QtGui import QCloseEvent
+from .icons import get_icon
 from . import APP_NAME
 
 from .config import (
@@ -355,7 +357,8 @@ class MainWindow(QMainWindow):
         self.output_view.setFixedHeight(200)
         main_layout.addWidget(self.output_view)
 
-        self.clear_output_button = create_button("Clear Output", "edit-clear")
+        self.clear_output_button = QPushButton("Clear Output")
+        self.clear_output_button.setIcon(get_icon("edit-clear"))
         self.clear_output_button.clicked.connect(self.clear_output)
         main_layout.addWidget(self.clear_output_button)
 
