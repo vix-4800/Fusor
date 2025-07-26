@@ -37,9 +37,10 @@ class ProjectTab(QWidget):
 
         self.start_btn = create_button("Start", "media-playback-start")
         self.start_btn.clicked.connect(main_window.start_project)
-        self.stop_btn = create_button("Stop", "media-playback-stop")
-        self.stop_btn.setStyleSheet(
-            "QPushButton:enabled { background-color: #dc3545; }"
+        self.stop_btn = create_button(
+            "Stop",
+            "media-playback-stop",
+            color="#dc3545",
         )
         self.stop_btn.clicked.connect(main_window.stop_project)
         server_layout.addWidget(self.start_btn)

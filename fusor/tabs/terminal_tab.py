@@ -43,10 +43,7 @@ class TerminalTab(QWidget):
         self.start_btn = create_button("Start Shell")
         self.start_btn.clicked.connect(self.start_shell)
         btn_layout.addWidget(self.start_btn)
-        self.stop_btn = create_button("Stop")
-        self.stop_btn.setStyleSheet(
-            "QPushButton:enabled { background-color: #dc3545; }"
-        )
+        self.stop_btn = create_button("Stop", color="#dc3545")
         self.stop_btn.setEnabled(False)
         self.stop_btn.clicked.connect(self.stop_shell)
         btn_layout.addWidget(self.stop_btn)
