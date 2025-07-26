@@ -1,13 +1,11 @@
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
-    QPushButton,
     QGroupBox,
     QScrollArea,
 )
 
 from ..ui import create_button, CONTENT_MARGIN
-from typing import Callable
 
 
 class YiiTab(QWidget):
@@ -32,20 +30,17 @@ class YiiTab(QWidget):
         console_layout = QVBoxLayout()
         console_layout.setSpacing(10)
 
-        self.cache_flush_btn = self._btn(
-            "Cache Flush",
-            lambda: self.main_window.yii("cache/flush-all"),
-            icon="view-refresh",
+        self.cache_flush_btn = create_button("Cache Flush", "view-refresh")
+        self.cache_flush_btn.clicked.connect(
+            lambda: self.main_window.yii("cache/flush-all")
         )
-        self.migrate_btn = self._btn(
-            "Migrate",
-            lambda: self.main_window.yii("migrate"),
-            icon="system-run",
+        self.migrate_btn = create_button("Migrate", "system-run")
+        self.migrate_btn.clicked.connect(
+            lambda: self.main_window.yii("migrate")
         )
-        self.make_migration_btn = self._btn(
-            "Make Migration",
-            lambda: self.main_window.yii("migrate/create"),
-            icon="document-new",
+        self.make_migration_btn = create_button("Make Migration", "document-new")
+        self.make_migration_btn.clicked.connect(
+            lambda: self.main_window.yii("migrate/create")
         )
 
         console_layout.addWidget(self.cache_flush_btn)
@@ -57,13 +52,6 @@ class YiiTab(QWidget):
         layout.addStretch(1)
 
         self.on_framework_changed(self.main_window.framework_choice)
-
-    def _btn(
-        self, text: str, slot: Callable[[], None], icon: str | None = None
-    ) -> QPushButton:
-        btn = create_button(text, icon)
-        btn.clicked.connect(slot)
-        return btn
 
     def on_framework_changed(self, text: str) -> None:
         visible = text == "Yii"

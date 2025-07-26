@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
-    QPushButton,
     QGroupBox,
     QFileDialog,
     QScrollArea,
@@ -9,7 +8,6 @@ from PyQt6.QtWidgets import (
     QLabel,
     QHBoxLayout,
 )
-from typing import Callable
 
 from ..ui import create_button, CONTENT_MARGIN
 
@@ -45,21 +43,12 @@ class DatabaseTab(QWidget):
         combo_row.addWidget(self.db_combo)
         tools_layout.addLayout(combo_row)
 
-        self.dbeaver_btn = self._btn(
-            "Open in DBeaver",
-            self.open_dbeaver,
-            icon="database",
-        )
-        self.dump_btn = self._btn(
-            "Dump to SQL",
-            self.dump_sql,
-            icon="document-save",
-        )
-        self.restore_btn = self._btn(
-            "Restore dump",
-            self.restore_dump,
-            icon="document-open",
-        )
+        self.dbeaver_btn = create_button("Open in DBeaver", "database")
+        self.dbeaver_btn.clicked.connect(self.open_dbeaver)
+        self.dump_btn = create_button("Dump to SQL", "document-save")
+        self.dump_btn.clicked.connect(self.dump_sql)
+        self.restore_btn = create_button("Restore dump", "document-open")
+        self.restore_btn.clicked.connect(self.restore_dump)
 
         tools_layout.addWidget(self.dbeaver_btn)
         tools_layout.addWidget(self.dump_btn)
@@ -73,13 +62,6 @@ class DatabaseTab(QWidget):
     def on_framework_changed(self, _text: str) -> None:
         """Database tab has no framework specific controls."""
         pass
-
-    def _btn(
-        self, text: str, slot: Callable[[], None], icon: str | None = None
-    ) -> QPushButton:
-        btn = create_button(text, icon)
-        btn.clicked.connect(slot)
-        return btn
 
     def open_dbeaver(self) -> None:
         self.main_window.run_command(["dbeaver"], service=self.main_window.db_service)

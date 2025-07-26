@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
-    QPushButton,
     QScrollArea,
     QGroupBox,
 )
@@ -33,15 +32,14 @@ class ComposerTab(QWidget):
         layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
         layout.setSpacing(DEFAULT_SPACING)
 
-        self.install_btn = self._btn(
-            "Composer install", self.composer_install, icon="package-install"
+        self.install_btn = create_button("Composer install", "package-install")
+        self.install_btn.clicked.connect(self.composer_install)
+        self.update_btn = create_button(
+            "Composer update", "system-software-update"
         )
-        self.update_btn = self._btn(
-            "Composer update", self.composer_update, icon="system-software-update"
-        )
-        self.outdated_btn = self._btn(
-            "Composer outdated", self.composer_outdated, icon="view-refresh"
-        )
+        self.update_btn.clicked.connect(self.composer_update)
+        self.outdated_btn = create_button("Composer outdated", "view-refresh")
+        self.outdated_btn.clicked.connect(self.composer_outdated)
         layout.addWidget(self.install_btn)
         layout.addWidget(self.update_btn)
         layout.addWidget(self.outdated_btn)
@@ -54,11 +52,6 @@ class ComposerTab(QWidget):
         layout.addStretch(1)
 
         self.update_composer_scripts()
-
-    def _btn(self, text: str, slot: Callable[[bool], None], icon: str | None = None) -> QPushButton:
-        btn = create_button(text, icon)
-        btn.clicked.connect(slot)
-        return btn
 
     def composer_install(self, _: bool = False) -> None:
         self.main_window.run_command(["composer", "install"])
@@ -101,11 +94,10 @@ class ComposerTab(QWidget):
         self._script_buttons = []
 
         for name in scripts:
-            btn = self._btn(
-                name.capitalize().replace('-', ' '),
-                self._make_script_handler(name),
-                icon="system-run",
+            btn = create_button(
+                name.capitalize().replace("-", " "), "system-run"
             )
+            btn.clicked.connect(self._make_script_handler(name))
             self.scripts_layout.addWidget(btn)
             self._script_buttons.append(btn)
 

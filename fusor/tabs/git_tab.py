@@ -2,7 +2,6 @@ from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QPushButton,
     QMessageBox,
     QGroupBox,
     QLabel,
@@ -15,7 +14,6 @@ from ..branch_dialog import BranchDialog
 from ..ui import create_button, CONTENT_MARGIN
 
 import subprocess
-from typing import Callable
 
 
 class GitTab(QWidget):
@@ -43,11 +41,8 @@ class GitTab(QWidget):
         branch_group = QGroupBox("Active Branch")
         branch_layout = QHBoxLayout()
         self.current_branch_label = QLabel("")
-        checkout_btn = self._btn(
-            "Checkout...",
-            self.show_branch_dialog,
-            icon="document-open",
-        )
+        checkout_btn = create_button("Checkout...", "document-open")
+        checkout_btn.clicked.connect(self.show_branch_dialog)
 
         branch_layout.addWidget(QLabel("Current:"))
         branch_layout.addWidget(self.current_branch_label)
@@ -61,11 +56,8 @@ class GitTab(QWidget):
         create_group = QGroupBox("Create Branch")
         create_layout = QHBoxLayout()
         self.branch_name_edit = QLineEdit()
-        create_btn = self._btn(
-            "Create Branch",
-            self.create_branch,
-            icon="list-add",
-        )
+        create_btn = create_button("Create Branch", "list-add")
+        create_btn.clicked.connect(self.create_branch)
         create_layout.addWidget(self.branch_name_edit)
         create_layout.addWidget(create_btn)
         create_group.setLayout(create_layout)
@@ -76,11 +68,8 @@ class GitTab(QWidget):
         commit_group = QGroupBox("Commit Changes")
         commit_layout = QHBoxLayout()
         self.commit_message_edit = QLineEdit()
-        commit_btn = self._btn(
-            "Commit",
-            self.commit_changes,
-            icon="document-save",
-        )
+        commit_btn = create_button("Commit", "document-save")
+        commit_btn.clicked.connect(self.commit_changes)
         commit_layout.addWidget(self.commit_message_edit)
         commit_layout.addWidget(commit_btn)
         commit_group.setLayout(commit_layout)
@@ -92,41 +81,20 @@ class GitTab(QWidget):
         actions_layout = QVBoxLayout()
         actions_layout.setSpacing(10)
 
-        pull_btn = self._btn(
-            "Pull",
-            lambda: self.run_git_command("pull"),
-            icon="go-down",
-        )
-        push_btn = self._btn(
-            "Push",
-            lambda: self.run_git_command("push"),
-            icon="go-up",
-        )
-        reset_btn = self._btn(
-            "Hard Reset",
-            self.hard_reset,
-            icon="edit-undo",
-        )
-        stash_btn = self._btn(
-            "Stash",
-            self.stash,
-            icon="document-save",
-        )
-        status_btn = self._btn(
-            "Status",
-            self.show_status,
-            icon="dialog-information",
-        )
-        diff_btn = self._btn(
-            "Diff",
-            self.show_diff,
-            icon="document-diff",
-        )
-        view_log_btn = self._btn(
-            "View Log",
-            self.view_log,
-            icon="text-x-generic",
-        )
+        pull_btn = create_button("Pull", "go-down")
+        pull_btn.clicked.connect(lambda: self.run_git_command("pull"))
+        push_btn = create_button("Push", "go-up")
+        push_btn.clicked.connect(lambda: self.run_git_command("push"))
+        reset_btn = create_button("Hard Reset", "edit-undo")
+        reset_btn.clicked.connect(self.hard_reset)
+        stash_btn = create_button("Stash", "document-save")
+        stash_btn.clicked.connect(self.stash)
+        status_btn = create_button("Status", "dialog-information")
+        status_btn.clicked.connect(self.show_status)
+        diff_btn = create_button("Diff", "document-diff")
+        diff_btn.clicked.connect(self.show_diff)
+        view_log_btn = create_button("View Log", "text-x-generic")
+        view_log_btn.clicked.connect(self.view_log)
 
         actions_layout.addWidget(pull_btn)
         actions_layout.addWidget(push_btn)
@@ -140,19 +108,13 @@ class GitTab(QWidget):
         outer_layout.addWidget(actions_group)
         self.actions_group = actions_group
 
-        self.init_btn = self._btn("Init Repository", self.init_repo, icon="list-add")
+        self.init_btn = create_button("Init Repository", "list-add")
+        self.init_btn.clicked.connect(self.init_repo)
         outer_layout.addWidget(self.init_btn)
 
         outer_layout.addStretch(1)
 
         self.update_visibility()
-
-    def _btn(
-        self, label: str, slot: Callable[..., object], icon: str | None = None
-    ) -> QPushButton:
-        btn = create_button(label, icon)
-        btn.clicked.connect(slot)
-        return btn
 
     def run_git_command(self, *args: str) -> subprocess.CompletedProcess[str] | None:
         if not self.main_window.ensure_project_path():
