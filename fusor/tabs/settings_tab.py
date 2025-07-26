@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
     QFormLayout,
     QLineEdit,
     QComboBox,
+    QPushButton,
     QHBoxLayout,
     QFileDialog,
     QInputDialog,
@@ -20,6 +21,7 @@ from PyQt6.QtWidgets import (
 )
 
 from PyQt6.QtCore import Qt
+from ..icons import get_icon
 from ..config import load_config, save_config
 from .. import main_window as mw_module
 from ..ui import create_button, CONTENT_MARGIN
@@ -118,7 +120,9 @@ class SettingsTab(QWidget):
         self.compose_label = QLabel("Compose Files:")
         docker_form.addRow(self.compose_label, self.compose_files_container)
 
-        add_compose_btn = create_button("Add Compose File", "list-add")
+        add_compose_btn = QPushButton("Add Compose File")
+        add_compose_btn.setIcon(get_icon("list-add"))
+        add_compose_btn.setFixedHeight(30)
         add_compose_btn.clicked.connect(lambda: self._add_compose_file_field(""))
         self.add_compose_btn = add_compose_btn
         docker_form.addRow("", self._wrap(add_compose_btn))
@@ -180,7 +184,9 @@ class SettingsTab(QWidget):
         logs_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
         logs_form.addRow(self.log_dir_label, self.log_dirs_container)
 
-        add_log_btn = create_button("Add Log Directory", "list-add")
+        add_log_btn = QPushButton("Add Log Directory")
+        add_log_btn.setIcon(get_icon("list-add"))
+        add_log_btn.setFixedHeight(30)
         add_log_btn.clicked.connect(lambda: self._add_log_dir_field(""))
         self.add_log_btn = add_log_btn
         logs_form.addRow("", self._wrap(add_log_btn))

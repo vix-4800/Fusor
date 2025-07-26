@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QLabel,
+    QPushButton,
     QFileDialog,
     QInputDialog,
     QMessageBox,
@@ -16,7 +17,6 @@ from PyQt6.QtCore import Qt
 from typing import Optional
 
 from . import APP_NAME
-from .ui import create_button
 
 
 class WelcomeDialog(QDialog):
@@ -32,15 +32,15 @@ class WelcomeDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("Select a project to get started:"))
 
-        add_btn = create_button("Add Project")
+        add_btn = QPushButton("Add Project")
         add_btn.clicked.connect(self.add_project)
         layout.addWidget(add_btn)
 
-        create_btn = create_button("Create Project")
+        create_btn = QPushButton("Create Project")
         create_btn.clicked.connect(self.create_project)
         layout.addWidget(create_btn)
 
-        clone_btn = create_button("Clone from Git")
+        clone_btn = QPushButton("Clone from Git")
         clone_btn.clicked.connect(self.clone_project)
         layout.addWidget(clone_btn)
 
