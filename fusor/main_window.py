@@ -744,7 +744,6 @@ class MainWindow(QMainWindow):
         self.output_view.setVisible(show_output)
         self.clear_output_button.setVisible(show_output)
 
-
         if hasattr(self, "logs_tab") and hasattr(
             self.logs_tab, "update_responsive_layout"
         ):
