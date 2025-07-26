@@ -1,13 +1,11 @@
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
-    QPushButton,
     QGroupBox,
     QScrollArea,
 )
 
 from ..ui import create_button, CONTENT_MARGIN
-from typing import Callable
 
 
 class SymfonyTab(QWidget):
@@ -32,25 +30,21 @@ class SymfonyTab(QWidget):
         console_layout = QVBoxLayout()
         console_layout.setSpacing(10)
 
-        self.cache_clear_btn = self._btn(
-            "Cache Clear",
-            lambda: self.main_window.symfony("cache:clear"),
-            icon="view-refresh",
+        self.cache_clear_btn = create_button("Cache Clear", "view-refresh")
+        self.cache_clear_btn.clicked.connect(
+            lambda: self.main_window.symfony("cache:clear")
         )
-        self.migrate_btn = self._btn(
-            "Migrate",
-            lambda: self.main_window.symfony("doctrine:migrations:migrate"),
-            icon="system-run",
+        self.migrate_btn = create_button("Migrate", "system-run")
+        self.migrate_btn.clicked.connect(
+            lambda: self.main_window.symfony("doctrine:migrations:migrate")
         )
-        self.status_btn = self._btn(
-            "Migration Status",
-            lambda: self.main_window.symfony("doctrine:migrations:status"),
-            icon="dialog-information",
+        self.status_btn = create_button("Migration Status", "dialog-information")
+        self.status_btn.clicked.connect(
+            lambda: self.main_window.symfony("doctrine:migrations:status")
         )
-        self.make_migration_btn = self._btn(
-            "Make Migration",
-            lambda: self.main_window.symfony("make:migration"),
-            icon="document-new",
+        self.make_migration_btn = create_button("Make Migration", "document-new")
+        self.make_migration_btn.clicked.connect(
+            lambda: self.main_window.symfony("make:migration")
         )
 
         console_layout.addWidget(self.cache_clear_btn)
@@ -63,13 +57,6 @@ class SymfonyTab(QWidget):
         layout.addStretch(1)
 
         self.on_framework_changed(self.main_window.framework_choice)
-
-    def _btn(
-        self, text: str, slot: Callable[[], None], icon: str | None = None
-    ) -> QPushButton:
-        btn = create_button(text, icon)
-        btn.clicked.connect(slot)
-        return btn
 
     def on_framework_changed(self, text: str) -> None:
         visible = text == "Symfony"

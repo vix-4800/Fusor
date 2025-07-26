@@ -1,13 +1,11 @@
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
-    QPushButton,
     QGroupBox,
     QScrollArea,
 )
 
 from ..ui import create_button, CONTENT_MARGIN
-from typing import Callable
 
 
 class LaravelTab(QWidget):
@@ -32,18 +30,18 @@ class LaravelTab(QWidget):
         self.migrate_group = QGroupBox("Laravel Migrations")
         migrate_layout = QVBoxLayout()
         migrate_layout.setSpacing(10)
-        migrate_layout.addWidget(
-            self._btn("Migrate", self.main_window.migrate, icon="system-run")
-        )
-        migrate_layout.addWidget(
-            self._btn("Rollback", self.main_window.rollback, icon="edit-undo")
-        )
-        migrate_layout.addWidget(
-            self._btn("Fresh", self.main_window.fresh, icon="view-refresh")
-        )
-        migrate_layout.addWidget(
-            self._btn("Seed", self.main_window.seed, icon="list-add")
-        )
+        btn = create_button("Migrate", "system-run")
+        btn.clicked.connect(self.main_window.migrate)
+        migrate_layout.addWidget(btn)
+        btn = create_button("Rollback", "edit-undo")
+        btn.clicked.connect(self.main_window.rollback)
+        migrate_layout.addWidget(btn)
+        btn = create_button("Fresh", "view-refresh")
+        btn.clicked.connect(self.main_window.fresh)
+        migrate_layout.addWidget(btn)
+        btn = create_button("Seed", "list-add")
+        btn.clicked.connect(self.main_window.seed)
+        migrate_layout.addWidget(btn)
         self.migrate_group.setLayout(migrate_layout)
         layout.addWidget(self.migrate_group)
 
@@ -51,15 +49,13 @@ class LaravelTab(QWidget):
         self.artisan_group = QGroupBox("Laravel Artisan")
         artisan_layout = QVBoxLayout()
         artisan_layout.setSpacing(10)
-        self.optimize_btn = self._btn(
-            "Optimize",
-            lambda: self.main_window.artisan("optimize"),
-            icon="preferences-system",
+        self.optimize_btn = create_button("Optimize", "preferences-system")
+        self.optimize_btn.clicked.connect(
+            lambda: self.main_window.artisan("optimize")
         )
-        self.config_clear_btn = self._btn(
-            "Config Clear",
-            lambda: self.main_window.artisan("config:clear"),
-            icon="edit-clear",
+        self.config_clear_btn = create_button("Config Clear", "edit-clear")
+        self.config_clear_btn.clicked.connect(
+            lambda: self.main_window.artisan("config:clear")
         )
         artisan_layout.addWidget(self.optimize_btn)
         artisan_layout.addWidget(self.config_clear_btn)
@@ -69,13 +65,6 @@ class LaravelTab(QWidget):
         layout.addStretch(1)
 
         self.on_framework_changed(self.main_window.framework_choice)
-
-    def _btn(
-        self, text: str, slot: Callable[[], None], icon: str | None = None
-    ) -> QPushButton:
-        btn = create_button(text, icon)
-        btn.clicked.connect(slot)
-        return btn
 
     def on_framework_changed(self, text: str) -> None:
         visible = text == "Laravel"

@@ -1,11 +1,11 @@
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
-    QPushButton,
     QScrollArea,
+    QPushButton,
 )
 from pathlib import Path
-from typing import Callable
+
 import re
 
 from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
@@ -55,11 +55,6 @@ class MakefileTab(QWidget):
         self.update_commands()
         self._layout.addStretch(1)
 
-    def _btn(self, text: str, slot: Callable[[], None], icon: str | None = None) -> QPushButton:
-        btn = create_button(text, icon)
-        btn.clicked.connect(slot)
-        return btn
-
     def update_commands(self) -> None:
         """Load make targets from the current project."""
         for btn in self._buttons:
@@ -70,10 +65,9 @@ class MakefileTab(QWidget):
         path = Path(self.main_window.project_path) / "Makefile"
         targets = parse_makefile_targets(path)
         for name in targets:
-            btn = self._btn(
-                name.replace("_", " ").capitalize(),
-                partial(self.main_window.run_command, ["make", name]),
-                icon="system-run",
+            btn = create_button(name.replace("_", " ").capitalize(), "system-run")
+            btn.clicked.connect(
+                partial(self.main_window.run_command, ["make", name])
             )
             self._layout.addWidget(btn)
             self._buttons.append(btn)

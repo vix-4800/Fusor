@@ -1,11 +1,9 @@
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
-    QPushButton,
     QScrollArea,
     QGroupBox,
 )
-from typing import Callable
 from pathlib import Path
 import json
 
@@ -34,9 +32,8 @@ class NodeTab(QWidget):
         layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
         layout.setSpacing(DEFAULT_SPACING)
 
-        self.npm_install_btn = self._btn(
-            "npm install", self.npm_install, icon="system-run"
-        )
+        self.npm_install_btn = create_button("npm install", "system-run")
+        self.npm_install_btn.clicked.connect(self.npm_install)
 
         layout.addWidget(self.npm_install_btn)
 
@@ -48,11 +45,6 @@ class NodeTab(QWidget):
         layout.addStretch(1)
 
         self.update_npm_scripts()
-
-    def _btn(self, text: str, slot: Callable[[], None], icon: str | None = None) -> QPushButton:
-        btn = create_button(text, icon)
-        btn.clicked.connect(slot)
-        return btn
 
     def npm_install(self) -> None:
         self.main_window.run_command(["npm", "install"])
@@ -78,10 +70,11 @@ class NodeTab(QWidget):
         self._script_buttons = []
 
         for name in scripts:
-            btn = self._btn(
-                name.capitalize().replace('-', ' '),
-                partial(self.main_window.run_command, ["npm", "run", name]),
-                icon="system-run",
+            btn = create_button(
+                name.capitalize().replace("-", " "), "system-run"
+            )
+            btn.clicked.connect(
+                partial(self.main_window.run_command, ["npm", "run", name])
             )
             self.npm_scripts_layout.addWidget(btn)
             self._script_buttons.append(btn)

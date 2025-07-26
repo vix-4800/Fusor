@@ -7,7 +7,6 @@ from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QPushButton,
     QGroupBox,
     QScrollArea,
 )
@@ -36,62 +35,47 @@ class ProjectTab(QWidget):
         server_group = QGroupBox("Server Control")
         server_layout = QHBoxLayout()
 
-        self.start_btn = self._btn(
-            "Start",
-            main_window.start_project,
-            icon="media-playback-start",
+        self.start_btn = create_button("Start", "media-playback-start")
+        self.start_btn.clicked.connect(main_window.start_project)
+        self.stop_btn = create_button("Stop", "media-playback-stop")
+        self.stop_btn.setStyleSheet(
+            "QPushButton:enabled { background-color: #dc3545; }"
         )
-        self.stop_btn = self._btn(
-            "Stop",
-            main_window.stop_project,
-            icon="media-playback-stop",
-            color="#dc3545",
-        )
+        self.stop_btn.clicked.connect(main_window.stop_project)
         server_layout.addWidget(self.start_btn)
         server_layout.addWidget(self.stop_btn)
 
         server_group.setLayout(server_layout)
         layout.addWidget(server_group)
 
-        self.terminal_btn = self._btn(
-            "Open Terminal",
-            self.open_terminal,
-            icon="utilities-terminal",
-        )
+        self.terminal_btn = create_button("Open Terminal", "utilities-terminal")
+        self.terminal_btn.clicked.connect(self.open_terminal)
         layout.addWidget(self.terminal_btn)
 
-        self.explorer_btn = self._btn(
-            "Open Folder",
-            self.open_explorer,
-            icon="document-open",
-        )
+        self.explorer_btn = create_button("Open Folder", "document-open")
+        self.explorer_btn.clicked.connect(self.open_explorer)
         layout.addWidget(self.explorer_btn)
 
         # --- PHP Tools Group ---
         self.php_tools_group = QGroupBox("PHP Tools")
         php_layout = QVBoxLayout()
 
-        self.phpunit_btn = self._btn(
-            "Run PHPUnit",
-            main_window.phpunit,
-            icon="system-run",
-        )
-        self.rector_btn = self._btn(
-            "Run Rector",
+        self.phpunit_btn = create_button("Run PHPUnit", "system-run")
+        self.phpunit_btn.clicked.connect(main_window.phpunit)
+        self.rector_btn = create_button("Run Rector", "system-run")
+        self.rector_btn.clicked.connect(
             lambda: main_window.run_command(
                 [main_window.php_path, str(Path("vendor") / "bin" / "rector")]
-            ),
-            icon="system-run",
+            )
         )
-        self.csfixer_btn = self._btn(
-            "Run PHP CS-Fixer",
+        self.csfixer_btn = create_button("Run PHP CS-Fixer", "system-run")
+        self.csfixer_btn.clicked.connect(
             lambda: main_window.run_command(
                 [
                     main_window.php_path,
                     str(Path("vendor") / "bin" / "php-cs-fixer"),
                 ]
-            ),
-            icon="system-run",
+            )
         )
 
         php_layout.addWidget(self.phpunit_btn)
@@ -104,15 +88,6 @@ class ProjectTab(QWidget):
         layout.addStretch(1)
 
         self.update_php_tools()
-
-    def _btn(
-        self, label: str, slot, icon: str | None = None, color: str | None = None
-    ) -> QPushButton:
-        btn = create_button(label, icon)
-        if color:
-            btn.setStyleSheet(f"QPushButton:enabled {{ background-color: {color}; }}")
-        btn.clicked.connect(slot)
-        return btn
 
     def open_terminal(self) -> None:
         """Open a new terminal window in the current project directory."""

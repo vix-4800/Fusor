@@ -1,6 +1,5 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QScrollArea
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QScrollArea
 from ..ui import create_button, CONTENT_MARGIN, DEFAULT_SPACING
-from typing import Callable
 
 
 class DockerTab(QWidget):
@@ -24,12 +23,18 @@ class DockerTab(QWidget):
         layout.setContentsMargins(CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN, CONTENT_MARGIN)
         layout.setSpacing(DEFAULT_SPACING)
 
-        self.build_btn = self._btn("Rebuild Images", self.build, icon="system-run")
-        self.pull_btn = self._btn("Pull Images", self.pull, icon="go-down")
-        self.status_btn = self._btn("Status", self.status, icon="dialog-information")
-        self.logs_btn = self._btn("Logs", self.logs, icon="text-x-generic")
-        self.restart_btn = self._btn("Restart", self.restart, icon="view-refresh")
-        self.shell_btn = self._btn("Open Shell", self.shell, icon="utilities-terminal")
+        self.build_btn = create_button("Rebuild Images", "system-run")
+        self.build_btn.clicked.connect(self.build)
+        self.pull_btn = create_button("Pull Images", "go-down")
+        self.pull_btn.clicked.connect(self.pull)
+        self.status_btn = create_button("Status", "dialog-information")
+        self.status_btn.clicked.connect(self.status)
+        self.logs_btn = create_button("Logs", "text-x-generic")
+        self.logs_btn.clicked.connect(self.logs)
+        self.restart_btn = create_button("Restart", "view-refresh")
+        self.restart_btn.clicked.connect(self.restart)
+        self.shell_btn = create_button("Open Shell", "utilities-terminal")
+        self.shell_btn.clicked.connect(self.shell)
 
         layout.addWidget(self.build_btn)
         layout.addWidget(self.pull_btn)
@@ -39,13 +44,6 @@ class DockerTab(QWidget):
         layout.addWidget(self.shell_btn)
 
         layout.addStretch(1)
-
-    def _btn(
-        self, text: str, slot: Callable[[], None], icon: str | None = None
-    ) -> QPushButton:
-        btn = create_button(text, icon)
-        btn.clicked.connect(slot)
-        return btn
 
     def build(self) -> None:
         self.main_window.run_command(["docker", "compose", "build"])
