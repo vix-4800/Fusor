@@ -14,14 +14,12 @@ from PyQt6.QtWidgets import (
     QTabWidget,
     QWidget,
     QVBoxLayout,
-    QHBoxLayout,
     QTextEdit,
     QMessageBox,
     QFileDialog,
     QInputDialog,
     QSystemTrayIcon,
     QMenu,
-    QLabel,
 )
 from PyQt6.QtCore import QTimer, pyqtSignal, Qt
 from PyQt6.QtGui import QShortcut, QKeySequence, QAction
@@ -340,12 +338,6 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         main_layout = QVBoxLayout(central_widget)
 
-        header_layout = QHBoxLayout()
-        header_layout.addStretch()
-        self.status_label = QLabel("Stopped")
-        header_layout.addWidget(self.status_label)
-        main_layout.addLayout(header_layout)
-
         main_layout.addWidget(self.tabs)
 
         self.output_view = QTextEdit()
@@ -549,6 +541,7 @@ class MainWindow(QMainWindow):
         self.tabs.currentChanged.connect(self.on_tab_changed)
         self.update_run_buttons()
         self._update_responsive_layout()
+        self.update_window_title()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -738,6 +731,10 @@ class MainWindow(QMainWindow):
                 self.project_tab.start_btn.setEnabled(not self.project_running)
             if hasattr(self.project_tab, "stop_btn"):
                 self.project_tab.stop_btn.setEnabled(self.project_running)
+
+    def update_window_title(self) -> None:
+        status = "Running" if self.project_running else "Stopped"
+        self.setWindowTitle(f"{APP_NAME} – PHP QA Toolbox – {status}")
 
     def _update_responsive_layout(self) -> None:
         """Adjust UI elements based on the current window size."""
@@ -1617,7 +1614,7 @@ class MainWindow(QMainWindow):
             self.run_command(["docker", "compose", "up", "-d"])
             self.project_running = True
             self.update_run_buttons()
-            self.status_label.setText("Running")
+            self.update_window_title()
             self.notify("Project started")
             return
 
@@ -1676,7 +1673,7 @@ class MainWindow(QMainWindow):
             self.executor.submit(stream)
             self.project_running = True
             self.update_run_buttons()
-            self.status_label.setText("Running")
+            self.update_window_title()
             if self.open_browser:
                 webbrowser.open(f"http://localhost:{self.server_port}")
             self.notify("Project started")
@@ -1692,7 +1689,7 @@ class MainWindow(QMainWindow):
             self.run_command(["docker", "compose", "down"])
             self.project_running = False
             self.update_run_buttons()
-            self.status_label.setText("Stopped")
+            self.update_window_title()
             self.notify("Project stopped")
             return
 
@@ -1721,7 +1718,7 @@ class MainWindow(QMainWindow):
             print("Project is not running")
         self.project_running = False
         self.update_run_buttons()
-        self.status_label.setText("Stopped")
+        self.update_window_title()
         self.notify("Project stopped")
         if self.tray_enabled:
             self._update_tray_menu()

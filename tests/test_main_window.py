@@ -1378,7 +1378,7 @@ class TestMainWindow:
         main_window.stop_project()
         assert (APP_NAME, "Project stopped") in notified
 
-    def test_status_label_updates_on_start_stop(self, tmp_path: Path, main_window, monkeypatch):
+    def test_window_title_updates_on_start_stop(self, tmp_path: Path, main_window, monkeypatch):
         class DummyProc:
             stdout: list[str] = []
 
@@ -1399,13 +1399,13 @@ class TestMainWindow:
         (tmp_path / "public").mkdir()
         main_window.framework_choice = "None"
 
-        assert main_window.status_label.text() == "Stopped"
+        assert "Stopped" in main_window.windowTitle()
 
         main_window.start_project()
-        assert main_window.status_label.text() == "Running"
+        assert "Running" in main_window.windowTitle()
 
         main_window.stop_project()
-        assert main_window.status_label.text() == "Stopped"
+        assert "Stopped" in main_window.windowTitle()
 
     def test_ctrl_s_saves_settings(self, qtbot, monkeypatch):
         monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
