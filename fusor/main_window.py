@@ -14,14 +14,12 @@ from PyQt6.QtWidgets import (
     QTabWidget,
     QWidget,
     QVBoxLayout,
-    QHBoxLayout,
     QTextEdit,
     QMessageBox,
     QFileDialog,
     QInputDialog,
     QSystemTrayIcon,
     QMenu,
-    QLabel,
 )
 from PyQt6.QtCore import QTimer, pyqtSignal, Qt
 from PyQt6.QtGui import QShortcut, QKeySequence, QAction
@@ -62,6 +60,7 @@ from .tabs.logs_tab import LogsTab
 from .tabs.terminal_tab import TerminalTab
 from .tabs.env_tab import EnvTab
 from .tabs.settings_tab import SettingsTab
+from .tabs.about_tab import AboutTab
 
 # allow tests to monkeypatch file operations easily
 open = builtins.open
@@ -339,15 +338,6 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         main_layout = QVBoxLayout(central_widget)
 
-        header_layout = QHBoxLayout()
-        header_layout.addStretch()
-        self.status_label = QLabel("Stopped")
-        header_layout.addWidget(self.status_label)
-        self.help_button = create_button("", "help-about", fixed=True)
-        self.help_button.clicked.connect(self.show_about_dialog)
-        header_layout.addWidget(self.help_button)
-        main_layout.addLayout(header_layout)
-
         main_layout.addWidget(self.tabs)
 
         self.output_view = QTextEdit()
@@ -471,6 +461,9 @@ class MainWindow(QMainWindow):
         self.terminal_tab = TerminalTab(self)
         self.terminal_index = self.tabs.addTab(self.terminal_tab, "Terminal")
 
+        self.about_tab = AboutTab(self)
+        self.about_index = self.tabs.addTab(self.about_tab, "About")
+
         self.settings_tab = SettingsTab(self)
         self.settings_index = self.tabs.addTab(self.settings_tab, "Settings")
         self.update_settings_tab_title()
@@ -548,6 +541,7 @@ class MainWindow(QMainWindow):
         self.tabs.currentChanged.connect(self.on_tab_changed)
         self.update_run_buttons()
         self._update_responsive_layout()
+        self.update_window_title()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -738,6 +732,10 @@ class MainWindow(QMainWindow):
             if hasattr(self.project_tab, "stop_btn"):
                 self.project_tab.stop_btn.setEnabled(self.project_running)
 
+    def update_window_title(self) -> None:
+        status = "Running" if self.project_running else "Stopped"
+        self.setWindowTitle(f"{APP_NAME} – PHP QA Toolbox – {status}")
+
     def _update_responsive_layout(self) -> None:
         """Adjust UI elements based on the current window size."""
         width = self.width()
@@ -746,7 +744,6 @@ class MainWindow(QMainWindow):
         self.output_view.setVisible(show_output)
         self.clear_output_button.setVisible(show_output)
 
-        self.help_button.setVisible(width >= 500)
 
         if hasattr(self, "logs_tab") and hasattr(
             self.logs_tab, "update_responsive_layout"
@@ -1617,7 +1614,7 @@ class MainWindow(QMainWindow):
             self.run_command(["docker", "compose", "up", "-d"])
             self.project_running = True
             self.update_run_buttons()
-            self.status_label.setText("Running")
+            self.update_window_title()
             self.notify("Project started")
             return
 
@@ -1676,7 +1673,7 @@ class MainWindow(QMainWindow):
             self.executor.submit(stream)
             self.project_running = True
             self.update_run_buttons()
-            self.status_label.setText("Running")
+            self.update_window_title()
             if self.open_browser:
                 webbrowser.open(f"http://localhost:{self.server_port}")
             self.notify("Project started")
@@ -1692,7 +1689,7 @@ class MainWindow(QMainWindow):
             self.run_command(["docker", "compose", "down"])
             self.project_running = False
             self.update_run_buttons()
-            self.status_label.setText("Stopped")
+            self.update_window_title()
             self.notify("Project stopped")
             return
 
@@ -1721,7 +1718,7 @@ class MainWindow(QMainWindow):
             print("Project is not running")
         self.project_running = False
         self.update_run_buttons()
-        self.status_label.setText("Stopped")
+        self.update_window_title()
         self.notify("Project stopped")
         if self.tray_enabled:
             self._update_tray_menu()
@@ -1761,12 +1758,6 @@ class MainWindow(QMainWindow):
         if self._tray_icon is not None:
             self._tray_icon.hide()
         super().closeEvent(event)
-
-    def show_about_dialog(self) -> None:
-        from .about_dialog import AboutDialog
-
-        dlg = AboutDialog(self)
-        dlg.exec()
 
     def on_tab_changed(self, index: int) -> None:
         if index == getattr(self, "git_index", -1):
