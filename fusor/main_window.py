@@ -62,6 +62,7 @@ from .tabs.logs_tab import LogsTab
 from .tabs.terminal_tab import TerminalTab
 from .tabs.env_tab import EnvTab
 from .tabs.settings_tab import SettingsTab
+from .tabs.about_tab import AboutTab
 
 # allow tests to monkeypatch file operations easily
 open = builtins.open
@@ -343,9 +344,6 @@ class MainWindow(QMainWindow):
         header_layout.addStretch()
         self.status_label = QLabel("Stopped")
         header_layout.addWidget(self.status_label)
-        self.help_button = create_button("", "help-about", fixed=True)
-        self.help_button.clicked.connect(self.show_about_dialog)
-        header_layout.addWidget(self.help_button)
         main_layout.addLayout(header_layout)
 
         main_layout.addWidget(self.tabs)
@@ -470,6 +468,9 @@ class MainWindow(QMainWindow):
 
         self.terminal_tab = TerminalTab(self)
         self.terminal_index = self.tabs.addTab(self.terminal_tab, "Terminal")
+
+        self.about_tab = AboutTab(self)
+        self.about_index = self.tabs.addTab(self.about_tab, "About")
 
         self.settings_tab = SettingsTab(self)
         self.settings_index = self.tabs.addTab(self.settings_tab, "Settings")
@@ -746,7 +747,6 @@ class MainWindow(QMainWindow):
         self.output_view.setVisible(show_output)
         self.clear_output_button.setVisible(show_output)
 
-        self.help_button.setVisible(width >= 500)
 
         if hasattr(self, "logs_tab") and hasattr(
             self.logs_tab, "update_responsive_layout"
@@ -1761,12 +1761,6 @@ class MainWindow(QMainWindow):
         if self._tray_icon is not None:
             self._tray_icon.hide()
         super().closeEvent(event)
-
-    def show_about_dialog(self) -> None:
-        from .about_dialog import AboutDialog
-
-        dlg = AboutDialog(self)
-        dlg.exec()
 
     def on_tab_changed(self, index: int) -> None:
         if index == getattr(self, "git_index", -1):

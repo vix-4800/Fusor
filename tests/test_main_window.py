@@ -12,7 +12,7 @@ from PyQt6.QtCore import QTimer, Qt
 import fusor.main_window as mw_module
 from fusor.main_window import MainWindow
 from fusor import APP_NAME
-from PyQt6.QtWidgets import QMainWindow, QMessageBox, QFileDialog
+from PyQt6.QtWidgets import QMainWindow, QMessageBox, QFileDialog, QLabel
 from fusor.tabs.git_tab import GitTab
 
 # ---------------------------------------------------------------------------
@@ -685,21 +685,15 @@ class TestMainWindow:
         qtbot.wait(10)
         assert main_window.tabs.tabText(idx) == "Settings"
 
-    def test_help_button_opens_dialog(self, main_window, qtbot, monkeypatch):
-        shown = []
+    def test_about_tab_displays_info(self, main_window, qtbot):
+        idx = main_window.tabs.indexOf(main_window.about_tab)
+        assert main_window.tabs.tabText(idx) == "About"
 
-        def fake_exec(self):
-            shown.append(self.windowTitle())
+        main_window.tabs.setCurrentIndex(idx)
+        qtbot.wait(10)
 
-        monkeypatch.setattr(
-            "fusor.about_dialog.AboutDialog.exec",
-            fake_exec,
-            raising=True,
-        )
-
-        qtbot.mouseClick(main_window.help_button, Qt.MouseButton.LeftButton)
-
-        assert shown == [f"About {APP_NAME}"]
+        texts = [lbl.text() for lbl in main_window.about_tab.findChildren(QLabel)]
+        assert any(text.startswith("Version:") for text in texts)
 
     def test_remove_project_updates_config(self, qtbot, monkeypatch):
         monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
