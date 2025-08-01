@@ -1281,18 +1281,21 @@ class TestMainWindow:
 
         assert not win.output_view.isVisible()
         assert not win.clear_output_button.isVisible()
+        assert not win.speak_button.isVisible()
 
         win.resize(900, 700)
         qtbot.wait(10)
 
         assert not win.output_view.isVisible()
         assert not win.clear_output_button.isVisible()
+        assert not win.speak_button.isVisible()
 
         win.show_console_output = True
         win._update_responsive_layout()
 
         assert win.output_view.isVisible()
         assert win.clear_output_button.isVisible()
+        assert win.speak_button.isVisible()
 
     def test_minimum_window_size(self, qtbot, monkeypatch):
         monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
@@ -1304,6 +1307,20 @@ class TestMainWindow:
 
         assert win.minimumWidth() == 425
         assert win.minimumHeight() == 300
+
+    def test_speak_button_enabled_by_checkbox(self, qtbot, monkeypatch):
+        monkeypatch.setattr(QTimer, "singleShot", lambda *a, **k: None, raising=True)
+        monkeypatch.setattr(mw_module, "load_config", lambda: {}, raising=True)
+        monkeypatch.setattr(mw_module, "save_config", lambda *a, **k: None, raising=True)
+
+        win = MainWindow()
+        qtbot.addWidget(win)
+        win.show()
+
+        assert not win.speak_button.isEnabled()
+        win.speak_checkbox.setChecked(True)
+        qtbot.wait(10)
+        assert win.speak_button.isEnabled()
 
     def test_add_project_populates_remote_combo(self, tmp_path: Path, qtbot, monkeypatch):
         remotes: list[str] = []

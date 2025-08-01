@@ -219,6 +219,11 @@ class SettingsTab(QWidget):
             )
         misc_form.addRow("", self.console_output_checkbox)
 
+        self.speak_checkbox = QCheckBox("Enable Speech")
+        if hasattr(self.main_window, "speak_output"):
+            self.speak_checkbox.setChecked(self.main_window.speak_output)
+        misc_form.addRow("", self.speak_checkbox)
+
         self.tray_checkbox = QCheckBox("Enable System Tray Icon")
         if hasattr(self.main_window, "tray_enabled"):
             self.tray_checkbox.setChecked(self.main_window.tray_enabled)
@@ -238,6 +243,7 @@ class SettingsTab(QWidget):
         self.docker_checkbox.toggled.connect(self.on_docker_toggled)
         self.terminal_checkbox.toggled.connect(self.on_terminal_toggled)
         self.console_output_checkbox.toggled.connect(self.on_console_output_toggled)
+        self.speak_checkbox.toggled.connect(self.on_speak_toggled)
         self.tray_checkbox.toggled.connect(self.on_tray_toggled)
         docker_form.addRow("", self.docker_checkbox)
 
@@ -278,10 +284,12 @@ class SettingsTab(QWidget):
         self.main_window.open_browser_checkbox = self.open_browser_checkbox
         self.main_window.console_output_checkbox = self.console_output_checkbox
         self.main_window.tray_checkbox = self.tray_checkbox
+        self.main_window.speak_checkbox = self.speak_checkbox
 
         self.on_docker_toggled(self.docker_checkbox.isChecked())
         self.on_terminal_toggled(self.terminal_checkbox.isChecked())
         self.on_console_output_toggled(self.console_output_checkbox.isChecked())
+        self.on_speak_toggled(self.speak_checkbox.isChecked())
         self.on_tray_toggled(self.tray_checkbox.isChecked())
         current_fw = self.framework_combo.currentText()
         self.on_framework_changed(current_fw)
@@ -320,6 +328,9 @@ class SettingsTab(QWidget):
             self.main_window.mark_settings_dirty
         )
         self.console_output_checkbox.toggled.connect(
+            self.main_window.mark_settings_dirty
+        )
+        self.speak_checkbox.toggled.connect(
             self.main_window.mark_settings_dirty
         )
         self.tray_checkbox.toggled.connect(
@@ -475,6 +486,11 @@ class SettingsTab(QWidget):
         if hasattr(self.main_window, "output_view"):
             self.main_window.show_console_output = checked
             self.main_window._update_responsive_layout()
+
+    def on_speak_toggled(self, checked: bool) -> None:
+        if hasattr(self.main_window, "speak_button"):
+            self.main_window.speak_output = checked
+            self.main_window.speak_button.setEnabled(checked)
 
     def on_tray_toggled(self, checked: bool) -> None:
         self.main_window.tray_enabled = checked

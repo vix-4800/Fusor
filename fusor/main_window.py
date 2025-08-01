@@ -332,6 +332,7 @@ class MainWindow(QMainWindow):
         self.terminal_checkbox: QCheckBox | None = None
         self.open_browser_checkbox: QCheckBox | None = None
         self.console_output_checkbox: QCheckBox | None = None
+        self.speak_checkbox: QCheckBox | None = None
         self.log_view: QTextEdit | None = None
 
         self.tabs = QTabWidget()
@@ -348,6 +349,11 @@ class MainWindow(QMainWindow):
         self.clear_output_button = create_button("Clear Output", "edit-clear")
         self.clear_output_button.clicked.connect(self.clear_output)
         main_layout.addWidget(self.clear_output_button)
+
+        self.speak_button = create_button("Speak Output", "audio-volume-high")
+        self.speak_button.clicked.connect(self.speak_output_text)
+        self.speak_button.setEnabled(False)
+        main_layout.addWidget(self.speak_button)
 
         self.setCentralWidget(central_widget)
 
@@ -398,6 +404,7 @@ class MainWindow(QMainWindow):
         self.auto_refresh_secs = 5
         self.open_browser = False
         self.show_console_output = False
+        self.speak_output = False
         self.load_config()
         self.use_node = self.project_uses_node(self.project_path)
         self.use_composer = self.project_uses_composer(self.project_path)
@@ -654,6 +661,7 @@ class MainWindow(QMainWindow):
         self.show_console_output = bool(
             data.get("show_console_output", self.show_console_output)
         )
+        self.speak_output = bool(data.get("speak_output", self.speak_output))
         self.tray_enabled = bool(data.get("enable_tray", self.tray_enabled))
 
         self.theme_choice = data.get("theme", self.theme_choice)
@@ -743,6 +751,7 @@ class MainWindow(QMainWindow):
         show_output = width >= 700 and self.show_console_output
         self.output_view.setVisible(show_output)
         self.clear_output_button.setVisible(show_output)
+        self.speak_button.setVisible(show_output)
 
         if hasattr(self, "logs_tab") and hasattr(
             self.logs_tab, "update_responsive_layout"
@@ -909,6 +918,10 @@ class MainWindow(QMainWindow):
             self.open_browser_checkbox.setChecked(self.open_browser)
         if self.console_output_checkbox is not None:
             self.console_output_checkbox.setChecked(self.show_console_output)
+        if self.speak_checkbox is not None:
+            self.speak_checkbox.setChecked(self.speak_output)
+        if hasattr(self, "speak_button"):
+            self.speak_button.setEnabled(self.speak_output)
         if hasattr(self, "logs_tab"):
             self.logs_tab.update_timer_interval(self.auto_refresh_secs)
         if hasattr(self, "terminal_index"):
@@ -1441,6 +1454,9 @@ class MainWindow(QMainWindow):
         self.show_console_output = bool(show_console_output)
         self.tray_enabled = bool(tray_enabled)
         self.max_log_lines = int(getattr(self, "max_log_lines", DEFAULT_MAX_LOG_LINES))
+        self.speak_output = bool(
+            self.speak_checkbox.isChecked() if self.speak_checkbox is not None else self.speak_output
+        )
 
         data = load_config()
         updated_projects = []
@@ -1503,6 +1519,7 @@ class MainWindow(QMainWindow):
                 "current_project": project_path,
                 "theme": self.theme_choice,
                 "show_console_output": self.show_console_output,
+                "speak_output": self.speak_output,
                 "enable_tray": self.tray_enabled,
             }
         )
@@ -1819,3 +1836,19 @@ class MainWindow(QMainWindow):
             subprocess.Popen(["xdg-open", path])
         except FileNotFoundError:
             subprocess.Popen(["gio", "open", path])
+
+    def speak_output_text(self) -> None:
+        """Speak the contents of the output view using text-to-speech."""
+        if not self.speak_output:
+            return
+        text = self.output_view.toPlainText()
+        if not text.strip():
+            return
+        try:
+            import pyttsx3
+
+            engine = pyttsx3.init()
+            engine.say(text)
+            engine.runAndWait()
+        except Exception as e:  # pragma: no cover - tts failures
+            print(f"Failed to speak output: {e}")

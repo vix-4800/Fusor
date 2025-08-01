@@ -28,6 +28,7 @@ Fusor aims to **simplify routine PHP project operations** via a user-friendly vi
 -   Basic Node/NPM commands with automatic buttons for package scripts
 -   Detects **Makefiles** and provides buttons for each target
 -   Configurable log viewer with auto-refresh
+-   Optional text-to-speech via **Speak Output** button
 -   **Ctrl+S** shortcut to quickly save settings
 -   Isolated settings stored in `~/.fusor_config.json`
 

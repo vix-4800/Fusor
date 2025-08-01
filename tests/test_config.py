@@ -32,6 +32,7 @@ def test_save_then_load(tmp_path, monkeypatch):
     loaded = config.load_config()
     data.setdefault("show_console_output", False)
     data.setdefault("enable_tray", True)
+    data.setdefault("speak_output", False)
     assert loaded == data
 
 def test_load_missing_file(tmp_path, monkeypatch):
